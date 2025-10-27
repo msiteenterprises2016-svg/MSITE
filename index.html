@@ -437,6 +437,38 @@ html, body {
       transform: translateX(3px);
       border-radius: 6px;
     }
+	  /* === FIX SIDEBAR OVERLAP === */
+.content {
+  display: flex;
+}
+
+.sidebar {
+  position: fixed;
+  top: 60px; /* below topbar */
+  left: 0;
+  width: 220px;
+  height: calc(100vh - 60px);
+  background-color: var(--msite-blue);
+  transition: width 0.3s ease;
+  z-index: 1000;
+}
+
+.main {
+  margin-left: 220px; /* leave space for sidebar */
+  flex: 1;
+  padding: 24px;
+  transition: margin-left 0.3s ease;
+}
+
+/* When collapsed */
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar.collapsed ~ .main {
+  margin-left: 70px;
+}
+
   </style>
   <!-- iOS PWA Compatibility -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2212,6 +2244,16 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 });
 </script>
+  <script>
+    const sidebar = document.querySelector('.sidebar');
+    const toggleBtn = document.getElementById('toggleSidebar');
+
+    toggleBtn.addEventListener('click', () => {
+      sidebar.classList.toggle('collapsed');
+    });
+  </script>
+</body>
+</html>
 
 
 
@@ -2219,6 +2261,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 </html>
+
 
 
 
