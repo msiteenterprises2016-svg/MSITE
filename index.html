@@ -405,7 +405,7 @@
       font-size: 1.3rem;
     }
 
-    /* Sidebar hover animation */
+    /* Sidebar hover anim	ation */
     .sidebar a:hover {
       background: var(--msite-blue-2);
       transform: translateX(3px);
@@ -2157,11 +2157,27 @@ function toggleMenu() {
   const sidebar = document.querySelector('.sidebar');
   sidebar.classList.toggle('active');
 }
+
+// ✅ Automatically close sidebar when a link is clicked (mobile)
+document.addEventListener('DOMContentLoaded', () => {
+  const sidebarLinks = document.querySelectorAll('.sidebar a');
+  const sidebar = document.querySelector('.sidebar');
+  
+  sidebarLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      if (window.innerWidth <= 768) { // only on small screens
+        sidebar.classList.remove('active');
+      }
+    });
+  });
+});
 </script>
+
 
 
 </body>
 
 
 </html>
+
 
