@@ -297,23 +297,38 @@
       line-height: 1.6;
     }
 
-   footer {
+/* ✅ Fixed footer behavior */
+footer {
   text-align: center;
   padding: 12px;
   font-size: 0.95rem;
   color: #fff;
   background: var(--msite-blue);
   width: 100%;
-  position: relative; /* ✅ makes footer sit after content */
+  position: relative;
   bottom: 0;
-  margin-top: 40px;   /* ✅ adds space above footer */
+  left: 0;
 }
-	  @media (max-width: 768px) {
+
+/* Make sure footer sits at bottom if page is short */
+html, body {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1; /* ✅ pushes footer down */
+}
+
+/* Small screen adjustment */
+@media (max-width: 768px) {
   footer {
     font-size: 14px;
     padding: 10px;
   }
 }
+
 
 
 
@@ -2204,6 +2219,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 </html>
+
 
 
 
