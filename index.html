@@ -297,14 +297,25 @@
       line-height: 1.6;
     }
 
-    footer {
-      text-align: center;
-      padding: 12px;
-      font-size: 0.95rem;
-      color: #fff;
-      background: var(--msite-blue);
-      width: 100%;
-    }
+   footer {
+  text-align: center;
+  padding: 12px;
+  font-size: 0.95rem;
+  color: #fff;
+  background: var(--msite-blue);
+  width: 100%;
+  position: relative; /* ✅ makes footer sit after content */
+  bottom: 0;
+  margin-top: 40px;   /* ✅ adds space above footer */
+}
+	  @media (max-width: 768px) {
+  footer {
+    font-size: 14px;
+    padding: 10px;
+  }
+}
+
+
 
     /* In-app receipt preview (compact box) */
     #receipt,
@@ -2193,6 +2204,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 </html>
+
 
 
 
