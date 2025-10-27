@@ -2047,6 +2047,41 @@ storageBucket: "msite-45cd2.appspot.com",
   const app = firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 	<script>
+  // 🔄 Migrate old local data (if any) into Firebase once
+  async function migrateLocalData() {
+    // Try to get localStorage data (adjust key name if different)
+    const oldData = JSON.parse(localStorage.getItem("stocks")) || [];
+
+    if (oldData.length === 0) {
+      console.log("No old local data found — skipping migration.");
+      return;
+    }
+
+    console.log(`Found ${oldData.length} local items — uploading to Firebase...`);
+
+    for (const item of oldData) {
+      try {
+        await db.collection("stocks").add({
+          name: item.name || item.itemName || "Unnamed",
+          qty: item.qty || item.quantity || 0,
+          timestamp: new Date()
+        });
+        console.log(`Uploaded: ${item.name}`);
+      } catch (error) {
+        console.error("Error uploading item:", error);
+      }
+    }
+
+    // Optionally clear localStorage after migration
+    localStorage.removeItem("stocks");
+    alert("✅ Old data migrated to Firebase successfully!");
+  }
+
+  // Run migration once when page loads
+  migrateLocalData();
+</script>
+
+	<script>
     async function addStock() {
       const itemName = document.getElementById("itemName").value.trim();
       const itemQty = parseInt(document.getElementById("itemQty").value);
@@ -2093,3 +2128,4 @@ storageBucket: "msite-45cd2.appspot.com",
 
 
 </html>
+
