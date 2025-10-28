@@ -13,15 +13,13 @@
   <link rel="icon" href="msite.png" type="image/png">
 
 <style>
-  /* === MAIN THEME COLORS === */
-:root {
+  :root {
   --primary: #0a63a6;
   --primary-dark: #004b8d;
-  --light-bg: #f8faff;
+  --light-bg: #f5f8ff;
   --border: #dbe3ef;
 }
 
-/* === BASE LAYOUT === */
 body {
   font-family: "Segoe UI", Arial, sans-serif;
   margin: 0;
@@ -58,7 +56,10 @@ main {
   box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-/* === FORM === */
+h2 {
+  color: var(--primary-dark);
+}
+
 .input-row {
   display: flex;
   flex-wrap: wrap;
@@ -79,6 +80,7 @@ input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 2px rgba(10, 99, 166, 0.2);
 }
+
 button {
   background: var(--primary);
   color: white;
@@ -93,7 +95,6 @@ button:hover {
   background: var(--primary-dark);
 }
 
-/* === TOOLBAR === */
 .toolbar {
   display: flex;
   justify-content: space-between;
@@ -121,7 +122,7 @@ button:hover {
   color: white;
 }
 
-/* === TABLE VIEW (DESKTOP) === */
+/* TABLE VIEW (desktop) */
 table {
   border-collapse: collapse;
   width: 100%;
@@ -143,8 +144,6 @@ th {
 tr:hover {
   background: #f1f7ff;
 }
-
-/* === ACTION BUTTONS === */
 .action-btn {
   background: #1976d2;
   padding: 6px 10px;
@@ -153,47 +152,67 @@ tr:hover {
 .action-btn.delete-btn {
   background: #e53935;
 }
-
-/* === PRINT BUTTON === */
 .print-btn {
   background: #00796b;
   margin-left: 10px;
 }
 
-/* === MOBILE CARD VIEW === */
-@media (max-width: 700px) {
+/* ===== MOBILE CARD VIEW ===== */
+@media (max-width: 750px) {
   table, thead, tbody, th, td, tr {
     display: block;
   }
   thead {
     display: none;
   }
+
   tr {
-    background: #ffffff;
-    border: 1px solid var(--border);
-    margin-bottom: 10px;
-    border-radius: 10px;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-    padding: 10px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    padding: 15px;
+    margin-bottom: 15px;
+    position: relative;
   }
+
   td {
     display: flex;
-    justify-content: space-between;
+    align-items: center;
     padding: 8px 0;
     border: none;
-    border-bottom: 1px solid #f1f1f1;
   }
-  td:last-child {
-    border-bottom: none;
-  }
+
   td::before {
     content: attr(data-label);
-    font-weight: bold;
+    flex-basis: 100px;
+    font-weight: 600;
     color: var(--primary-dark);
   }
+
+  td[data-label="Name"] {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+    border-bottom: 1px solid #e3e9f4;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+  }
+
+  .icon {
+    margin-right: 6px;
+    color: var(--primary-dark);
+  }
+
+  .card-icons {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 6px;
+    color: var(--primary-dark);
+  }
+
   .action-btn {
-    margin-top: 5px;
     width: 100%;
+    margin-top: 8px;
   }
 }
 
@@ -212,6 +231,7 @@ tr:hover {
     color: white !important;
   }
 }
+
 
   </style>
 </head>
@@ -289,35 +309,42 @@ function renderStock() {
     .forEach((item, i) => {
       const tr = document.createElement("tr");
 
-      const columns = [
-        { key: "name", label: "Name" },
-        { key: "qty", label: "Qty" },
-        { key: "unit", label: "Unit" },
-        { key: "price", label: "Price" }
-      ];
+      // Data cells
+      const tdName = document.createElement("td");
+      tdName.setAttribute("data-label", "Name");
+      tdName.textContent = item.name;
+      tr.appendChild(tdName);
 
-      columns.forEach(({ key, label }) => {
-        const td = document.createElement("td");
-        td.textContent = item[key];
-        td.setAttribute("data-label", label);
-        td.contentEditable = true;
+      const tdQty = document.createElement("td");
+      tdQty.setAttribute("data-label", "Qty");
+      tdQty.innerHTML = `<span class="icon">📦</span> ${item.qty}`;
+      tdQty.contentEditable = true;
+      tdQty.onblur = () => {
+        window.stockData[i].qty = parseFloat(tdQty.textContent) || 0;
+        saveToFirebase();
+      };
+      tr.appendChild(tdQty);
 
-        td.oninput = () => {
-          const val = (key === "qty" || key === "price")
-            ? parseFloat(td.textContent) || 0
-            : td.textContent.trim();
-          window.stockData[i][key] = val;
-          saveLocal(); // quick local save
-        };
+      const tdUnit = document.createElement("td");
+      tdUnit.setAttribute("data-label", "Unit");
+      tdUnit.innerHTML = `<span class="icon">⚖️</span> ${item.unit}`;
+      tdUnit.contentEditable = true;
+      tdUnit.onblur = () => {
+        window.stockData[i].unit = tdUnit.textContent.trim();
+        saveToFirebase();
+      };
+      tr.appendChild(tdUnit);
 
-        td.onblur = () => {
-          saveToFirebase(); // sync to Firebase after editing
-        };
+      const tdPrice = document.createElement("td");
+      tdPrice.setAttribute("data-label", "Price");
+      tdPrice.innerHTML = `<span class="icon">💰</span> ${item.price}`;
+      tdPrice.contentEditable = true;
+      tdPrice.onblur = () => {
+        window.stockData[i].price = parseFloat(tdPrice.textContent) || 0;
+        saveToFirebase();
+      };
+      tr.appendChild(tdPrice);
 
-        tr.appendChild(td); // ✅ append each editable cell
-      }); // ✅ properly close the forEach loop
-
-      // === ACTION BUTTON ===
       const tdAct = document.createElement("td");
       tdAct.setAttribute("data-label", "Action");
       const del = document.createElement("button");
@@ -334,6 +361,7 @@ function renderStock() {
       tbody.appendChild(tr);
     });
 }
+
 
 
     function sortStock(type) {
