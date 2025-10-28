@@ -279,7 +279,7 @@ tr:hover {
 
     window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
 
-  function renderStock() {
+function renderStock() {
   const tbody = document.getElementById("stockTableBody");
   const searchVal = document.getElementById("search").value.toLowerCase();
   tbody.innerHTML = "";
@@ -311,12 +311,13 @@ tr:hover {
         };
 
         td.onblur = () => {
-          saveToFirebase(); // sync when editing done
+          saveToFirebase(); // sync to Firebase after editing
         };
 
-        tr.appendChild(td);
-      });
+        tr.appendChild(td); // ✅ append each editable cell
+      }); // ✅ properly close the forEach loop
 
+      // === ACTION BUTTON ===
       const tdAct = document.createElement("td");
       tdAct.setAttribute("data-label", "Action");
       const del = document.createElement("button");
