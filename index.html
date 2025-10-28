@@ -8,1307 +8,15 @@
   <meta name="theme-color" content="#004b8d">
   <link rel="icon" href="msite.png" type="image/png">
 
-  <script>
-    // Register Service Worker for PWA support
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(() => console.log(' Service Worker registered'))
-        .catch(err => console.error(' Service Worker registration failed:', err));
-    }
-  </script>
-  <!-- END PWA CONFIG -->
-
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#004b8d">
-  <link rel="icon" href="msite.png" type="image/png">
-
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MSITE Inventory System</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
-  <style>
-    /* ===== Modern Font & Button Styles ===== */
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap');
-
-    body {
-      font-family: 'Poppins', sans-serif;
-      color: #2c3e50;
-    }
-
-    /* Global button style */
-    button {
-      background: linear-gradient(135deg, var(--msite-blue-2), var(--accent));
-      color: #fff;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      letter-spacing: 0.3px;
-      cursor: pointer;
-      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
-      transition: all 0.25s ease;
-    }
-
-    button:hover {
-      transform: translateY(-2px);
-      background: linear-gradient(135deg, var(--msite-blue), var(--accent));
-      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.15);
-    }
-
-    button:active {
-      transform: scale(0.97);
-    }
-
-    /* Sidebar links */
-    .sidebar a {
-      font-weight: 500;
-      letter-spacing: 0.5px;
-      transition: background 0.3s, transform 0.2s;
-    }
-
-    .sidebar a:hover,
-    .sidebar a.active {
-      background: var(--msite-blue-2);
-      transform: translateX(3px);
-    }
-
-    /* Headings */
-    h1,
-    h2,
-    h3 {
-      font-weight: 600;
-      letter-spacing: 0.5px;
-    }
-
-    /* Inputs */
-    input,
-    select {
-      border: 1px solid #ccd9e4;
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-size: 14px;
-      outline: none;
-      transition: border-color 0.25s;
-    }
-
-    input:focus,
-    select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(42, 157, 143, 0.15);
-    }
-
-    /* ========== MSITE THEME ========== */
-    :root {
-      --msite-blue: #004b8d;
-      --msite-blue-2: #006bb3;
-      --accent: #00bfa5;
-      --danger: #e63946;
-    }
-
-    body {
-      margin: 0;
-      font-family: "Segoe UI", sans-serif;
-      background-color: #f5faff;
-      color: #333;
-      display: flex;
-      min-height: 100vh;
-      flex-direction: column;
-    }
-
-    .content {
-      flex: 1;
-      display: flex;
-      min-height: 0;
-    }
-
-    .sidebar {
-      width: 220px;
-      background-color: var(--msite-blue);
-      color: #fff;
-      padding: 20px 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-
-    .sidebar img {
-      width: 100px;
-      margin-bottom: 10px;
-    }
-
-    .sidebar h2 {
-      margin-bottom: 18px;
-      letter-spacing: 1px;
-    }
-
-    .sidebar a {
-      padding: 12px 20px;
-      color: #fff;
-      text-decoration: none;
-      display: block;
-      width: 100%;
-      text-align: center;
-      transition: background 0.2s;
-    }
-
-    .sidebar a:hover,
-    .sidebar a.active {
-      background: var(--msite-blue-2);
-    }
-
-    .main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      overflow-y: auto;
-      padding: 20px;
-      box-sizing: border-box;
-    }
-
-    .section {
-      display: none;
-      padding: 0 0 40px 0;
-    }
-
-    .section.active {
-      display: block;
-      animation: fadeIn .25s ease-in;
-    }
-
-    @keyframes fadeIn {
-      from {
-        opacity: 0
-      }
-
-      to {
-        opacity: 1
-      }
-    }
-
-    h1 {
-      color: var(--msite-blue);
-      border-bottom: 2px solid var(--msite-blue-2);
-      padding-bottom: 8px;
-      margin-bottom: 16px;
-    }
-
-    input,
-    select,
-    button {
-      padding: 8px;
-      margin: 5px;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      font-size: 14px;
-    }
-
-    button {
-      background: var(--msite-blue-2);
-      color: #fff;
-      border: none;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: var(--msite-blue);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 12px;
-    }
-
-    th,
-    td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
-
-    th {
-      background: var(--msite-blue);
-      color: #fff;
-    }
-
-    td.editing {
-      background: #fff8c4;
-    }
-
-    /* light yellow while editing */
-    .action-btn {
-      padding: 5px 10px;
-      font-size: 12px;
-      margin: 2px;
-      border-radius: 4px;
-      color: #fff;
-      cursor: pointer;
-    }
-
-    .delete-btn {
-      background: var(--danger);
-    }
-
-    .view-btn {
-      background: var(--accent);
-    }
-
-    .summary {
-      margin-top: 20px;
-      background: #e8f0ff;
-      padding: 10px;
-      border-radius: 6px;
-    }
-
-    .grand-total {
-      margin-top: 10px;
-      text-align: right;
-      font-weight: bold;
-      color: var(--msite-blue);
-    }
-
-    .frontpage {
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      text-align: center;
-      padding: 80px 20px;
-      background: #e8f0ff;
-      min-height: 300px;
-    }
-
-    .frontpage h1 {
-      font-size: 2.2rem;
-      color: var(--msite-blue);
-      margin: 0 0 10px 0;
-    }
-
-    .frontpage p {
-      max-width: 700px;
-      color: #333;
-      line-height: 1.6;
-    }
-
-    footer {
-      text-align: center;
-      padding: 12px;
-      font-size: 0.95rem;
-      color: #fff;
-      background: var(--msite-blue);
-      width: 100%;
-    }
-
-    /* In-app receipt preview (compact box) */
-    #receipt,
-    #cashout-receipt {
-      display: none;
-      background: #fff;
-      padding: 10px;
-      border: 1px solid #ccc;
-      margin: 12px auto;
-      width: 320px;
-      font-size: 12px;
-      font-family: "Segoe UI", sans-serif;
-      box-sizing: border-box;
-    }
-
-    #receipt .receipt-inner,
-    #cashout-receipt .receipt-inner {
-      background: #fff;
-      padding: 6px;
-      border-radius: 4px;
-    }
-
-    @media (max-width:700px) {
-      .sidebar {
-        display: none
-      }
-
-      #receipt,
-      #cashout-receipt {
-        width: 100%;
-        box-sizing: border-box
-      }
-    }
-
-    /* Receipt preview modal (in-page) */
-    .modal-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.6);
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-
-    .modal-backdrop.show {
-      display: flex;
-    }
-
-    .modal-box {
-      background: #fff;
-      padding: 12px;
-      border-radius: 8px;
-      width: 90%;
-      max-width: 720px;
-      box-sizing: border-box;
-    }
-
-    .modal-actions {
-      text-align: center;
-      margin-top: 10px;
-    }
-
-    .modal-actions button {
-      margin: 0 6px;
-    }
-
-    /* Sidebar icons */
-    .sidebar a {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-      gap: 10px;
-      font-size: 0.95rem;
-      padding: 12px 20px;
-    }
-
-    .sidebar a i {
-      font-size: 1.1rem;
-      transition: transform 0.3s, color 0.3s;
-    }
-
-    .sidebar a:hover i {
-      transform: rotate(8deg) scale(1.1);
-      color: #ffe066;
-    }
-
-    /* Collapsed mode */
-    .sidebar.collapsed a span {
-      display: none;
-    }
-
-    .sidebar.collapsed a {
-      justify-content: center;
-    }
-
-    .sidebar.collapsed a i {
-      font-size: 1.3rem;
-    }
-
-    /* Sidebar hover animation */
-    .sidebar a:hover {
-      background: var(--msite-blue-2);
-      transform: translateX(3px);
-      border-radius: 6px;
-    }
-  </style>
-  <!-- iOS PWA Compatibility -->
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="MSITE">
-  <link rel="apple-touch-icon" href="msite.png">
-
-</head>
-
-<body>
-  <header class="topbar">
-    <div class="topbar-left">
-      <img src="msite.png" alt="Logo" class="logo-small">
-      <h1 class="app-title">MSITE Inventory System</h1>
-    </div>
-  </header>
-
-  <div class="content">
-    <div class="sidebar">
-
-      <img src="msite.png" alt="MSITE Logo">
-      <h2>MSITE</h2>
-
-      <a href="#" class="menu-link active" data-section="home-section">
-        <i class="fas fa-home"></i> <span>Home</span>
-      </a>
-      <a href="#" class="menu-link" data-section="stock-section">
-        <i class="fas fa-boxes-stacked"></i> <span>Stock Management</span>
-      </a>
-      <a href="#" class="menu-link" data-section="purchase-section">
-        <i class="fas fa-file-invoice-dollar"></i> <span>Purchase Order</span>
-      </a>
-      <a href="#" class="menu-link" data-section="po-list-section">
-        <i class="fas fa-list"></i> <span>PO List</span>
-      </a>
-      <a href="#" class="menu-link" data-section="cashout-section">
-        <i class="fas fa-cash-register"></i> <span>Cashout</span>
-      </a>
-      <a href="#" class="menu-link" data-section="sales-section">
-        <i class="fas fa-chart-line"></i> <span>Sales History</span>
-      </a>
-      <a href="#" class="menu-link" data-section="buy-section">
-        <i class="fas fa-cart-plus"></i> <span>Items to Buy</span>
-      </a>
-    </div>
-    <button id="toggleSidebar">=</button>
-
-
-    <div class="main">
-      <!-- Home -->
-      <div id="home-section" class="section active">
-        <div class="frontpage">
-          <h1>Welcome to MSITE Enterprises</h1>
-          <p>MSITE is a trusted enterprise specializing in school materials, durable furniture, and construction
-            essentials. Providing affordable, top-grade products for schools and businesses since 2016.</p>
-        </div>
-      </div>
-
-      <!-- Stock Management -->
-      <div id="stock-section" class="section">
-        <h1>Stock Management</h1>
-        <div class="form-row">
-          <input id="stock-name" placeholder="Item Name">
-          <input id="stock-qty" type="number" placeholder="Quantity">
-          <input id="stock-unit" placeholder="Unit">
-          <input id="stock-price" type="number" placeholder="Price">
-          <button onclick="addStock()">Add Item</button>
-        </div>
-
-        <div class="form-row">
-          <input id="stock-search" placeholder="Search item...">
-        </div>
-
-        <table id="stockTable">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Qty</th>
-              <th>Unit</th>
-              <th>Price</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="stockTableBody"></tbody>
-        </table>
-        <div style="margin-top: 20px; text-align: center;">
-          <button onclick="printStockTable()" style="
-    background-color: #0a3d62;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 18px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: background 0.3s;">
-            Print Stock List
-          </button>
-        </div>
-
-      </div>
-
-
-      <!-- Items to Buy Section -->
-      <div id="buy-section" class="section buy-card">
-        <h1>Items to Buy</h1>
-
-        <!-- Input Form -->
-        <div class="buy-form">
-          <input type="text" id="itemName" placeholder="Item Name">
-          <input type="text" id="itemUnit" placeholder="Unit (pcs, kg...)">
-          <input type="number" id="itemQty" placeholder="Qty">
-          <input type="number" id="itemPrice" placeholder="Price">
-          <button onclick="addBuyItem()">Add</button>
-        </div>
-
-        <!-- Search Bar -->
-        <div class="buy-search">
-          <input id="buy-search" placeholder="Search item...">
-        </div>
-
-        <!-- Items Table -->
-        <div class="buy-table-wrapper">
-          <table id="buyTable">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Unit</th>
-                <th>Qty</th>
-                <th>Price</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="buyTableBody"></tbody>
-          </table>
-        </div>
-
-        <!-- Action Buttons -->
-        <div class="buy-actions">
-          <button onclick="confirmBuyList()">Confirm Order</button>
-          <button onclick="printBuyList()">Print Buy List</button>
-        </div>
-      </div>
-
-      <style>
-        /* Card Layout */
-        .buy-card {
-          background-color: #fff;
-          border-radius: 12px;
-          padding: 20px;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-          max-width: 900px;
-          margin: 20px auto;
-          font-family: Arial, sans-serif;
-        }
-
-        /* Section Header */
-        .buy-card h1 {
-          margin-bottom: 16px;
-          font-size: 1.5rem;
-          color: #1e6091;
-        }
-
-        /* Input Form */
-        .buy-form {
-          display: flex;
-          flex-wrap: wrap;
-          gap: 10px;
-          margin-bottom: 12px;
-        }
-
-        .buy-form input {
-          flex: 1;
-          min-width: 100px;
-          padding: 8px 10px;
-          border-radius: 6px;
-          border: 1px solid #ccc;
-        }
-
-        .buy-form button {
-          padding: 8px 16px;
-          border: none;
-          background-color: #1e6091;
-          color: #fff;
-          border-radius: 6px;
-          cursor: pointer;
-          transition: background 0.3s;
-        }
-
-        .buy-form button:hover {
-          background-color: #0a3d62;
-        }
-
-        /* Search Bar */
-        .buy-search {
-          margin-bottom: 12px;
-          text-align: right;
-        }
-
-        .buy-search input {
-          padding: 6px 10px;
-          border-radius: 6px;
-          border: 1px solid #ccc;
-          width: 220px;
-        }
-
-        /* Table � MSITE Themed */
-        .buy-table-wrapper {
-          overflow-x: auto;
-          border-radius: 8px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        #buyTable {
-          width: 100%;
-          border-collapse: collapse;
-          border-radius: 8px;
-          overflow: hidden;
-        }
-
-        #buyTable th,
-        #buyTable td {
-          padding: 10px;
-          text-align: center;
-          border: 1px solid #ddd;
-        }
-
-        #buyTable th {
-          background-color: var(--msite-blue);
-          color: #fff;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-        }
-
-        #buyTable tr:nth-child(even) {
-          background-color: #f9fbff;
-        }
-
-        #buyTable tr:hover {
-          background-color: #e8f0ff;
-          transition: background 0.2s;
-        }
-
-
-        /* Action Buttons */
-        .buy-actions {
-          margin-top: 12px;
-          display: flex;
-          gap: 10px;
-        }
-
-        .buy-actions button {
-          padding: 8px 16px;
-          border-radius: 6px;
-          border: none;
-          cursor: pointer;
-          background-color: #0a3d62;
-          color: white;
-          transition: background 0.3s;
-        }
-
-        .buy-actions button:hover {
-          background-color: #1e6091;
-        }
-
-        /* ======== UI UPGRADE: Layout, Tables & Collapsible Sidebar ======== */
-
-        /* Global layout polish */
-        .main {
-          flex: 1;
-          background: #f8fbff;
-          padding: 24px;
-          border-radius: 16px 0 0 0;
-          overflow-y: auto;
-        }
-
-        /* Card containers for sections */
-        .section {
-          background: #fff;
-          border-radius: 12px;
-          padding: 24px;
-          box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-          margin-bottom: 30px;
-        }
-
-        /* Headings */
-        .section h1 {
-          font-size: 1.5rem;
-          margin-bottom: 16px;
-          color: var(--msite-blue);
-          border-bottom: 2px solid var(--msite-blue-2);
-          padding-bottom: 8px;
-        }
-
-        /* Table Styling */
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          border-radius: 8px;
-          overflow: hidden;
-          box-shadow: 0 1px 6px rgba(0, 0, 0, 0.05);
-        }
-
-        th,
-        td {
-          padding: 10px 12px;
-          text-align: center;
-        }
-
-        th {
-          background: var(--msite-blue);
-          color: white;
-          font-weight: 500;
-          letter-spacing: 0.4px;
-        }
-
-        tr:nth-child(even) {
-          background: #f7faff;
-        }
-
-        tr:hover {
-          background: #eaf3ff;
-          transition: background 0.25s;
-        }
-
-        /* Sidebar enhancements */
-        .sidebar {
-          position: relative;
-          transition: all 0.3s ease;
-          width: 240px;
-        }
-
-        .sidebar.collapsed {
-          width: 70px;
-        }
-
-        .sidebar.collapsed h2,
-        .sidebar.collapsed img {
-          display: none;
-        }
-
-        .sidebar.collapsed a {
-          text-align: center;
-          font-size: 0.85rem;
-          padding: 12px 0;
-        }
-
-        /* Toggle button for sidebar */
-        #toggleSidebar {
-          position: absolute;
-          top: 10px;
-          right: -15px;
-          background: var(--accent);
-          color: white;
-          border-radius: 50%;
-          width: 28px;
-          height: 28px;
-          border: none;
-          cursor: pointer;
-          font-size: 16px;
-          font-weight: bold;
-          line-height: 0;
-          box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2);
-          transition: background 0.3s;
-        }
-
-        #toggleSidebar:hover {
-          background: var(--msite-blue-2);
-        }
-
-        /* Adjust layout when sidebar collapses */
-        .content {
-          display: flex;
-          transition: all 0.3s ease;
-        }
-
-        .content.sidebar-collapsed .main {
-          margin-left: 70px;
-        }
-
-        /* Make tables and forms responsive */
-        @media (max-width: 700px) {
-          .section {
-            padding: 16px;
-          }
-
-          table,
-          thead,
-          tbody,
-          th,
-          td,
-          tr {
-            display: block;
-          }
-
-          th {
-            display: none;
-          }
-
-          td {
-            text-align: right;
-            position: relative;
-            padding-left: 50%;
-          }
-
-          td::before {
-            content: attr(data-label);
-            position: absolute;
-            left: 10px;
-            text-align: left;
-            font-weight: 600;
-          }
-        }
-
-        /* ====== TOPBAR & LAYOUT ENHANCEMENTS ====== */
-        .topbar {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          height: 60px;
-          background: linear-gradient(135deg, var(--msite-blue), var(--msite-blue-2));
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 20px;
-          color: #fff;
-          box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-          z-index: 1000;
-        }
-
-        .topbar-left {
-          display: flex;
-          align-items: center;
-          gap: 10px;
-        }
-
-        .topbar .app-title {
-          font-size: 1.2rem;
-          font-weight: 600;
-          letter-spacing: 0.5px;
-        }
-
-        .logo-small {
-          width: 36px;
-          height: 36px;
-          border-radius: 6px;
-          object-fit: contain;
-        }
-
-        /* Sidebar Adjustments */
-        .sidebar {
-          margin-top: 60px;
-          height: calc(100vh - 60px);
-          transition: width 0.3s ease, background 0.3s ease;
-          box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-        }
-
-        /* Smooth slide animation for collapse */
-        .sidebar.collapsed {
-          width: 70px;
-          overflow: hidden;
-        }
-
-        /* Content adjusts when sidebar collapses */
-        .content {
-          margin-top: 60px;
-          transition: margin-left 0.3s ease;
-        }
-
-        .content.sidebar-collapsed .main {
-          margin-left: 70px;
-        }
-
-        /* Main Section Design */
-        .main {
-          background: #f5f9ff;
-          padding: 32px;
-          border-radius: 16px;
-          box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
-        }
-
-        /* Section Cards */
-        .section {
-          background: #fff;
-          border-radius: 12px;
-          padding: 24px;
-          margin-bottom: 32px;
-          box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
-          transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .section:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 6px 14px rgba(0, 0, 0, 0.08);
-        }
-
-        /* Buttons refined */
-        button {
-          border-radius: 8px;
-          font-weight: 500;
-          padding: 10px 18px;
-          transition: background 0.25s, transform 0.25s;
-        }
-
-        button:hover {
-          transform: translateY(-2px);
-          background: linear-gradient(135deg, var(--msite-blue-2), var(--accent));
-        }
-
-        /* Sidebar toggle button inside topbar */
-        .sidebar-toggle {
-          background: transparent;
-          color: #fff;
-          border: none;
-          font-size: 1.4rem;
-          cursor: pointer;
-          transition: transform 0.2s;
-        }
-
-        .sidebar-toggle:hover {
-          transform: scale(1.1);
-        }
-
-        /* Responsive Adjustments */
-        @media (max-width: 700px) {
-          .topbar {
-            height: 56px;
-            padding: 0 12px;
-          }
-
-          .app-title {
-            font-size: 1rem;
-          }
-
-          .main {
-            padding: 16px;
-          }
-        }
-
-        /* === Sidebar Toggle Button Styling === */
-        .sidebar #toggleSidebar {
-          position: absolute;
-          top: 16px;
-          right: -15px;
-          background: var(--accent);
-          color: #fff;
-          border: none;
-          border-radius: 50%;
-          width: 34px;
-          height: 34px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 18px;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 3px 8px rgba(0, 0, 0, 0.25);
-          z-index: 10;
-        }
-
-        .sidebar #toggleSidebar:hover {
-          background: var(--msite-blue-2);
-          transform: scale(1.05);
-        }
-
-        /* When sidebar is collapsed, adjust button placement */
-        .sidebar.collapsed #toggleSidebar {
-          right: -20px;
-        }
-
-        /* ==== Floating Sidebar Toggle Button Upgrade ==== */
-        #toggleSidebar {
-          position: fixed;
-          top: 80px;
-          left: 220px;
-          /* where the sidebar ends */
-          background: linear-gradient(135deg, var(--accent), var(--msite-blue-2));
-          color: #fff;
-          border: none;
-          border-radius: 50%;
-          width: 45px;
-          height: 45px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 20px;
-          cursor: pointer;
-          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-          z-index: 1200;
-          transition: all 0.3s ease;
-        }
-
-        #toggleSidebar:hover {
-          background: linear-gradient(135deg, var(--msite-blue-2), var(--accent));
-          transform: scale(1.1);
-        }
-
-        /* When sidebar collapses, move the toggle closer */
-        .sidebar.collapsed~#toggleSidebar {
-          left: 70px;
-        }
-      </style>
-
-
-      <!-- Purchase Order -->
-      <div id="purchase-section" class="section">
-        <h1>Purchase Order</h1>
-        <input list="po-item-list" id="poItem" class="item-select" placeholder="Select Item">
-        <datalist id="po-item-list"></datalist>
-        <input type="number" id="poQty" placeholder="Quantity"> <input type="text" id="po-school"
-          placeholder="School Name">
-        <button onclick="addToCurrentPO()">Add to Order</button> <button onclick="submitPO()">Submit Order</button>
-
-        <div style="margin-top:8px;">
-          <label for="receipt-size-po">Paper Size:</label>
-          <select id="receipt-size-po">
-            <option value="58mm">Thermal (58mm)</option>
-            <option value="80mm">Thermal (80mm)</option>
-            <option value="A5">A5</option>
-            <option value="A4">A4</option>
-          </select>
-          <button onclick="previewPOReceipt()">Preview & Print Receipt</button>
-        </div>
-
-        <table id="poTable">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Qty</th>
-              <th>Unit</th>
-              <th>Price</th>
-              <th>Total</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="poTableBody"></tbody>
-        </table>
-
-        <div class="grand-total">PO Total: <span id="po-total">0.00</span></div>
-        <div id="receipt" aria-hidden="true"></div>
-      </div>
-
-      <!-- PO List -->
-      <div id="po-list-section" class="section">
-        <h1>Purchase Order List</h1>
-        <table id="po-list-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>School</th>
-              <th>Total</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="po-list-body"></tbody>
-        </table>
-      </div>
-
-      <!-- Cashout -->
-      <div id="cashout-section" class="section">
-        <h1>Cashout</h1>
-        <input list="item-list" id="cashout-item" class="item-select" placeholder="Select Item">
-        <datalist id="item-list"></datalist>
-        <input type="number" id="cashout-qty" placeholder="Quantity">
-        <button onclick="addToCashout()">Add to Sales</button>
-        <button onclick="finalizeCashout()">Finalize & Save</button>
-
-        <div style="margin-top:8px;">
-          <label for="receipt-size-cash">Paper Size:</label>
-          <select id="receipt-size-cash">
-            <option value="58mm">Thermal (58mm)</option>
-            <option value="80mm">Thermal (80mm)</option>
-            <option value="A5">A5</option>
-            <option value="A4">A4</option>
-          </select>
-          <button onclick="previewCashoutReceipt()">Preview & Print Receipt</button>
-        </div>
-
-        <div class="summary">
-          <table id="salesTable">
-            <thead>
-              <tr>
-                <th>Item</th>
-                <th>Qty</th>
-                <th>Unit</th>
-                <th>Price</th>
-                <th>Total</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="salesTableBody"></tbody>
-          </table>
-          <div class="grand-total">Grand Total: <span id="salesTotal">0.00</span></div>
-        </div>
-
-        <div id="cashout-receipt" aria-hidden="true"></div>
-      </div>
-
-      <!-- Sales History -->
-      <div id="sales-section" class="section">
-        <h1>Sales History</h1>
-        <button onclick="clearSalesHistory()">Clear History</button>
-        <table id="history-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Item</th>
-              <th>Qty</th>
-              <th>Unit</th>
-              <th>Price</th>
-              <th>Total</th>
-              <th>School</th>
-            </tr>
-          </thead>
-          <tbody id="history-table-body"></tbody>
-        </table>
-      </div>
-
-    </div>
-  </div>
-
-  <footer><strong>Mr. Michael Martinez | Since 2016 | Registered to PhilGEPS</strong></footer>
-
-  <!-- In-page preview modal (fallback) -->
-  <div id="preview-modal" class="modal-backdrop">
-    <div class="modal-box">
-      <div id="preview-content"></div>
-      <div class="modal-actions">
-        <button onclick="openPrintWindowFromModal()">Open Print Window</button>
-        <button onclick="closeModalPreview()">Close Preview</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    /* ===========================
-       Persistent data stores
-       =========================== */
-    let stockData = JSON.parse(localStorage.getItem('stockData')) || [];
-    let salesData = JSON.parse(localStorage.getItem('salesData')) || [];
-    let poList = JSON.parse(localStorage.getItem('poList')) || [];
-    let currentPO = [];
-    let cashoutBuffer = JSON.parse(localStorage.getItem('cashoutBuffer')) || [];
-
-    // State to track last preview type for auto-clear after print
-    let lastPreviewType = null; // 'cash' | 'po' | null
-    let lastPreviewPayload = null;
-
-    function saveData() {
-      localStorage.setItem('stockData', JSON.stringify(stockData));
-      localStorage.setItem('salesData', JSON.stringify(salesData));
-      localStorage.setItem('poList', JSON.stringify(poList));
-      localStorage.setItem('cashoutBuffer', JSON.stringify(cashoutBuffer));
-    }
-
-    function escapeHtml(str) {
-      if (str === null || str === undefined) return '';
-      return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-    }
-    let buyList = JSON.parse(localStorage.getItem('buyList')) || [];
-
-    function saveBuyList() {
-      localStorage.setItem('buyList', JSON.stringify(buyList));
-    }
-
-    function renderBuyList() {
-      const tbody = document.getElementById('buyTableBody');
-      tbody.innerHTML = '';
-      buyList.forEach((item, idx) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-      <td>${item.name}</td>
-      <td>${item.unit}</td> <!-- render unit -->
-      <td>${item.qty}</td>
-      <td>${item.price.toFixed(2)}</td>
-      <td><button onclick="removeBuyItem(${idx})">Delete</button></td>
-    `;
-        tbody.appendChild(tr);
-      });
-    }
-    function removeBuyItem(index) {
-      if (!confirm('Are you sure you want to delete this item?')) return;
-      buyList.splice(index, 1);   // remove from array
-      saveBuyList();              // update localStorage
-      renderBuyList();            // re-render the table
-    }
-
-
-
-
-
-
-
-    // Add item
-    function addBuyItem() {
-      const name = document.getElementById('itemName').value;
-      const unit = document.getElementById('itemUnit').value; // <-- unit captured
-      const qty = Number(document.getElementById('itemQty').value);
-      const price = Number(document.getElementById('itemPrice').value);
-
-      if (!name || !unit || !qty || !price) return alert('Please fill all fields.');
-
-      buyList.push({ name, unit, qty, price });
-      saveBuyList();
-      renderBuyList();
-    }
-
-
-    // Search filter
-    document.getElementById('buy-search').addEventListener('input', function () {
-      const query = this.value.toLowerCase();
-      const tbody = document.getElementById('buyTableBody');
-      Array.from(tbody.rows).forEach(row => {
-        const itemName = row.cells[0].textContent.toLowerCase();
-        row.style.display = itemName.includes(query) ? '' : 'none';
-      });
-    });
-
-    // Initialize
-    renderBuyList();
-
-    function printBuyList() {
-      if (buyList.length === 0) return alert('No items to print!');
-
-      let rows = '';
-      let grandTotal = 0;
-
-      buyList.forEach(item => {
-        const total = item.qty * item.price;
-        grandTotal += total;
-        rows += `
-      <tr>
-        <td style="padding:6px 4px;border-bottom:1px dashed #ccc;">${escapeHtml(item.name)}</td>
-        <td style="padding:6px 4px;border-bottom:1px dashed #ccc;text-align:center;">${escapeHtml(item.unit || '')}</td>
-        <td style="padding:6px 4px;border-bottom:1px dashed #ccc;text-align:center;">${item.qty}</td>
-        <td style="padding:6px 4px;border-bottom:1px dashed #ccc;text-align:right;">${Number(item.price).toFixed(2)}</td>
-        <td style="padding:6px 4px;border-bottom:1px dashed #ccc;text-align:right;">${total.toFixed(2)}</td>
-      </tr>
-    `;
-      });
-
-      const html = `
-    <div style="font-family:'Segoe UI',sans-serif; width:320px; margin:0 auto;">
-      <div style="text-align:center; margin-bottom:6px;">
-        <h2 style="margin:0; color:var(--msite-blue);">MSITE Enterprises</h2>
-       
-
-      </div>
-
-      <div style="margin-top:8px;font-weight:bold;text-align:center;">ITEMS TO BUY</div>
-      <hr style="border:none;border-top:1px dashed #333;margin:8px 0;">
-
-      <table style="width:100%; border-collapse:collapse; font-size:13px;">
-        <thead>
-          <tr>
-            <th style="text-align:left;padding:6px 4px;">Item</th>
-            <th style="text-align:center;padding:6px 4px;">Unit</th>
-            <th style="text-align:center;padding:6px 4px;">Qty</th>
-            <th style="text-align:right;padding:6px 4px;">Price</th>
-            <th style="text-align:right;padding:6px 4px;">Total</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
-
-      <div style="margin-top:8px;text-align:right;font-weight:bold;">
-        Grand Total: ${grandTotal.toFixed(2)}
-      </div>
-
-      <hr style="border:none;border-top:1px dashed #333;margin:8px 0;">
   
-    </div>
-  `;
+<!-- END FIREBASE STOCK-SYNC -->
 
-      const w = window.open('', '', 'height=600,width=800');
-      w.document.write(`
-  <html>
-    <head>
-      <title>Buy List</title>
-      <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        h2 { text-align: center; color: #0a3d62; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
-        th { background: #0a3d62; color: #fff; }
-      </style>
-    </head>
-    <body>
-      <h2>Buy List</h2>
-      ${document.querySelector('#buyTable')?.outerHTML || ''}
-      <div style="margin-top:8px;text-align:right;font-weight:bold;">
-        Grand Total: ${grandTotal.toFixed(2)}
-      </div>
-      <hr style="border:none;border-top:1px dashed #333;margin:8px 0;">
-    
-<!-- FIREBASE STOCK-SYNC (overrides stock functions to use Realtime Database + localStorage fallback) -->
+
+<!-- FIREBASE: realtime stock sync (only for Stock Management). Prepared for GitHub Pages -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-database.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 
-  // --- Your Firebase config (provided) ---
   const firebaseConfig = {
     apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
     authDomain: "msite-45cd2.firebaseapp.com",
@@ -1319,90 +27,81 @@
     appId: "1:634058871629:web:e92190c30153f56cf41d04"
   };
 
+  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const stocksRef = ref(db, "stocks");
 
-  // Ensure stockData exists (will be kept in sync)
-  window.stockData = window.stockData || (JSON.parse(localStorage.getItem('stockData')) || []);
-
-  // Helper: save to localStorage (backup)
+  // local helper for backup
   function saveLocalStock() {
-    localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+    try { localStorage.setItem('stockData', JSON.stringify(window.stockData || [])); } catch(e) {}
   }
 
-  // Listen for remote changes and apply them locally
+  // Initialize window.stockData from localStorage as fallback
+  window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+
+  // Listen for remote updates and merge
   onValue(stocksRef, (snapshot) => {
-    const val = snapshot.val();
-    if (val === null) {
-      // No remote data yet; if we have local data, push it up
+    const remote = snapshot.val();
+    if (remote === null) {
+      // if remote empty but local has data, push local to remote
       const local = JSON.parse(localStorage.getItem('stockData') || "[]");
-      if (local.length) {
+      if (local && local.length) {
         window.stockData = local;
-        set(stocksRef, local).catch(e => console.warn("Failed to push local backup to Firebase:", e));
+        set(stocksRef, window.stockData).catch(()=>{});
       } else {
         window.stockData = [];
         saveLocalStock();
       }
     } else {
-      // When remote changes arrive, update local and re-render
-      window.stockData = val;
+      // remote present: use it
+      window.stockData = Array.isArray(remote) ? remote : (Object.values(remote) || []);
       saveLocalStock();
-      if (typeof renderStock === "function") {
-        try { renderStock(); } catch(e) { console.warn("renderStock failed:", e); }
-      }
-      if (typeof updateItemLists === "function") {
-        try { updateItemLists(); } catch(e) { console.warn("updateItemLists failed:", e); }
-      }
     }
+    // Re-render if functions exist
+    if (typeof renderStock === "function") try { renderStock(); } catch(e){ console.warn(e); }
+    if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){ console.warn(e); }
+    console.log("📦 Firebase stock synced", window.stockData);
   }, (err) => {
-    console.error("Firebase onValue error:", err);
+    console.warn("Firebase onValue error:", err);
   });
 
-  // Override/add stock functions to use Firebase (but still keep localStorage backup)
+  // Override addStock to update local and remote
   window.addStock = function() {
     const nameEl = document.getElementById("stock-name");
     const qtyEl = document.getElementById("stock-qty");
     const unitEl = document.getElementById("stock-unit");
     const priceEl = document.getElementById("stock-price");
-
     const name = (nameEl?.value || "").trim();
     const qty = parseFloat(qtyEl?.value || "0");
     const unit = (unitEl?.value || "").trim();
     const price = parseFloat(priceEl?.value || "0");
-
     if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
       return alert("Please enter valid name, quantity and price.");
     }
-
-    // merge if exists
-    const existing = (window.stockData || []).find(s => s.name.toLowerCase() === name.toLowerCase());
+    // merge
+    const existing = (window.stockData || []).find(s => s.name && s.name.toLowerCase() === name.toLowerCase());
     if (existing) {
       existing.qty = Number(existing.qty || 0) + qty;
       if (unit) existing.unit = unit;
       existing.price = price;
     } else {
-      (window.stockData = window.stockData || []).push({ name, qty, unit: unit || '', price });
+      window.stockData = window.stockData || [];
+      window.stockData.push({ name, qty, unit: unit || '', price });
     }
-
-    // save locally and push entire array to Firebase
     saveLocalStock();
-    set(stocksRef, window.stockData).catch(e => {
-      console.warn("Failed to save to Firebase, data saved locally instead:", e);
-      alert("Saved locally (offline). Will sync when online.");
-    });
-
-    // clear inputs and re-render
+    // write entire array to Firebase (simple and consistent)
+    set(stocksRef, window.stockData).catch((e)=>{ console.warn("Failed to save to Firebase:", e); alert("Saved locally — will sync when online."); });
+    // clear inputs and refresh
     if (nameEl) nameEl.value = "";
     if (qtyEl) qtyEl.value = "";
     if (unitEl) unitEl.value = "";
     if (priceEl) priceEl.value = "";
-
-    if (typeof renderStock === "function") renderStock();
-    if (typeof updateItemLists === "function") updateItemLists();
+    if (typeof renderStock === "function") try { renderStock(); } catch(e){ console.warn(e); }
+    if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){ console.warn(e); }
   };
 
-  // Replace renderStock to render from window.stockData and update Firebase on edits/deletes
+  // Override renderStock to render from window.stockData and keep same UI
   window.renderStock = function() {
     const tbody = document.getElementById('stockTableBody');
     const datalist = document.getElementById('item-list');
@@ -1487,32 +186,21 @@
     if (typeof updateItemLists === "function") updateItemLists();
   };
 
-  // small helper same as earlier in file
-  function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-  }
-
-  // If there is no Firebase data yet, ensure localDefault is pushed on first run:
-  // (the onValue listener above handles pushing local backup if remote is null)
-
-  // Ensure initial render using local data until Firebase provides snapshot
-  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
-  if (typeof renderStock === "function") renderStock();
-  if (typeof updateItemLists === "function") updateItemLists();
-
-  // Expose helper to force re-sync from local to firebase
+  // expose helper to push local to firebase manually
   window.pushLocalStockToFirebase = function() {
-    const local = JSON.parse(localStorage.getItem('stockData') || "[]");
-    window.stockData = local;
-    set(stocksRef, window.stockData).then(()=> {
-      alert('Local stock pushed to Firebase.');
-    }).catch(e => {
-      alert('Failed to push to Firebase: '+e.message);
-    });
+    try {
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      window.stockData = local;
+      set(stocksRef, window.stockData).then(()=> { alert('Local stock pushed to Firebase.'); }).catch(e=>{ alert('Push failed: '+e.message); });
+    } catch(e){ alert('Push failed: '+e.message); }
   };
+
+  // ensure initial render from local until firebase sends snapshot
+  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+  if (typeof renderStock === "function") try { renderStock(); } catch(e){}
+  if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){}
 </script>
-<!-- END FIREBASE STOCK-SYNC -->
+<!-- END FIREBASE -->
 
 </body>
   </html>
@@ -1901,96 +589,16 @@
       `;
 
       const script = `
-        <script>
-          function doPrint() {
-            window.print();
-          }
-          function closeWin() { window.close(); }
-          // notify opener after print completes (auto-clear action)
-          window.onafterprint = function() {
-            try { if(window.opener && !window.opener.closed) { window.opener.postMessage({ action: 'receiptPrinted' }, '*'); } } catch(e) {}
-          };
-        <\/script>
-      `;
-
-      w.document.open();
-      w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Receipt Preview</title>${styles}</head><body>
-        <div style="text-align:right;" class="no-print">
-          <button class="btn" onclick="doPrint()">Print</button>
-          <button class="btn" onclick="closeWin()">Close</button>
-        </div>
-        <div class="preview-wrap">${receiptHTML}</div>
-        ${script}
-      
-<!-- ✅ Firebase Realtime Database (Working for GitHub Pages) -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
-
-  const firebaseConfig = {
-    apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
-    authDomain: "msite-45cd2.firebaseapp.com",
-    databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
-    projectId: "msite-45cd2",
-    storageBucket: "msite-45cd2.firebasestorage.app",
-    messagingSenderId: "634058871629",
-    appId: "1:634058871629:web:e92190c30153f56cf41d04"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const stocksRef = ref(db, "stocks");
-
-  // 🔄 Listen for stock updates
-  onValue(stocksRef, (snapshot) => {
-    const data = snapshot.val();
-    console.log("📦 Firebase Stock Data:", data);
-  });
-
-  // 🧩 Example: Add or replace stock data
-  window.addStockFirebase = function(name, qty, unit, price) {
-    set(stocksRef, [
-      { name, qty, unit, price }
-    ]);
-  };
-</script>
+        
 <!-- ✅ End Firebase -->
 
 
-</body></html>`);
-      w.document.close();
 
-      // track that preview happened (to allow auto-clear after printed)
-      lastPreviewType = null; // will be set by caller
-    }
-
-    /* UI preview trigger functions */
-    function previewPOReceipt() {
-      const container = document.getElementById('receipt');
-      if (!container.innerHTML.trim()) return alert('No Purchase Order receipt available. Save or view a PO first.');
-      const sizeKey = document.getElementById('receipt-size-po').value || '58mm';
-      // mark last preview type for opener to clear only if it's cash
-      lastPreviewType = 'po';
-      lastPreviewPayload = { type: 'po' };
-      openReceiptPreviewWindow(container.innerHTML, sizeKey);
-    }
-
-    function previewCashoutReceipt() {
-      const container = document.getElementById('cashout-receipt');
-      if (!container.innerHTML.trim()) {
-        if (cashoutBuffer.length === 0) return alert('No cashout items available. Add items before printing.');
-        setUnifiedReceiptPreview('cash', { id: 'R' + Date.now(), items: JSON.parse(JSON.stringify(cashoutBuffer)), total: cashoutBuffer.reduce((s, i) => s + Number(i.total || 0), 0) });
-      }
-      const sizeKey = document.getElementById('receipt-size-cash').value || '58mm';
-      const html = document.getElementById('cashout-receipt').innerHTML;
-      const w = window.open('', '_blank');
-      w.document.write(`<html><head><title>Print</title></head><body>${html}
-<!-- FIREBASE STOCK-SYNC (overrides stock functions to use Realtime Database + localStorage fallback) -->
+<!-- FIREBASE: realtime stock sync (only for Stock Management). Prepared for GitHub Pages -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-database.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 
-  // --- Your Firebase config (provided) ---
   const firebaseConfig = {
     apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
     authDomain: "msite-45cd2.firebaseapp.com",
@@ -2001,90 +609,81 @@
     appId: "1:634058871629:web:e92190c30153f56cf41d04"
   };
 
+  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const stocksRef = ref(db, "stocks");
 
-  // Ensure stockData exists (will be kept in sync)
-  window.stockData = window.stockData || (JSON.parse(localStorage.getItem('stockData')) || []);
-
-  // Helper: save to localStorage (backup)
+  // local helper for backup
   function saveLocalStock() {
-    localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+    try { localStorage.setItem('stockData', JSON.stringify(window.stockData || [])); } catch(e) {}
   }
 
-  // Listen for remote changes and apply them locally
+  // Initialize window.stockData from localStorage as fallback
+  window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+
+  // Listen for remote updates and merge
   onValue(stocksRef, (snapshot) => {
-    const val = snapshot.val();
-    if (val === null) {
-      // No remote data yet; if we have local data, push it up
+    const remote = snapshot.val();
+    if (remote === null) {
+      // if remote empty but local has data, push local to remote
       const local = JSON.parse(localStorage.getItem('stockData') || "[]");
-      if (local.length) {
+      if (local && local.length) {
         window.stockData = local;
-        set(stocksRef, local).catch(e => console.warn("Failed to push local backup to Firebase:", e));
+        set(stocksRef, window.stockData).catch(()=>{});
       } else {
         window.stockData = [];
         saveLocalStock();
       }
     } else {
-      // When remote changes arrive, update local and re-render
-      window.stockData = val;
+      // remote present: use it
+      window.stockData = Array.isArray(remote) ? remote : (Object.values(remote) || []);
       saveLocalStock();
-      if (typeof renderStock === "function") {
-        try { renderStock(); } catch(e) { console.warn("renderStock failed:", e); }
-      }
-      if (typeof updateItemLists === "function") {
-        try { updateItemLists(); } catch(e) { console.warn("updateItemLists failed:", e); }
-      }
     }
+    // Re-render if functions exist
+    if (typeof renderStock === "function") try { renderStock(); } catch(e){ console.warn(e); }
+    if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){ console.warn(e); }
+    console.log("📦 Firebase stock synced", window.stockData);
   }, (err) => {
-    console.error("Firebase onValue error:", err);
+    console.warn("Firebase onValue error:", err);
   });
 
-  // Override/add stock functions to use Firebase (but still keep localStorage backup)
+  // Override addStock to update local and remote
   window.addStock = function() {
     const nameEl = document.getElementById("stock-name");
     const qtyEl = document.getElementById("stock-qty");
     const unitEl = document.getElementById("stock-unit");
     const priceEl = document.getElementById("stock-price");
-
     const name = (nameEl?.value || "").trim();
     const qty = parseFloat(qtyEl?.value || "0");
     const unit = (unitEl?.value || "").trim();
     const price = parseFloat(priceEl?.value || "0");
-
     if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
       return alert("Please enter valid name, quantity and price.");
     }
-
-    // merge if exists
-    const existing = (window.stockData || []).find(s => s.name.toLowerCase() === name.toLowerCase());
+    // merge
+    const existing = (window.stockData || []).find(s => s.name && s.name.toLowerCase() === name.toLowerCase());
     if (existing) {
       existing.qty = Number(existing.qty || 0) + qty;
       if (unit) existing.unit = unit;
       existing.price = price;
     } else {
-      (window.stockData = window.stockData || []).push({ name, qty, unit: unit || '', price });
+      window.stockData = window.stockData || [];
+      window.stockData.push({ name, qty, unit: unit || '', price });
     }
-
-    // save locally and push entire array to Firebase
     saveLocalStock();
-    set(stocksRef, window.stockData).catch(e => {
-      console.warn("Failed to save to Firebase, data saved locally instead:", e);
-      alert("Saved locally (offline). Will sync when online.");
-    });
-
-    // clear inputs and re-render
+    // write entire array to Firebase (simple and consistent)
+    set(stocksRef, window.stockData).catch((e)=>{ console.warn("Failed to save to Firebase:", e); alert("Saved locally — will sync when online."); });
+    // clear inputs and refresh
     if (nameEl) nameEl.value = "";
     if (qtyEl) qtyEl.value = "";
     if (unitEl) unitEl.value = "";
     if (priceEl) priceEl.value = "";
-
-    if (typeof renderStock === "function") renderStock();
-    if (typeof updateItemLists === "function") updateItemLists();
+    if (typeof renderStock === "function") try { renderStock(); } catch(e){ console.warn(e); }
+    if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){ console.warn(e); }
   };
 
-  // Replace renderStock to render from window.stockData and update Firebase on edits/deletes
+  // Override renderStock to render from window.stockData and keep same UI
   window.renderStock = function() {
     const tbody = document.getElementById('stockTableBody');
     const datalist = document.getElementById('item-list');
@@ -2169,32 +768,242 @@
     if (typeof updateItemLists === "function") updateItemLists();
   };
 
-  // small helper same as earlier in file
-  function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  // expose helper to push local to firebase manually
+  window.pushLocalStockToFirebase = function() {
+    try {
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      window.stockData = local;
+      set(stocksRef, window.stockData).then(()=> { alert('Local stock pushed to Firebase.'); }).catch(e=>{ alert('Push failed: '+e.message); });
+    } catch(e){ alert('Push failed: '+e.message); }
+  };
+
+  // ensure initial render from local until firebase sends snapshot
+  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+  if (typeof renderStock === "function") try { renderStock(); } catch(e){}
+  if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){}
+</script>
+<!-- END FIREBASE -->
+
+</body></html>`);
+      w.document.close();
+
+      // track that preview happened (to allow auto-clear after printed)
+      lastPreviewType = null; // will be set by caller
+    }
+
+    /* UI preview trigger functions */
+    function previewPOReceipt() {
+      const container = document.getElementById('receipt');
+      if (!container.innerHTML.trim()) return alert('No Purchase Order receipt available. Save or view a PO first.');
+      const sizeKey = document.getElementById('receipt-size-po').value || '58mm';
+      // mark last preview type for opener to clear only if it's cash
+      lastPreviewType = 'po';
+      lastPreviewPayload = { type: 'po' };
+      openReceiptPreviewWindow(container.innerHTML, sizeKey);
+    }
+
+    function previewCashoutReceipt() {
+      const container = document.getElementById('cashout-receipt');
+      if (!container.innerHTML.trim()) {
+        if (cashoutBuffer.length === 0) return alert('No cashout items available. Add items before printing.');
+        setUnifiedReceiptPreview('cash', { id: 'R' + Date.now(), items: JSON.parse(JSON.stringify(cashoutBuffer)), total: cashoutBuffer.reduce((s, i) => s + Number(i.total || 0), 0) });
+      }
+      const sizeKey = document.getElementById('receipt-size-cash').value || '58mm';
+      const html = document.getElementById('cashout-receipt').innerHTML;
+      const w = window.open('', '_blank');
+      w.document.write(`<html><head><title>Print</title></head><body>${html}
+
+
+
+<!-- FIREBASE: realtime stock sync (only for Stock Management). Prepared for GitHub Pages -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
+    authDomain: "msite-45cd2.firebaseapp.com",
+    databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
+    projectId: "msite-45cd2",
+    storageBucket: "msite-45cd2.firebasestorage.app",
+    messagingSenderId: "634058871629",
+    appId: "1:634058871629:web:e92190c30153f56cf41d04"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const stocksRef = ref(db, "stocks");
+
+  // local helper for backup
+  function saveLocalStock() {
+    try { localStorage.setItem('stockData', JSON.stringify(window.stockData || [])); } catch(e) {}
   }
 
-  // If there is no Firebase data yet, ensure localDefault is pushed on first run:
-  // (the onValue listener above handles pushing local backup if remote is null)
+  // Initialize window.stockData from localStorage as fallback
+  window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
 
-  // Ensure initial render using local data until Firebase provides snapshot
-  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
-  if (typeof renderStock === "function") renderStock();
-  if (typeof updateItemLists === "function") updateItemLists();
+  // Listen for remote updates and merge
+  onValue(stocksRef, (snapshot) => {
+    const remote = snapshot.val();
+    if (remote === null) {
+      // if remote empty but local has data, push local to remote
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      if (local && local.length) {
+        window.stockData = local;
+        set(stocksRef, window.stockData).catch(()=>{});
+      } else {
+        window.stockData = [];
+        saveLocalStock();
+      }
+    } else {
+      // remote present: use it
+      window.stockData = Array.isArray(remote) ? remote : (Object.values(remote) || []);
+      saveLocalStock();
+    }
+    // Re-render if functions exist
+    if (typeof renderStock === "function") try { renderStock(); } catch(e){ console.warn(e); }
+    if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){ console.warn(e); }
+    console.log("📦 Firebase stock synced", window.stockData);
+  }, (err) => {
+    console.warn("Firebase onValue error:", err);
+  });
 
-  // Expose helper to force re-sync from local to firebase
-  window.pushLocalStockToFirebase = function() {
-    const local = JSON.parse(localStorage.getItem('stockData') || "[]");
-    window.stockData = local;
-    set(stocksRef, window.stockData).then(()=> {
-      alert('Local stock pushed to Firebase.');
-    }).catch(e => {
-      alert('Failed to push to Firebase: '+e.message);
-    });
+  // Override addStock to update local and remote
+  window.addStock = function() {
+    const nameEl = document.getElementById("stock-name");
+    const qtyEl = document.getElementById("stock-qty");
+    const unitEl = document.getElementById("stock-unit");
+    const priceEl = document.getElementById("stock-price");
+    const name = (nameEl?.value || "").trim();
+    const qty = parseFloat(qtyEl?.value || "0");
+    const unit = (unitEl?.value || "").trim();
+    const price = parseFloat(priceEl?.value || "0");
+    if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
+      return alert("Please enter valid name, quantity and price.");
+    }
+    // merge
+    const existing = (window.stockData || []).find(s => s.name && s.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.qty = Number(existing.qty || 0) + qty;
+      if (unit) existing.unit = unit;
+      existing.price = price;
+    } else {
+      window.stockData = window.stockData || [];
+      window.stockData.push({ name, qty, unit: unit || '', price });
+    }
+    saveLocalStock();
+    // write entire array to Firebase (simple and consistent)
+    set(stocksRef, window.stockData).catch((e)=>{ console.warn("Failed to save to Firebase:", e); alert("Saved locally — will sync when online."); });
+    // clear inputs and refresh
+    if (nameEl) nameEl.value = "";
+    if (qtyEl) qtyEl.value = "";
+    if (unitEl) unitEl.value = "";
+    if (priceEl) priceEl.value = "";
+    if (typeof renderStock === "function") try { renderStock(); } catch(e){ console.warn(e); }
+    if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){ console.warn(e); }
   };
+
+  // Override renderStock to render from window.stockData and keep same UI
+  window.renderStock = function() {
+    const tbody = document.getElementById('stockTableBody');
+    const datalist = document.getElementById('item-list');
+    const poListData = document.getElementById('po-item-list');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (datalist) datalist.innerHTML = '';
+    if (poListData) poListData.innerHTML = '';
+
+    (window.stockData || []).forEach((item, idx) => {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = item.name;
+      tdName.contentEditable = true;
+      tdName.addEventListener('blur', () => {
+        const v = tdName.textContent.trim();
+        if (!v) { window.renderStock(); return; }
+        window.stockData[idx].name = v;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdName);
+
+      const tdQty = document.createElement('td');
+      tdQty.textContent = item.qty;
+      tdQty.contentEditable = true;
+      tdQty.addEventListener('blur', () => {
+        const n = parseFloat(tdQty.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].qty = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdQty);
+
+      const tdUnit = document.createElement('td');
+      tdUnit.textContent = item.unit || '';
+      tdUnit.contentEditable = true;
+      tdUnit.addEventListener('blur', () => {
+        window.stockData[idx].unit = tdUnit.textContent.trim();
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdUnit);
+
+      const tdPrice = document.createElement('td');
+      tdPrice.textContent = item.price;
+      tdPrice.contentEditable = true;
+      tdPrice.addEventListener('blur', () => {
+        const n = parseFloat(tdPrice.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].price = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdPrice);
+
+      const tdAction = document.createElement('td');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'action-btn delete-btn';
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => {
+        if (!confirm('Delete this item?')) return;
+        window.stockData.splice(idx, 1);
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof renderStock === "function") renderStock();
+        if (typeof updateItemLists === "function") updateItemLists();
+      };
+      tdAction.appendChild(delBtn);
+      tr.appendChild(tdAction);
+
+      tbody.appendChild(tr);
+
+      if (datalist) datalist.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+      if (poListData) poListData.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+    });
+
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // expose helper to push local to firebase manually
+  window.pushLocalStockToFirebase = function() {
+    try {
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      window.stockData = local;
+      set(stocksRef, window.stockData).then(()=> { alert('Local stock pushed to Firebase.'); }).catch(e=>{ alert('Push failed: '+e.message); });
+    } catch(e){ alert('Push failed: '+e.message); }
+  };
+
+  // ensure initial render from local until firebase sends snapshot
+  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+  if (typeof renderStock === "function") try { renderStock(); } catch(e){}
+  if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){}
 </script>
-<!-- END FIREBASE STOCK-SYNC -->
+<!-- END FIREBASE -->
 
 </body></html>`);
       w.document.close();
@@ -2330,12 +1139,14 @@
       const html = container.innerHTML;
       const w = window.open('', '_blank');
       w.document.write(`<html><head><title>Print</title></head><body>${html}
-<!-- FIREBASE STOCK-SYNC (overrides stock functions to use Realtime Database + localStorage fallback) -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-database.js";
 
-  // --- Your Firebase config (provided) ---
+
+
+<!-- FIREBASE: realtime stock sync (only for Stock Management). Prepared for GitHub Pages -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+
   const firebaseConfig = {
     apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
     authDomain: "msite-45cd2.firebaseapp.com",
@@ -2346,90 +1157,81 @@
     appId: "1:634058871629:web:e92190c30153f56cf41d04"
   };
 
+  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const stocksRef = ref(db, "stocks");
 
-  // Ensure stockData exists (will be kept in sync)
-  window.stockData = window.stockData || (JSON.parse(localStorage.getItem('stockData')) || []);
-
-  // Helper: save to localStorage (backup)
+  // local helper for backup
   function saveLocalStock() {
-    localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+    try { localStorage.setItem('stockData', JSON.stringify(window.stockData || [])); } catch(e) {}
   }
 
-  // Listen for remote changes and apply them locally
+  // Initialize window.stockData from localStorage as fallback
+  window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+
+  // Listen for remote updates and merge
   onValue(stocksRef, (snapshot) => {
-    const val = snapshot.val();
-    if (val === null) {
-      // No remote data yet; if we have local data, push it up
+    const remote = snapshot.val();
+    if (remote === null) {
+      // if remote empty but local has data, push local to remote
       const local = JSON.parse(localStorage.getItem('stockData') || "[]");
-      if (local.length) {
+      if (local && local.length) {
         window.stockData = local;
-        set(stocksRef, local).catch(e => console.warn("Failed to push local backup to Firebase:", e));
+        set(stocksRef, window.stockData).catch(()=>{});
       } else {
         window.stockData = [];
         saveLocalStock();
       }
     } else {
-      // When remote changes arrive, update local and re-render
-      window.stockData = val;
+      // remote present: use it
+      window.stockData = Array.isArray(remote) ? remote : (Object.values(remote) || []);
       saveLocalStock();
-      if (typeof renderStock === "function") {
-        try { renderStock(); } catch(e) { console.warn("renderStock failed:", e); }
-      }
-      if (typeof updateItemLists === "function") {
-        try { updateItemLists(); } catch(e) { console.warn("updateItemLists failed:", e); }
-      }
     }
+    // Re-render if functions exist
+    if (typeof renderStock === "function") try { renderStock(); } catch(e){ console.warn(e); }
+    if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){ console.warn(e); }
+    console.log("📦 Firebase stock synced", window.stockData);
   }, (err) => {
-    console.error("Firebase onValue error:", err);
+    console.warn("Firebase onValue error:", err);
   });
 
-  // Override/add stock functions to use Firebase (but still keep localStorage backup)
+  // Override addStock to update local and remote
   window.addStock = function() {
     const nameEl = document.getElementById("stock-name");
     const qtyEl = document.getElementById("stock-qty");
     const unitEl = document.getElementById("stock-unit");
     const priceEl = document.getElementById("stock-price");
-
     const name = (nameEl?.value || "").trim();
     const qty = parseFloat(qtyEl?.value || "0");
     const unit = (unitEl?.value || "").trim();
     const price = parseFloat(priceEl?.value || "0");
-
     if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
       return alert("Please enter valid name, quantity and price.");
     }
-
-    // merge if exists
-    const existing = (window.stockData || []).find(s => s.name.toLowerCase() === name.toLowerCase());
+    // merge
+    const existing = (window.stockData || []).find(s => s.name && s.name.toLowerCase() === name.toLowerCase());
     if (existing) {
       existing.qty = Number(existing.qty || 0) + qty;
       if (unit) existing.unit = unit;
       existing.price = price;
     } else {
-      (window.stockData = window.stockData || []).push({ name, qty, unit: unit || '', price });
+      window.stockData = window.stockData || [];
+      window.stockData.push({ name, qty, unit: unit || '', price });
     }
-
-    // save locally and push entire array to Firebase
     saveLocalStock();
-    set(stocksRef, window.stockData).catch(e => {
-      console.warn("Failed to save to Firebase, data saved locally instead:", e);
-      alert("Saved locally (offline). Will sync when online.");
-    });
-
-    // clear inputs and re-render
+    // write entire array to Firebase (simple and consistent)
+    set(stocksRef, window.stockData).catch((e)=>{ console.warn("Failed to save to Firebase:", e); alert("Saved locally — will sync when online."); });
+    // clear inputs and refresh
     if (nameEl) nameEl.value = "";
     if (qtyEl) qtyEl.value = "";
     if (unitEl) unitEl.value = "";
     if (priceEl) priceEl.value = "";
-
-    if (typeof renderStock === "function") renderStock();
-    if (typeof updateItemLists === "function") updateItemLists();
+    if (typeof renderStock === "function") try { renderStock(); } catch(e){ console.warn(e); }
+    if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){ console.warn(e); }
   };
 
-  // Replace renderStock to render from window.stockData and update Firebase on edits/deletes
+  // Override renderStock to render from window.stockData and keep same UI
   window.renderStock = function() {
     const tbody = document.getElementById('stockTableBody');
     const datalist = document.getElementById('item-list');
@@ -2514,32 +1316,21 @@
     if (typeof updateItemLists === "function") updateItemLists();
   };
 
-  // small helper same as earlier in file
-  function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-  }
-
-  // If there is no Firebase data yet, ensure localDefault is pushed on first run:
-  // (the onValue listener above handles pushing local backup if remote is null)
-
-  // Ensure initial render using local data until Firebase provides snapshot
-  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
-  if (typeof renderStock === "function") renderStock();
-  if (typeof updateItemLists === "function") updateItemLists();
-
-  // Expose helper to force re-sync from local to firebase
+  // expose helper to push local to firebase manually
   window.pushLocalStockToFirebase = function() {
-    const local = JSON.parse(localStorage.getItem('stockData') || "[]");
-    window.stockData = local;
-    set(stocksRef, window.stockData).then(()=> {
-      alert('Local stock pushed to Firebase.');
-    }).catch(e => {
-      alert('Failed to push to Firebase: '+e.message);
-    });
+    try {
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      window.stockData = local;
+      set(stocksRef, window.stockData).then(()=> { alert('Local stock pushed to Firebase.'); }).catch(e=>{ alert('Push failed: '+e.message); });
+    } catch(e){ alert('Push failed: '+e.message); }
   };
+
+  // ensure initial render from local until firebase sends snapshot
+  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+  if (typeof renderStock === "function") try { renderStock(); } catch(e){}
+  if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){}
 </script>
-<!-- END FIREBASE STOCK-SYNC -->
+<!-- END FIREBASE -->
 
 </body></html>`);
       w.document.close();
@@ -2678,12 +1469,14 @@
           Printed on: ${new Date().toLocaleString()}
         </div>
       
-<!-- FIREBASE STOCK-SYNC (overrides stock functions to use Realtime Database + localStorage fallback) -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-database.js";
 
-  // --- Your Firebase config (provided) ---
+
+
+<!-- FIREBASE: realtime stock sync (only for Stock Management). Prepared for GitHub Pages -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+
   const firebaseConfig = {
     apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
     authDomain: "msite-45cd2.firebaseapp.com",
@@ -2694,90 +1487,81 @@
     appId: "1:634058871629:web:e92190c30153f56cf41d04"
   };
 
+  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const stocksRef = ref(db, "stocks");
 
-  // Ensure stockData exists (will be kept in sync)
-  window.stockData = window.stockData || (JSON.parse(localStorage.getItem('stockData')) || []);
-
-  // Helper: save to localStorage (backup)
+  // local helper for backup
   function saveLocalStock() {
-    localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+    try { localStorage.setItem('stockData', JSON.stringify(window.stockData || [])); } catch(e) {}
   }
 
-  // Listen for remote changes and apply them locally
+  // Initialize window.stockData from localStorage as fallback
+  window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+
+  // Listen for remote updates and merge
   onValue(stocksRef, (snapshot) => {
-    const val = snapshot.val();
-    if (val === null) {
-      // No remote data yet; if we have local data, push it up
+    const remote = snapshot.val();
+    if (remote === null) {
+      // if remote empty but local has data, push local to remote
       const local = JSON.parse(localStorage.getItem('stockData') || "[]");
-      if (local.length) {
+      if (local && local.length) {
         window.stockData = local;
-        set(stocksRef, local).catch(e => console.warn("Failed to push local backup to Firebase:", e));
+        set(stocksRef, window.stockData).catch(()=>{});
       } else {
         window.stockData = [];
         saveLocalStock();
       }
     } else {
-      // When remote changes arrive, update local and re-render
-      window.stockData = val;
+      // remote present: use it
+      window.stockData = Array.isArray(remote) ? remote : (Object.values(remote) || []);
       saveLocalStock();
-      if (typeof renderStock === "function") {
-        try { renderStock(); } catch(e) { console.warn("renderStock failed:", e); }
-      }
-      if (typeof updateItemLists === "function") {
-        try { updateItemLists(); } catch(e) { console.warn("updateItemLists failed:", e); }
-      }
     }
+    // Re-render if functions exist
+    if (typeof renderStock === "function") try { renderStock(); } catch(e){ console.warn(e); }
+    if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){ console.warn(e); }
+    console.log("📦 Firebase stock synced", window.stockData);
   }, (err) => {
-    console.error("Firebase onValue error:", err);
+    console.warn("Firebase onValue error:", err);
   });
 
-  // Override/add stock functions to use Firebase (but still keep localStorage backup)
+  // Override addStock to update local and remote
   window.addStock = function() {
     const nameEl = document.getElementById("stock-name");
     const qtyEl = document.getElementById("stock-qty");
     const unitEl = document.getElementById("stock-unit");
     const priceEl = document.getElementById("stock-price");
-
     const name = (nameEl?.value || "").trim();
     const qty = parseFloat(qtyEl?.value || "0");
     const unit = (unitEl?.value || "").trim();
     const price = parseFloat(priceEl?.value || "0");
-
     if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
       return alert("Please enter valid name, quantity and price.");
     }
-
-    // merge if exists
-    const existing = (window.stockData || []).find(s => s.name.toLowerCase() === name.toLowerCase());
+    // merge
+    const existing = (window.stockData || []).find(s => s.name && s.name.toLowerCase() === name.toLowerCase());
     if (existing) {
       existing.qty = Number(existing.qty || 0) + qty;
       if (unit) existing.unit = unit;
       existing.price = price;
     } else {
-      (window.stockData = window.stockData || []).push({ name, qty, unit: unit || '', price });
+      window.stockData = window.stockData || [];
+      window.stockData.push({ name, qty, unit: unit || '', price });
     }
-
-    // save locally and push entire array to Firebase
     saveLocalStock();
-    set(stocksRef, window.stockData).catch(e => {
-      console.warn("Failed to save to Firebase, data saved locally instead:", e);
-      alert("Saved locally (offline). Will sync when online.");
-    });
-
-    // clear inputs and re-render
+    // write entire array to Firebase (simple and consistent)
+    set(stocksRef, window.stockData).catch((e)=>{ console.warn("Failed to save to Firebase:", e); alert("Saved locally — will sync when online."); });
+    // clear inputs and refresh
     if (nameEl) nameEl.value = "";
     if (qtyEl) qtyEl.value = "";
     if (unitEl) unitEl.value = "";
     if (priceEl) priceEl.value = "";
-
-    if (typeof renderStock === "function") renderStock();
-    if (typeof updateItemLists === "function") updateItemLists();
+    if (typeof renderStock === "function") try { renderStock(); } catch(e){ console.warn(e); }
+    if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){ console.warn(e); }
   };
 
-  // Replace renderStock to render from window.stockData and update Firebase on edits/deletes
+  // Override renderStock to render from window.stockData and keep same UI
   window.renderStock = function() {
     const tbody = document.getElementById('stockTableBody');
     const datalist = document.getElementById('item-list');
@@ -2862,32 +1646,21 @@
     if (typeof updateItemLists === "function") updateItemLists();
   };
 
-  // small helper same as earlier in file
-  function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-  }
-
-  // If there is no Firebase data yet, ensure localDefault is pushed on first run:
-  // (the onValue listener above handles pushing local backup if remote is null)
-
-  // Ensure initial render using local data until Firebase provides snapshot
-  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
-  if (typeof renderStock === "function") renderStock();
-  if (typeof updateItemLists === "function") updateItemLists();
-
-  // Expose helper to force re-sync from local to firebase
+  // expose helper to push local to firebase manually
   window.pushLocalStockToFirebase = function() {
-    const local = JSON.parse(localStorage.getItem('stockData') || "[]");
-    window.stockData = local;
-    set(stocksRef, window.stockData).then(()=> {
-      alert('Local stock pushed to Firebase.');
-    }).catch(e => {
-      alert('Failed to push to Firebase: '+e.message);
-    });
+    try {
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      window.stockData = local;
+      set(stocksRef, window.stockData).then(()=> { alert('Local stock pushed to Firebase.'); }).catch(e=>{ alert('Push failed: '+e.message); });
+    } catch(e){ alert('Push failed: '+e.message); }
   };
+
+  // ensure initial render from local until firebase sends snapshot
+  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+  if (typeof renderStock === "function") try { renderStock(); } catch(e){}
+  if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){}
 </script>
-<!-- END FIREBASE STOCK-SYNC -->
+<!-- END FIREBASE -->
 
 </body>
     </html>
@@ -2910,111 +1683,19 @@
   </script>
 
 <!-- Firebase Core SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js"></script>
-
-<!-- Firebase Firestore SDK -->
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js"></script>
-
-<script>
-  // Your Firebase configuration (from your Firebase console)
- const firebaseConfig = {
-  apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
-  authDomain: "msite-45cd2.firebaseapp.com",
-  projectId: "msite-45cd2",
-storageBucket: "msite-45cd2.appspot.com",
-  messagingSenderId: "634058871629",
-  appId: "1:634058871629:web:e92190c30153f56cf41d04"
-};
-
-
-  // Initialize Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-	<script>
-  // 🔄 Migrate old local data (if any) into Firebase once
-  async function migrateLocalData() {
-    // Try to get localStorage data (adjust key name if different)
-    const oldData = JSON.parse(localStorage.getItem("stocks")) || [];
-
-    if (oldData.length === 0) {
-      console.log("No old local data found — skipping migration.");
-      return;
-    }
-
-    console.log(`Found ${oldData.length} local items — uploading to Firebase...`);
-
-    for (const item of oldData) {
-      try {
-        await db.collection("stocks").add({
-          name: item.name || item.itemName || "Unnamed",
-          qty: item.qty || item.quantity || 0,
-          timestamp: new Date()
-        });
-        console.log(`Uploaded: ${item.name}`);
-      } catch (error) {
-        console.error("Error uploading item:", error);
-      }
-    }
-
-    // Optionally clear localStorage after migration
-    localStorage.removeItem("stocks");
-    alert("✅ Old data migrated to Firebase successfully!");
-  }
-
-  // Run migration once when page loads
-  migrateLocalData();
-</script>
-
-	<script>
-    async function addStock() {
-      const itemName = document.getElementById("itemName").value.trim();
-      const itemQty = parseInt(document.getElementById("itemQty").value);
-
-      if (!itemName || isNaN(itemQty)) {
-        alert("Please enter both item name and quantity!");
-        return;
-      }
-
-      try {
-        await db.collection("stocks").add({
-          name: itemName,
-          qty: itemQty,
-          timestamp: new Date()
-        });
-        alert(" Stock added successfully!");
-        document.getElementById("itemName").value = "";
-        document.getElementById("itemQty").value = "";
-      } catch (error) {
-        console.error("Error adding stock:", error);
-        alert(" Failed to add stock. Check console for details.");
-      }
-    }
-
-    // Show stock list live
-    db.collection("stocks").orderBy("timestamp", "desc")
-      .onSnapshot(snapshot => {
-        const stockList = document.getElementById("stock-list");
-        stockList.innerHTML = "";
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          stockList.innerHTML += `
-            <tr>
-              <td>${data.name}</td>
-              <td>${data.qty}</td>
-            </tr>
-          `;
-        });
-      });
-</script>
 
 
 
-<!-- FIREBASE STOCK-SYNC (overrides stock functions to use Realtime Database + localStorage fallback) -->
+
+	
+<!-- END FIREBASE STOCK-SYNC -->
+
+
+<!-- FIREBASE: realtime stock sync (only for Stock Management). Prepared for GitHub Pages -->
 <script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-database.js";
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
 
-  // --- Your Firebase config (provided) ---
   const firebaseConfig = {
     apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
     authDomain: "msite-45cd2.firebaseapp.com",
@@ -3025,90 +1706,81 @@ storageBucket: "msite-45cd2.appspot.com",
     appId: "1:634058871629:web:e92190c30153f56cf41d04"
   };
 
+  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
   const stocksRef = ref(db, "stocks");
 
-  // Ensure stockData exists (will be kept in sync)
-  window.stockData = window.stockData || (JSON.parse(localStorage.getItem('stockData')) || []);
-
-  // Helper: save to localStorage (backup)
+  // local helper for backup
   function saveLocalStock() {
-    localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+    try { localStorage.setItem('stockData', JSON.stringify(window.stockData || [])); } catch(e) {}
   }
 
-  // Listen for remote changes and apply them locally
+  // Initialize window.stockData from localStorage as fallback
+  window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+
+  // Listen for remote updates and merge
   onValue(stocksRef, (snapshot) => {
-    const val = snapshot.val();
-    if (val === null) {
-      // No remote data yet; if we have local data, push it up
+    const remote = snapshot.val();
+    if (remote === null) {
+      // if remote empty but local has data, push local to remote
       const local = JSON.parse(localStorage.getItem('stockData') || "[]");
-      if (local.length) {
+      if (local && local.length) {
         window.stockData = local;
-        set(stocksRef, local).catch(e => console.warn("Failed to push local backup to Firebase:", e));
+        set(stocksRef, window.stockData).catch(()=>{});
       } else {
         window.stockData = [];
         saveLocalStock();
       }
     } else {
-      // When remote changes arrive, update local and re-render
-      window.stockData = val;
+      // remote present: use it
+      window.stockData = Array.isArray(remote) ? remote : (Object.values(remote) || []);
       saveLocalStock();
-      if (typeof renderStock === "function") {
-        try { renderStock(); } catch(e) { console.warn("renderStock failed:", e); }
-      }
-      if (typeof updateItemLists === "function") {
-        try { updateItemLists(); } catch(e) { console.warn("updateItemLists failed:", e); }
-      }
     }
+    // Re-render if functions exist
+    if (typeof renderStock === "function") try { renderStock(); } catch(e){ console.warn(e); }
+    if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){ console.warn(e); }
+    console.log("📦 Firebase stock synced", window.stockData);
   }, (err) => {
-    console.error("Firebase onValue error:", err);
+    console.warn("Firebase onValue error:", err);
   });
 
-  // Override/add stock functions to use Firebase (but still keep localStorage backup)
+  // Override addStock to update local and remote
   window.addStock = function() {
     const nameEl = document.getElementById("stock-name");
     const qtyEl = document.getElementById("stock-qty");
     const unitEl = document.getElementById("stock-unit");
     const priceEl = document.getElementById("stock-price");
-
     const name = (nameEl?.value || "").trim();
     const qty = parseFloat(qtyEl?.value || "0");
     const unit = (unitEl?.value || "").trim();
     const price = parseFloat(priceEl?.value || "0");
-
     if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
       return alert("Please enter valid name, quantity and price.");
     }
-
-    // merge if exists
-    const existing = (window.stockData || []).find(s => s.name.toLowerCase() === name.toLowerCase());
+    // merge
+    const existing = (window.stockData || []).find(s => s.name && s.name.toLowerCase() === name.toLowerCase());
     if (existing) {
       existing.qty = Number(existing.qty || 0) + qty;
       if (unit) existing.unit = unit;
       existing.price = price;
     } else {
-      (window.stockData = window.stockData || []).push({ name, qty, unit: unit || '', price });
+      window.stockData = window.stockData || [];
+      window.stockData.push({ name, qty, unit: unit || '', price });
     }
-
-    // save locally and push entire array to Firebase
     saveLocalStock();
-    set(stocksRef, window.stockData).catch(e => {
-      console.warn("Failed to save to Firebase, data saved locally instead:", e);
-      alert("Saved locally (offline). Will sync when online.");
-    });
-
-    // clear inputs and re-render
+    // write entire array to Firebase (simple and consistent)
+    set(stocksRef, window.stockData).catch((e)=>{ console.warn("Failed to save to Firebase:", e); alert("Saved locally — will sync when online."); });
+    // clear inputs and refresh
     if (nameEl) nameEl.value = "";
     if (qtyEl) qtyEl.value = "";
     if (unitEl) unitEl.value = "";
     if (priceEl) priceEl.value = "";
-
-    if (typeof renderStock === "function") renderStock();
-    if (typeof updateItemLists === "function") updateItemLists();
+    if (typeof renderStock === "function") try { renderStock(); } catch(e){ console.warn(e); }
+    if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){ console.warn(e); }
   };
 
-  // Replace renderStock to render from window.stockData and update Firebase on edits/deletes
+  // Override renderStock to render from window.stockData and keep same UI
   window.renderStock = function() {
     const tbody = document.getElementById('stockTableBody');
     const datalist = document.getElementById('item-list');
@@ -3193,32 +1865,21 @@ storageBucket: "msite-45cd2.appspot.com",
     if (typeof updateItemLists === "function") updateItemLists();
   };
 
-  // small helper same as earlier in file
-  function escapeHtml(str) {
-    if (str === null || str === undefined) return '';
-    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-  }
-
-  // If there is no Firebase data yet, ensure localDefault is pushed on first run:
-  // (the onValue listener above handles pushing local backup if remote is null)
-
-  // Ensure initial render using local data until Firebase provides snapshot
-  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
-  if (typeof renderStock === "function") renderStock();
-  if (typeof updateItemLists === "function") updateItemLists();
-
-  // Expose helper to force re-sync from local to firebase
+  // expose helper to push local to firebase manually
   window.pushLocalStockToFirebase = function() {
-    const local = JSON.parse(localStorage.getItem('stockData') || "[]");
-    window.stockData = local;
-    set(stocksRef, window.stockData).then(()=> {
-      alert('Local stock pushed to Firebase.');
-    }).catch(e => {
-      alert('Failed to push to Firebase: '+e.message);
-    });
+    try {
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      window.stockData = local;
+      set(stocksRef, window.stockData).then(()=> { alert('Local stock pushed to Firebase.'); }).catch(e=>{ alert('Push failed: '+e.message); });
+    } catch(e){ alert('Push failed: '+e.message); }
   };
+
+  // ensure initial render from local until firebase sends snapshot
+  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+  if (typeof renderStock === "function") try { renderStock(); } catch(e){}
+  if (typeof updateItemLists === "function") try { updateItemLists(); } catch(e){}
 </script>
-<!-- END FIREBASE STOCK-SYNC -->
+<!-- END FIREBASE -->
 
 </body>
 
