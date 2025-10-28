@@ -689,45 +689,62 @@
   const db = getDatabase(app);
   const stocksRef = ref(db, "stocks");
 
-  // local backup
+  // Load local backup
   const saveLocal = () => localStorage.setItem("stockData", JSON.stringify(window.stockData || []));
   window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
 
-  // live sync from Firebase
-  onValue(stocksRef, snap => {
-    const remote = snap.val();
-    window.stockData = Array.isArray(remote) ? remote : (remote ? Object.values(remote) : []);
-    saveLocal();
-    if (typeof renderStock === "function") renderStock();
-    if (typeof updateItemLists === "function") updateItemLists();
-    console.log("📦 Firebase stock synced", window.stockData);
+  // 🔄 Listen for Firebase updates in real-time
+  onValue(stocksRef, (snap) => {
+    const data = snap.val();
+    if (data) {
+      window.stockData = Array.isArray(data) ? data : Object.values(data);
+      saveLocal();
+      if (typeof renderStock === "function") renderStock();
+      if (typeof updateItemLists === "function") updateItemLists();
+      console.log("✅ Synced from Firebase");
+    }
   });
 
-  // override addStock
+  // ✅ Safe unified save function (always updates Firebase)
+  function saveToFirebase() {
+    if (!window.stockData) return;
+    set(stocksRef, window.stockData)
+      .then(() => console.log("✅ Saved to Firebase"))
+      .catch((err) => console.error("❌ Firebase Save Failed", err));
+    saveLocal();
+  }
+
+  // ✅ Add new item
   window.addStock = function() {
     const name = document.getElementById("stock-name").value.trim();
-    const qty = parseFloat(document.getElementById("stock-qty").value || "0");
+    const qty = parseFloat(document.getElementById("stock-qty").value);
     const unit = document.getElementById("stock-unit").value.trim();
-    const price = parseFloat(document.getElementById("stock-price").value || "0");
-    if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) return alert("Enter valid name, quantity, and price.");
+    const price = parseFloat(document.getElementById("stock-price").value);
 
-    const existing = (window.stockData || []).find(s => s.name.toLowerCase() === name.toLowerCase());
-    if (existing) { existing.qty += qty; existing.unit = unit; existing.price = price; }
-    else (window.stockData ||= []).push({ name, qty, unit, price });
+    if (!name || isNaN(qty) || qty <= 0 || isNaN(price))
+      return alert("Enter valid name, quantity, and price.");
 
-    saveLocal();
-    set(stocksRef, window.stockData).catch(() => alert("Saved locally — will sync when online."));
+    const existing = window.stockData.find(s => s.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.qty += qty;
+      existing.unit = unit;
+      existing.price = price;
+    } else {
+      window.stockData.push({ name, qty, unit, price });
+    }
+
+    saveToFirebase();
     ["stock-name","stock-qty","stock-unit","stock-price"].forEach(id => document.getElementById(id).value = "");
     if (typeof renderStock === "function") renderStock();
     if (typeof updateItemLists === "function") updateItemLists();
   };
 
-  // override renderStock so edits/deletes sync
+  // ✅ Render + handle edits & deletes
   window.renderStock = function() {
     const tbody = document.getElementById("stockTableBody");
     if (!tbody) return;
     tbody.innerHTML = "";
-    (window.stockData || []).forEach((item, i) => {
+    window.stockData.forEach((item, i) => {
       const tr = document.createElement("tr");
       ["name","qty","unit","price"].forEach(k => {
         const td = document.createElement("td");
@@ -735,20 +752,27 @@
         td.contentEditable = true;
         td.onblur = () => {
           item[k] = (k === "qty" || k === "price") ? parseFloat(td.textContent)||0 : td.textContent.trim();
-          saveLocal(); set(stocksRef, window.stockData);
+          saveToFirebase();
         };
         tr.appendChild(td);
       });
       const tdAct = document.createElement("td");
       const del = document.createElement("button");
-      del.textContent = "Delete"; del.className = "action-btn delete-btn";
-      del.onclick = () => { window.stockData.splice(i,1); saveLocal(); set(stocksRef, window.stockData); renderStock(); };
-      tdAct.appendChild(del); tr.appendChild(tdAct);
+      del.textContent = "Delete";
+      del.className = "action-btn delete-btn";
+      del.onclick = () => {
+        window.stockData.splice(i, 1);
+        saveToFirebase();
+        renderStock();
+      };
+      tdAct.appendChild(del);
+      tr.appendChild(tdAct);
       tbody.appendChild(tr);
     });
   };
 </script>
 <!-- ✅ END Firebase block -->
+
 
 </body>
 
