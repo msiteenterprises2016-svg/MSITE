@@ -346,13 +346,21 @@ td.onblur = () => {
       window.print();
     }
 
-    function saveToFirebase() {
-      if (!window.stockData) return;
-      stocksRef.set(window.stockData)
-        .then(() => console.log("✅ Saved to Firebase"))
-        .catch((err) => console.error("❌ Firebase Save Failed", err));
-      saveLocal();
-    }
+ function saveToFirebase() {
+  if (!window.stockData) return;
+
+  const updates = {};
+  window.stockData.forEach((item, index) => {
+    updates[index] = item;
+  });
+
+  stocksRef.update(updates)
+    .then(() => console.log("✅ Updated Firebase"))
+    .catch((err) => console.error("❌ Firebase Update Failed", err));
+
+  saveLocal();
+}
+
 
     function addStock() {
       const name = document.getElementById("stock-name").value.trim();
