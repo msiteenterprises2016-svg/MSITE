@@ -279,7 +279,7 @@ tr:hover {
 
     window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
 
-    function renderStock() {
+  function renderStock() {
   const tbody = document.getElementById("stockTableBody");
   const searchVal = document.getElementById("search").value.toLowerCase();
   tbody.innerHTML = "";
@@ -301,18 +301,21 @@ tr:hover {
         td.textContent = item[key];
         td.setAttribute("data-label", label);
         td.contentEditable = true;
-        td.oninput = () => {
-  const val = (key === "qty" || key === "price")
-    ? parseFloat(td.textContent) || 0
-    : td.textContent.trim();
-  window.stockData[i][key] = val;
-  saveLocal(); // quick local save only
-};
-td.onblur = () => {
-  saveToFirebase(); // full sync to Firebase after editing
-};
 
-      
+        td.oninput = () => {
+          const val = (key === "qty" || key === "price")
+            ? parseFloat(td.textContent) || 0
+            : td.textContent.trim();
+          window.stockData[i][key] = val;
+          saveLocal(); // quick local save
+        };
+
+        td.onblur = () => {
+          saveToFirebase(); // sync when editing done
+        };
+
+        tr.appendChild(td);
+      });
 
       const tdAct = document.createElement("td");
       tdAct.setAttribute("data-label", "Action");
@@ -330,6 +333,7 @@ td.onblur = () => {
       tbody.appendChild(tr);
     });
 }
+
 
     function sortStock(type) {
       window.stockData.sort((a, b) => {
