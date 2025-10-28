@@ -128,51 +128,7 @@
 
 
 
-    function addStock() {
-      const name = document.getElementById("stock-name").value.trim();
-      const qty = parseFloat(document.getElementById("stock-qty").value);
-      const unit = document.getElementById("stock-unit").value.trim();
-      const price = parseFloat(document.getElementById("stock-price").value);
-
-      if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
-        return alert("Please enter valid name, quantity and price.");
-      }
-
-      const existing = stockData.find(s => s.name.toLowerCase() === name.toLowerCase());
-      if (existing) {
-        existing.qty += qty;
-        if (unit) existing.unit = unit;
-        existing.price = price;
-      } else {
-        stockData.push({ name, qty, unit: unit || '', price });
-      }
-      saveData();
-      renderStock();
-      updateItemLists();
-      document.getElementById("stock-name").value = "";
-      document.getElementById("stock-qty").value = "";
-      document.getElementById("stock-unit").value = "";
-      document.getElementById("stock-price").value = "";
-    }
-
-    function updateItemLists() {
-      const selects = document.querySelectorAll('.item-select');
-      selects.forEach(sel => {
-        const cur = sel.value;
-        sel.innerHTML = '';
-        const placeholder = document.createElement('option');
-        placeholder.value = '';
-        placeholder.text = '';
-        sel.appendChild(placeholder);
-        stockData.forEach(item => {
-          const opt = document.createElement('option');
-          opt.value = item.name;
-          opt.text = `${item.name} (${item.unit || ''})`;
-          sel.appendChild(opt);
-        });
-        sel.value = cur;
-      });
-    }
+    
 
     /* ===========================
        PURCHASE ORDER (currentPO)
