@@ -601,7 +601,7 @@
         /* Search Bar */
         .buy-search {
           margin-bottom: 12px;
-          text-align: left;
+          text-align: right;
         }
 
         .buy-search input {
@@ -1302,7 +1302,219 @@
         Grand Total: ${grandTotal.toFixed(2)}
       </div>
       <hr style="border:none;border-top:1px dashed #333;margin:8px 0;">
-    </body>
+    
+<!-- FIREBASE STOCK-SYNC (overrides stock functions to use Realtime Database + localStorage fallback) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-database.js";
+
+  // --- Your Firebase config (provided) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
+    authDomain: "msite-45cd2.firebaseapp.com",
+    databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
+    projectId: "msite-45cd2",
+    storageBucket: "msite-45cd2.firebasestorage.app",
+    messagingSenderId: "634058871629",
+    appId: "1:634058871629:web:e92190c30153f56cf41d04"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const stocksRef = ref(db, "stocks");
+
+  // Ensure stockData exists (will be kept in sync)
+  window.stockData = window.stockData || (JSON.parse(localStorage.getItem('stockData')) || []);
+
+  // Helper: save to localStorage (backup)
+  function saveLocalStock() {
+    localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+  }
+
+  // Listen for remote changes and apply them locally
+  onValue(stocksRef, (snapshot) => {
+    const val = snapshot.val();
+    if (val === null) {
+      // No remote data yet; if we have local data, push it up
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      if (local.length) {
+        window.stockData = local;
+        set(stocksRef, local).catch(e => console.warn("Failed to push local backup to Firebase:", e));
+      } else {
+        window.stockData = [];
+        saveLocalStock();
+      }
+    } else {
+      // When remote changes arrive, update local and re-render
+      window.stockData = val;
+      saveLocalStock();
+      if (typeof renderStock === "function") {
+        try { renderStock(); } catch(e) { console.warn("renderStock failed:", e); }
+      }
+      if (typeof updateItemLists === "function") {
+        try { updateItemLists(); } catch(e) { console.warn("updateItemLists failed:", e); }
+      }
+    }
+  }, (err) => {
+    console.error("Firebase onValue error:", err);
+  });
+
+  // Override/add stock functions to use Firebase (but still keep localStorage backup)
+  window.addStock = function() {
+    const nameEl = document.getElementById("stock-name");
+    const qtyEl = document.getElementById("stock-qty");
+    const unitEl = document.getElementById("stock-unit");
+    const priceEl = document.getElementById("stock-price");
+
+    const name = (nameEl?.value || "").trim();
+    const qty = parseFloat(qtyEl?.value || "0");
+    const unit = (unitEl?.value || "").trim();
+    const price = parseFloat(priceEl?.value || "0");
+
+    if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
+      return alert("Please enter valid name, quantity and price.");
+    }
+
+    // merge if exists
+    const existing = (window.stockData || []).find(s => s.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.qty = Number(existing.qty || 0) + qty;
+      if (unit) existing.unit = unit;
+      existing.price = price;
+    } else {
+      (window.stockData = window.stockData || []).push({ name, qty, unit: unit || '', price });
+    }
+
+    // save locally and push entire array to Firebase
+    saveLocalStock();
+    set(stocksRef, window.stockData).catch(e => {
+      console.warn("Failed to save to Firebase, data saved locally instead:", e);
+      alert("Saved locally (offline). Will sync when online.");
+    });
+
+    // clear inputs and re-render
+    if (nameEl) nameEl.value = "";
+    if (qtyEl) qtyEl.value = "";
+    if (unitEl) unitEl.value = "";
+    if (priceEl) priceEl.value = "";
+
+    if (typeof renderStock === "function") renderStock();
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // Replace renderStock to render from window.stockData and update Firebase on edits/deletes
+  window.renderStock = function() {
+    const tbody = document.getElementById('stockTableBody');
+    const datalist = document.getElementById('item-list');
+    const poListData = document.getElementById('po-item-list');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (datalist) datalist.innerHTML = '';
+    if (poListData) poListData.innerHTML = '';
+
+    (window.stockData || []).forEach((item, idx) => {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = item.name;
+      tdName.contentEditable = true;
+      tdName.addEventListener('blur', () => {
+        const v = tdName.textContent.trim();
+        if (!v) { window.renderStock(); return; }
+        window.stockData[idx].name = v;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdName);
+
+      const tdQty = document.createElement('td');
+      tdQty.textContent = item.qty;
+      tdQty.contentEditable = true;
+      tdQty.addEventListener('blur', () => {
+        const n = parseFloat(tdQty.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].qty = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdQty);
+
+      const tdUnit = document.createElement('td');
+      tdUnit.textContent = item.unit || '';
+      tdUnit.contentEditable = true;
+      tdUnit.addEventListener('blur', () => {
+        window.stockData[idx].unit = tdUnit.textContent.trim();
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdUnit);
+
+      const tdPrice = document.createElement('td');
+      tdPrice.textContent = item.price;
+      tdPrice.contentEditable = true;
+      tdPrice.addEventListener('blur', () => {
+        const n = parseFloat(tdPrice.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].price = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdPrice);
+
+      const tdAction = document.createElement('td');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'action-btn delete-btn';
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => {
+        if (!confirm('Delete this item?')) return;
+        window.stockData.splice(idx, 1);
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof renderStock === "function") renderStock();
+        if (typeof updateItemLists === "function") updateItemLists();
+      };
+      tdAction.appendChild(delBtn);
+      tr.appendChild(tdAction);
+
+      tbody.appendChild(tr);
+
+      if (datalist) datalist.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+      if (poListData) poListData.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+    });
+
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // small helper same as earlier in file
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  // If there is no Firebase data yet, ensure localDefault is pushed on first run:
+  // (the onValue listener above handles pushing local backup if remote is null)
+
+  // Ensure initial render using local data until Firebase provides snapshot
+  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+  if (typeof renderStock === "function") renderStock();
+  if (typeof updateItemLists === "function") updateItemLists();
+
+  // Expose helper to force re-sync from local to firebase
+  window.pushLocalStockToFirebase = function() {
+    const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+    window.stockData = local;
+    set(stocksRef, window.stockData).then(()=> {
+      alert('Local stock pushed to Firebase.');
+    }).catch(e => {
+      alert('Failed to push to Firebase: '+e.message);
+    });
+  };
+</script>
+<!-- END FIREBASE STOCK-SYNC -->
+
+</body>
   </html>
 `);
       w.document.close();
@@ -1709,7 +1921,219 @@
         </div>
         <div class="preview-wrap">${receiptHTML}</div>
         ${script}
-      </body></html>`);
+      
+<!-- FIREBASE STOCK-SYNC (overrides stock functions to use Realtime Database + localStorage fallback) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-database.js";
+
+  // --- Your Firebase config (provided) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
+    authDomain: "msite-45cd2.firebaseapp.com",
+    databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
+    projectId: "msite-45cd2",
+    storageBucket: "msite-45cd2.firebasestorage.app",
+    messagingSenderId: "634058871629",
+    appId: "1:634058871629:web:e92190c30153f56cf41d04"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const stocksRef = ref(db, "stocks");
+
+  // Ensure stockData exists (will be kept in sync)
+  window.stockData = window.stockData || (JSON.parse(localStorage.getItem('stockData')) || []);
+
+  // Helper: save to localStorage (backup)
+  function saveLocalStock() {
+    localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+  }
+
+  // Listen for remote changes and apply them locally
+  onValue(stocksRef, (snapshot) => {
+    const val = snapshot.val();
+    if (val === null) {
+      // No remote data yet; if we have local data, push it up
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      if (local.length) {
+        window.stockData = local;
+        set(stocksRef, local).catch(e => console.warn("Failed to push local backup to Firebase:", e));
+      } else {
+        window.stockData = [];
+        saveLocalStock();
+      }
+    } else {
+      // When remote changes arrive, update local and re-render
+      window.stockData = val;
+      saveLocalStock();
+      if (typeof renderStock === "function") {
+        try { renderStock(); } catch(e) { console.warn("renderStock failed:", e); }
+      }
+      if (typeof updateItemLists === "function") {
+        try { updateItemLists(); } catch(e) { console.warn("updateItemLists failed:", e); }
+      }
+    }
+  }, (err) => {
+    console.error("Firebase onValue error:", err);
+  });
+
+  // Override/add stock functions to use Firebase (but still keep localStorage backup)
+  window.addStock = function() {
+    const nameEl = document.getElementById("stock-name");
+    const qtyEl = document.getElementById("stock-qty");
+    const unitEl = document.getElementById("stock-unit");
+    const priceEl = document.getElementById("stock-price");
+
+    const name = (nameEl?.value || "").trim();
+    const qty = parseFloat(qtyEl?.value || "0");
+    const unit = (unitEl?.value || "").trim();
+    const price = parseFloat(priceEl?.value || "0");
+
+    if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
+      return alert("Please enter valid name, quantity and price.");
+    }
+
+    // merge if exists
+    const existing = (window.stockData || []).find(s => s.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.qty = Number(existing.qty || 0) + qty;
+      if (unit) existing.unit = unit;
+      existing.price = price;
+    } else {
+      (window.stockData = window.stockData || []).push({ name, qty, unit: unit || '', price });
+    }
+
+    // save locally and push entire array to Firebase
+    saveLocalStock();
+    set(stocksRef, window.stockData).catch(e => {
+      console.warn("Failed to save to Firebase, data saved locally instead:", e);
+      alert("Saved locally (offline). Will sync when online.");
+    });
+
+    // clear inputs and re-render
+    if (nameEl) nameEl.value = "";
+    if (qtyEl) qtyEl.value = "";
+    if (unitEl) unitEl.value = "";
+    if (priceEl) priceEl.value = "";
+
+    if (typeof renderStock === "function") renderStock();
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // Replace renderStock to render from window.stockData and update Firebase on edits/deletes
+  window.renderStock = function() {
+    const tbody = document.getElementById('stockTableBody');
+    const datalist = document.getElementById('item-list');
+    const poListData = document.getElementById('po-item-list');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (datalist) datalist.innerHTML = '';
+    if (poListData) poListData.innerHTML = '';
+
+    (window.stockData || []).forEach((item, idx) => {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = item.name;
+      tdName.contentEditable = true;
+      tdName.addEventListener('blur', () => {
+        const v = tdName.textContent.trim();
+        if (!v) { window.renderStock(); return; }
+        window.stockData[idx].name = v;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdName);
+
+      const tdQty = document.createElement('td');
+      tdQty.textContent = item.qty;
+      tdQty.contentEditable = true;
+      tdQty.addEventListener('blur', () => {
+        const n = parseFloat(tdQty.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].qty = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdQty);
+
+      const tdUnit = document.createElement('td');
+      tdUnit.textContent = item.unit || '';
+      tdUnit.contentEditable = true;
+      tdUnit.addEventListener('blur', () => {
+        window.stockData[idx].unit = tdUnit.textContent.trim();
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdUnit);
+
+      const tdPrice = document.createElement('td');
+      tdPrice.textContent = item.price;
+      tdPrice.contentEditable = true;
+      tdPrice.addEventListener('blur', () => {
+        const n = parseFloat(tdPrice.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].price = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdPrice);
+
+      const tdAction = document.createElement('td');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'action-btn delete-btn';
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => {
+        if (!confirm('Delete this item?')) return;
+        window.stockData.splice(idx, 1);
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof renderStock === "function") renderStock();
+        if (typeof updateItemLists === "function") updateItemLists();
+      };
+      tdAction.appendChild(delBtn);
+      tr.appendChild(tdAction);
+
+      tbody.appendChild(tr);
+
+      if (datalist) datalist.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+      if (poListData) poListData.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+    });
+
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // small helper same as earlier in file
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  // If there is no Firebase data yet, ensure localDefault is pushed on first run:
+  // (the onValue listener above handles pushing local backup if remote is null)
+
+  // Ensure initial render using local data until Firebase provides snapshot
+  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+  if (typeof renderStock === "function") renderStock();
+  if (typeof updateItemLists === "function") updateItemLists();
+
+  // Expose helper to force re-sync from local to firebase
+  window.pushLocalStockToFirebase = function() {
+    const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+    window.stockData = local;
+    set(stocksRef, window.stockData).then(()=> {
+      alert('Local stock pushed to Firebase.');
+    }).catch(e => {
+      alert('Failed to push to Firebase: '+e.message);
+    });
+  };
+</script>
+<!-- END FIREBASE STOCK-SYNC -->
+
+</body></html>`);
       w.document.close();
 
       // track that preview happened (to allow auto-clear after printed)
@@ -1736,7 +2160,219 @@
       const sizeKey = document.getElementById('receipt-size-cash').value || '58mm';
       const html = document.getElementById('cashout-receipt').innerHTML;
       const w = window.open('', '_blank');
-      w.document.write(`<html><head><title>Print</title></head><body>${html}</body></html>`);
+      w.document.write(`<html><head><title>Print</title></head><body>${html}
+<!-- FIREBASE STOCK-SYNC (overrides stock functions to use Realtime Database + localStorage fallback) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-database.js";
+
+  // --- Your Firebase config (provided) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
+    authDomain: "msite-45cd2.firebaseapp.com",
+    databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
+    projectId: "msite-45cd2",
+    storageBucket: "msite-45cd2.firebasestorage.app",
+    messagingSenderId: "634058871629",
+    appId: "1:634058871629:web:e92190c30153f56cf41d04"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const stocksRef = ref(db, "stocks");
+
+  // Ensure stockData exists (will be kept in sync)
+  window.stockData = window.stockData || (JSON.parse(localStorage.getItem('stockData')) || []);
+
+  // Helper: save to localStorage (backup)
+  function saveLocalStock() {
+    localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+  }
+
+  // Listen for remote changes and apply them locally
+  onValue(stocksRef, (snapshot) => {
+    const val = snapshot.val();
+    if (val === null) {
+      // No remote data yet; if we have local data, push it up
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      if (local.length) {
+        window.stockData = local;
+        set(stocksRef, local).catch(e => console.warn("Failed to push local backup to Firebase:", e));
+      } else {
+        window.stockData = [];
+        saveLocalStock();
+      }
+    } else {
+      // When remote changes arrive, update local and re-render
+      window.stockData = val;
+      saveLocalStock();
+      if (typeof renderStock === "function") {
+        try { renderStock(); } catch(e) { console.warn("renderStock failed:", e); }
+      }
+      if (typeof updateItemLists === "function") {
+        try { updateItemLists(); } catch(e) { console.warn("updateItemLists failed:", e); }
+      }
+    }
+  }, (err) => {
+    console.error("Firebase onValue error:", err);
+  });
+
+  // Override/add stock functions to use Firebase (but still keep localStorage backup)
+  window.addStock = function() {
+    const nameEl = document.getElementById("stock-name");
+    const qtyEl = document.getElementById("stock-qty");
+    const unitEl = document.getElementById("stock-unit");
+    const priceEl = document.getElementById("stock-price");
+
+    const name = (nameEl?.value || "").trim();
+    const qty = parseFloat(qtyEl?.value || "0");
+    const unit = (unitEl?.value || "").trim();
+    const price = parseFloat(priceEl?.value || "0");
+
+    if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
+      return alert("Please enter valid name, quantity and price.");
+    }
+
+    // merge if exists
+    const existing = (window.stockData || []).find(s => s.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.qty = Number(existing.qty || 0) + qty;
+      if (unit) existing.unit = unit;
+      existing.price = price;
+    } else {
+      (window.stockData = window.stockData || []).push({ name, qty, unit: unit || '', price });
+    }
+
+    // save locally and push entire array to Firebase
+    saveLocalStock();
+    set(stocksRef, window.stockData).catch(e => {
+      console.warn("Failed to save to Firebase, data saved locally instead:", e);
+      alert("Saved locally (offline). Will sync when online.");
+    });
+
+    // clear inputs and re-render
+    if (nameEl) nameEl.value = "";
+    if (qtyEl) qtyEl.value = "";
+    if (unitEl) unitEl.value = "";
+    if (priceEl) priceEl.value = "";
+
+    if (typeof renderStock === "function") renderStock();
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // Replace renderStock to render from window.stockData and update Firebase on edits/deletes
+  window.renderStock = function() {
+    const tbody = document.getElementById('stockTableBody');
+    const datalist = document.getElementById('item-list');
+    const poListData = document.getElementById('po-item-list');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (datalist) datalist.innerHTML = '';
+    if (poListData) poListData.innerHTML = '';
+
+    (window.stockData || []).forEach((item, idx) => {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = item.name;
+      tdName.contentEditable = true;
+      tdName.addEventListener('blur', () => {
+        const v = tdName.textContent.trim();
+        if (!v) { window.renderStock(); return; }
+        window.stockData[idx].name = v;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdName);
+
+      const tdQty = document.createElement('td');
+      tdQty.textContent = item.qty;
+      tdQty.contentEditable = true;
+      tdQty.addEventListener('blur', () => {
+        const n = parseFloat(tdQty.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].qty = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdQty);
+
+      const tdUnit = document.createElement('td');
+      tdUnit.textContent = item.unit || '';
+      tdUnit.contentEditable = true;
+      tdUnit.addEventListener('blur', () => {
+        window.stockData[idx].unit = tdUnit.textContent.trim();
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdUnit);
+
+      const tdPrice = document.createElement('td');
+      tdPrice.textContent = item.price;
+      tdPrice.contentEditable = true;
+      tdPrice.addEventListener('blur', () => {
+        const n = parseFloat(tdPrice.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].price = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdPrice);
+
+      const tdAction = document.createElement('td');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'action-btn delete-btn';
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => {
+        if (!confirm('Delete this item?')) return;
+        window.stockData.splice(idx, 1);
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof renderStock === "function") renderStock();
+        if (typeof updateItemLists === "function") updateItemLists();
+      };
+      tdAction.appendChild(delBtn);
+      tr.appendChild(tdAction);
+
+      tbody.appendChild(tr);
+
+      if (datalist) datalist.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+      if (poListData) poListData.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+    });
+
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // small helper same as earlier in file
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  // If there is no Firebase data yet, ensure localDefault is pushed on first run:
+  // (the onValue listener above handles pushing local backup if remote is null)
+
+  // Ensure initial render using local data until Firebase provides snapshot
+  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+  if (typeof renderStock === "function") renderStock();
+  if (typeof updateItemLists === "function") updateItemLists();
+
+  // Expose helper to force re-sync from local to firebase
+  window.pushLocalStockToFirebase = function() {
+    const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+    window.stockData = local;
+    set(stocksRef, window.stockData).then(()=> {
+      alert('Local stock pushed to Firebase.');
+    }).catch(e => {
+      alert('Failed to push to Firebase: '+e.message);
+    });
+  };
+</script>
+<!-- END FIREBASE STOCK-SYNC -->
+
+</body></html>`);
       w.document.close();
       w.focus();
       w.print();
@@ -1869,7 +2505,219 @@
       const sizeKey = document.getElementById('receipt-size-po').value || '58mm';
       const html = container.innerHTML;
       const w = window.open('', '_blank');
-      w.document.write(`<html><head><title>Print</title></head><body>${html}</body></html>`);
+      w.document.write(`<html><head><title>Print</title></head><body>${html}
+<!-- FIREBASE STOCK-SYNC (overrides stock functions to use Realtime Database + localStorage fallback) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-database.js";
+
+  // --- Your Firebase config (provided) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
+    authDomain: "msite-45cd2.firebaseapp.com",
+    databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
+    projectId: "msite-45cd2",
+    storageBucket: "msite-45cd2.firebasestorage.app",
+    messagingSenderId: "634058871629",
+    appId: "1:634058871629:web:e92190c30153f56cf41d04"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const stocksRef = ref(db, "stocks");
+
+  // Ensure stockData exists (will be kept in sync)
+  window.stockData = window.stockData || (JSON.parse(localStorage.getItem('stockData')) || []);
+
+  // Helper: save to localStorage (backup)
+  function saveLocalStock() {
+    localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+  }
+
+  // Listen for remote changes and apply them locally
+  onValue(stocksRef, (snapshot) => {
+    const val = snapshot.val();
+    if (val === null) {
+      // No remote data yet; if we have local data, push it up
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      if (local.length) {
+        window.stockData = local;
+        set(stocksRef, local).catch(e => console.warn("Failed to push local backup to Firebase:", e));
+      } else {
+        window.stockData = [];
+        saveLocalStock();
+      }
+    } else {
+      // When remote changes arrive, update local and re-render
+      window.stockData = val;
+      saveLocalStock();
+      if (typeof renderStock === "function") {
+        try { renderStock(); } catch(e) { console.warn("renderStock failed:", e); }
+      }
+      if (typeof updateItemLists === "function") {
+        try { updateItemLists(); } catch(e) { console.warn("updateItemLists failed:", e); }
+      }
+    }
+  }, (err) => {
+    console.error("Firebase onValue error:", err);
+  });
+
+  // Override/add stock functions to use Firebase (but still keep localStorage backup)
+  window.addStock = function() {
+    const nameEl = document.getElementById("stock-name");
+    const qtyEl = document.getElementById("stock-qty");
+    const unitEl = document.getElementById("stock-unit");
+    const priceEl = document.getElementById("stock-price");
+
+    const name = (nameEl?.value || "").trim();
+    const qty = parseFloat(qtyEl?.value || "0");
+    const unit = (unitEl?.value || "").trim();
+    const price = parseFloat(priceEl?.value || "0");
+
+    if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
+      return alert("Please enter valid name, quantity and price.");
+    }
+
+    // merge if exists
+    const existing = (window.stockData || []).find(s => s.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.qty = Number(existing.qty || 0) + qty;
+      if (unit) existing.unit = unit;
+      existing.price = price;
+    } else {
+      (window.stockData = window.stockData || []).push({ name, qty, unit: unit || '', price });
+    }
+
+    // save locally and push entire array to Firebase
+    saveLocalStock();
+    set(stocksRef, window.stockData).catch(e => {
+      console.warn("Failed to save to Firebase, data saved locally instead:", e);
+      alert("Saved locally (offline). Will sync when online.");
+    });
+
+    // clear inputs and re-render
+    if (nameEl) nameEl.value = "";
+    if (qtyEl) qtyEl.value = "";
+    if (unitEl) unitEl.value = "";
+    if (priceEl) priceEl.value = "";
+
+    if (typeof renderStock === "function") renderStock();
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // Replace renderStock to render from window.stockData and update Firebase on edits/deletes
+  window.renderStock = function() {
+    const tbody = document.getElementById('stockTableBody');
+    const datalist = document.getElementById('item-list');
+    const poListData = document.getElementById('po-item-list');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (datalist) datalist.innerHTML = '';
+    if (poListData) poListData.innerHTML = '';
+
+    (window.stockData || []).forEach((item, idx) => {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = item.name;
+      tdName.contentEditable = true;
+      tdName.addEventListener('blur', () => {
+        const v = tdName.textContent.trim();
+        if (!v) { window.renderStock(); return; }
+        window.stockData[idx].name = v;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdName);
+
+      const tdQty = document.createElement('td');
+      tdQty.textContent = item.qty;
+      tdQty.contentEditable = true;
+      tdQty.addEventListener('blur', () => {
+        const n = parseFloat(tdQty.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].qty = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdQty);
+
+      const tdUnit = document.createElement('td');
+      tdUnit.textContent = item.unit || '';
+      tdUnit.contentEditable = true;
+      tdUnit.addEventListener('blur', () => {
+        window.stockData[idx].unit = tdUnit.textContent.trim();
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdUnit);
+
+      const tdPrice = document.createElement('td');
+      tdPrice.textContent = item.price;
+      tdPrice.contentEditable = true;
+      tdPrice.addEventListener('blur', () => {
+        const n = parseFloat(tdPrice.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].price = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdPrice);
+
+      const tdAction = document.createElement('td');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'action-btn delete-btn';
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => {
+        if (!confirm('Delete this item?')) return;
+        window.stockData.splice(idx, 1);
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof renderStock === "function") renderStock();
+        if (typeof updateItemLists === "function") updateItemLists();
+      };
+      tdAction.appendChild(delBtn);
+      tr.appendChild(tdAction);
+
+      tbody.appendChild(tr);
+
+      if (datalist) datalist.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+      if (poListData) poListData.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+    });
+
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // small helper same as earlier in file
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  // If there is no Firebase data yet, ensure localDefault is pushed on first run:
+  // (the onValue listener above handles pushing local backup if remote is null)
+
+  // Ensure initial render using local data until Firebase provides snapshot
+  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+  if (typeof renderStock === "function") renderStock();
+  if (typeof updateItemLists === "function") updateItemLists();
+
+  // Expose helper to force re-sync from local to firebase
+  window.pushLocalStockToFirebase = function() {
+    const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+    window.stockData = local;
+    set(stocksRef, window.stockData).then(()=> {
+      alert('Local stock pushed to Firebase.');
+    }).catch(e => {
+      alert('Failed to push to Firebase: '+e.message);
+    });
+  };
+</script>
+<!-- END FIREBASE STOCK-SYNC -->
+
+</body></html>`);
       w.document.close();
       w.focus();
       w.print();
@@ -2005,7 +2853,219 @@
         <div style="text-align:right;margin-top:20px;font-weight:bold;">
           Printed on: ${new Date().toLocaleString()}
         </div>
-      </body>
+      
+<!-- FIREBASE STOCK-SYNC (overrides stock functions to use Realtime Database + localStorage fallback) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-database.js";
+
+  // --- Your Firebase config (provided) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
+    authDomain: "msite-45cd2.firebaseapp.com",
+    databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
+    projectId: "msite-45cd2",
+    storageBucket: "msite-45cd2.firebasestorage.app",
+    messagingSenderId: "634058871629",
+    appId: "1:634058871629:web:e92190c30153f56cf41d04"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const stocksRef = ref(db, "stocks");
+
+  // Ensure stockData exists (will be kept in sync)
+  window.stockData = window.stockData || (JSON.parse(localStorage.getItem('stockData')) || []);
+
+  // Helper: save to localStorage (backup)
+  function saveLocalStock() {
+    localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+  }
+
+  // Listen for remote changes and apply them locally
+  onValue(stocksRef, (snapshot) => {
+    const val = snapshot.val();
+    if (val === null) {
+      // No remote data yet; if we have local data, push it up
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      if (local.length) {
+        window.stockData = local;
+        set(stocksRef, local).catch(e => console.warn("Failed to push local backup to Firebase:", e));
+      } else {
+        window.stockData = [];
+        saveLocalStock();
+      }
+    } else {
+      // When remote changes arrive, update local and re-render
+      window.stockData = val;
+      saveLocalStock();
+      if (typeof renderStock === "function") {
+        try { renderStock(); } catch(e) { console.warn("renderStock failed:", e); }
+      }
+      if (typeof updateItemLists === "function") {
+        try { updateItemLists(); } catch(e) { console.warn("updateItemLists failed:", e); }
+      }
+    }
+  }, (err) => {
+    console.error("Firebase onValue error:", err);
+  });
+
+  // Override/add stock functions to use Firebase (but still keep localStorage backup)
+  window.addStock = function() {
+    const nameEl = document.getElementById("stock-name");
+    const qtyEl = document.getElementById("stock-qty");
+    const unitEl = document.getElementById("stock-unit");
+    const priceEl = document.getElementById("stock-price");
+
+    const name = (nameEl?.value || "").trim();
+    const qty = parseFloat(qtyEl?.value || "0");
+    const unit = (unitEl?.value || "").trim();
+    const price = parseFloat(priceEl?.value || "0");
+
+    if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
+      return alert("Please enter valid name, quantity and price.");
+    }
+
+    // merge if exists
+    const existing = (window.stockData || []).find(s => s.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.qty = Number(existing.qty || 0) + qty;
+      if (unit) existing.unit = unit;
+      existing.price = price;
+    } else {
+      (window.stockData = window.stockData || []).push({ name, qty, unit: unit || '', price });
+    }
+
+    // save locally and push entire array to Firebase
+    saveLocalStock();
+    set(stocksRef, window.stockData).catch(e => {
+      console.warn("Failed to save to Firebase, data saved locally instead:", e);
+      alert("Saved locally (offline). Will sync when online.");
+    });
+
+    // clear inputs and re-render
+    if (nameEl) nameEl.value = "";
+    if (qtyEl) qtyEl.value = "";
+    if (unitEl) unitEl.value = "";
+    if (priceEl) priceEl.value = "";
+
+    if (typeof renderStock === "function") renderStock();
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // Replace renderStock to render from window.stockData and update Firebase on edits/deletes
+  window.renderStock = function() {
+    const tbody = document.getElementById('stockTableBody');
+    const datalist = document.getElementById('item-list');
+    const poListData = document.getElementById('po-item-list');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (datalist) datalist.innerHTML = '';
+    if (poListData) poListData.innerHTML = '';
+
+    (window.stockData || []).forEach((item, idx) => {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = item.name;
+      tdName.contentEditable = true;
+      tdName.addEventListener('blur', () => {
+        const v = tdName.textContent.trim();
+        if (!v) { window.renderStock(); return; }
+        window.stockData[idx].name = v;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdName);
+
+      const tdQty = document.createElement('td');
+      tdQty.textContent = item.qty;
+      tdQty.contentEditable = true;
+      tdQty.addEventListener('blur', () => {
+        const n = parseFloat(tdQty.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].qty = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdQty);
+
+      const tdUnit = document.createElement('td');
+      tdUnit.textContent = item.unit || '';
+      tdUnit.contentEditable = true;
+      tdUnit.addEventListener('blur', () => {
+        window.stockData[idx].unit = tdUnit.textContent.trim();
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdUnit);
+
+      const tdPrice = document.createElement('td');
+      tdPrice.textContent = item.price;
+      tdPrice.contentEditable = true;
+      tdPrice.addEventListener('blur', () => {
+        const n = parseFloat(tdPrice.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].price = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdPrice);
+
+      const tdAction = document.createElement('td');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'action-btn delete-btn';
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => {
+        if (!confirm('Delete this item?')) return;
+        window.stockData.splice(idx, 1);
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof renderStock === "function") renderStock();
+        if (typeof updateItemLists === "function") updateItemLists();
+      };
+      tdAction.appendChild(delBtn);
+      tr.appendChild(tdAction);
+
+      tbody.appendChild(tr);
+
+      if (datalist) datalist.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+      if (poListData) poListData.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+    });
+
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // small helper same as earlier in file
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  // If there is no Firebase data yet, ensure localDefault is pushed on first run:
+  // (the onValue listener above handles pushing local backup if remote is null)
+
+  // Ensure initial render using local data until Firebase provides snapshot
+  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+  if (typeof renderStock === "function") renderStock();
+  if (typeof updateItemLists === "function") updateItemLists();
+
+  // Expose helper to force re-sync from local to firebase
+  window.pushLocalStockToFirebase = function() {
+    const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+    window.stockData = local;
+    set(stocksRef, window.stockData).then(()=> {
+      alert('Local stock pushed to Firebase.');
+    }).catch(e => {
+      alert('Failed to push to Firebase: '+e.message);
+    });
+  };
+</script>
+<!-- END FIREBASE STOCK-SYNC -->
+
+</body>
     </html>
   `);
       printWindow.document.close();
@@ -2124,9 +3184,220 @@ storageBucket: "msite-45cd2.appspot.com",
 </script>
 
 
+
+<!-- FIREBASE STOCK-SYNC (overrides stock functions to use Realtime Database + localStorage fallback) -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-app.js";
+  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.22.0/firebase-database.js";
+
+  // --- Your Firebase config (provided) ---
+  const firebaseConfig = {
+    apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
+    authDomain: "msite-45cd2.firebaseapp.com",
+    databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
+    projectId: "msite-45cd2",
+    storageBucket: "msite-45cd2.firebasestorage.app",
+    messagingSenderId: "634058871629",
+    appId: "1:634058871629:web:e92190c30153f56cf41d04"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+  const stocksRef = ref(db, "stocks");
+
+  // Ensure stockData exists (will be kept in sync)
+  window.stockData = window.stockData || (JSON.parse(localStorage.getItem('stockData')) || []);
+
+  // Helper: save to localStorage (backup)
+  function saveLocalStock() {
+    localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+  }
+
+  // Listen for remote changes and apply them locally
+  onValue(stocksRef, (snapshot) => {
+    const val = snapshot.val();
+    if (val === null) {
+      // No remote data yet; if we have local data, push it up
+      const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+      if (local.length) {
+        window.stockData = local;
+        set(stocksRef, local).catch(e => console.warn("Failed to push local backup to Firebase:", e));
+      } else {
+        window.stockData = [];
+        saveLocalStock();
+      }
+    } else {
+      // When remote changes arrive, update local and re-render
+      window.stockData = val;
+      saveLocalStock();
+      if (typeof renderStock === "function") {
+        try { renderStock(); } catch(e) { console.warn("renderStock failed:", e); }
+      }
+      if (typeof updateItemLists === "function") {
+        try { updateItemLists(); } catch(e) { console.warn("updateItemLists failed:", e); }
+      }
+    }
+  }, (err) => {
+    console.error("Firebase onValue error:", err);
+  });
+
+  // Override/add stock functions to use Firebase (but still keep localStorage backup)
+  window.addStock = function() {
+    const nameEl = document.getElementById("stock-name");
+    const qtyEl = document.getElementById("stock-qty");
+    const unitEl = document.getElementById("stock-unit");
+    const priceEl = document.getElementById("stock-price");
+
+    const name = (nameEl?.value || "").trim();
+    const qty = parseFloat(qtyEl?.value || "0");
+    const unit = (unitEl?.value || "").trim();
+    const price = parseFloat(priceEl?.value || "0");
+
+    if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
+      return alert("Please enter valid name, quantity and price.");
+    }
+
+    // merge if exists
+    const existing = (window.stockData || []).find(s => s.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.qty = Number(existing.qty || 0) + qty;
+      if (unit) existing.unit = unit;
+      existing.price = price;
+    } else {
+      (window.stockData = window.stockData || []).push({ name, qty, unit: unit || '', price });
+    }
+
+    // save locally and push entire array to Firebase
+    saveLocalStock();
+    set(stocksRef, window.stockData).catch(e => {
+      console.warn("Failed to save to Firebase, data saved locally instead:", e);
+      alert("Saved locally (offline). Will sync when online.");
+    });
+
+    // clear inputs and re-render
+    if (nameEl) nameEl.value = "";
+    if (qtyEl) qtyEl.value = "";
+    if (unitEl) unitEl.value = "";
+    if (priceEl) priceEl.value = "";
+
+    if (typeof renderStock === "function") renderStock();
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // Replace renderStock to render from window.stockData and update Firebase on edits/deletes
+  window.renderStock = function() {
+    const tbody = document.getElementById('stockTableBody');
+    const datalist = document.getElementById('item-list');
+    const poListData = document.getElementById('po-item-list');
+    if (!tbody) return;
+    tbody.innerHTML = '';
+    if (datalist) datalist.innerHTML = '';
+    if (poListData) poListData.innerHTML = '';
+
+    (window.stockData || []).forEach((item, idx) => {
+      const tr = document.createElement('tr');
+
+      const tdName = document.createElement('td');
+      tdName.textContent = item.name;
+      tdName.contentEditable = true;
+      tdName.addEventListener('blur', () => {
+        const v = tdName.textContent.trim();
+        if (!v) { window.renderStock(); return; }
+        window.stockData[idx].name = v;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdName);
+
+      const tdQty = document.createElement('td');
+      tdQty.textContent = item.qty;
+      tdQty.contentEditable = true;
+      tdQty.addEventListener('blur', () => {
+        const n = parseFloat(tdQty.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].qty = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdQty);
+
+      const tdUnit = document.createElement('td');
+      tdUnit.textContent = item.unit || '';
+      tdUnit.contentEditable = true;
+      tdUnit.addEventListener('blur', () => {
+        window.stockData[idx].unit = tdUnit.textContent.trim();
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof updateItemLists === "function") updateItemLists();
+      });
+      tr.appendChild(tdUnit);
+
+      const tdPrice = document.createElement('td');
+      tdPrice.textContent = item.price;
+      tdPrice.contentEditable = true;
+      tdPrice.addEventListener('blur', () => {
+        const n = parseFloat(tdPrice.textContent);
+        if (isNaN(n)) { window.renderStock(); return; }
+        window.stockData[idx].price = n;
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+      });
+      tr.appendChild(tdPrice);
+
+      const tdAction = document.createElement('td');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'action-btn delete-btn';
+      delBtn.textContent = 'Delete';
+      delBtn.onclick = () => {
+        if (!confirm('Delete this item?')) return;
+        window.stockData.splice(idx, 1);
+        saveLocalStock();
+        set(stocksRef, window.stockData).catch(()=>{});
+        if (typeof renderStock === "function") renderStock();
+        if (typeof updateItemLists === "function") updateItemLists();
+      };
+      tdAction.appendChild(delBtn);
+      tr.appendChild(tdAction);
+
+      tbody.appendChild(tr);
+
+      if (datalist) datalist.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+      if (poListData) poListData.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+    });
+
+    if (typeof updateItemLists === "function") updateItemLists();
+  };
+
+  // small helper same as earlier in file
+  function escapeHtml(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+  }
+
+  // If there is no Firebase data yet, ensure localDefault is pushed on first run:
+  // (the onValue listener above handles pushing local backup if remote is null)
+
+  // Ensure initial render using local data until Firebase provides snapshot
+  if (!window.stockData) window.stockData = JSON.parse(localStorage.getItem('stockData') || "[]");
+  if (typeof renderStock === "function") renderStock();
+  if (typeof updateItemLists === "function") updateItemLists();
+
+  // Expose helper to force re-sync from local to firebase
+  window.pushLocalStockToFirebase = function() {
+    const local = JSON.parse(localStorage.getItem('stockData') || "[]");
+    window.stockData = local;
+    set(stocksRef, window.stockData).then(()=> {
+      alert('Local stock pushed to Firebase.');
+    }).catch(e => {
+      alert('Failed to push to Firebase: '+e.message);
+    });
+  };
+</script>
+<!-- END FIREBASE STOCK-SYNC -->
+
 </body>
 
 
 </html>
-
 
