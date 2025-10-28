@@ -671,10 +671,10 @@
   </script>
 
 <!-- ✅ Firebase Realtime Database for Stock Management -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
-
+<!-- Use classic imports (non-module, fully GitHub-compatible) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
     authDomain: "msite-45cd2.firebaseapp.com",
@@ -685,16 +685,16 @@
     appId: "1:634058871629:web:e92190c30153f56cf41d04"
   };
 
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const stocksRef = ref(db, "stocks");
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const stocksRef = db.ref("stocks");
 
   // Load local backup
   const saveLocal = () => localStorage.setItem("stockData", JSON.stringify(window.stockData || []));
   window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
 
-  // 🔄 Listen for Firebase updates in real-time
-  onValue(stocksRef, (snap) => {
+  // 🔄 Sync from Firebase
+  stocksRef.on("value", (snap) => {
     const data = snap.val();
     if (data) {
       window.stockData = Array.isArray(data) ? data : Object.values(data);
@@ -705,10 +705,10 @@
     }
   });
 
-  // ✅ Safe unified save function (always updates Firebase)
+  // ✅ Save function
   function saveToFirebase() {
     if (!window.stockData) return;
-    set(stocksRef, window.stockData)
+    stocksRef.set(window.stockData)
       .then(() => console.log("✅ Saved to Firebase"))
       .catch((err) => console.error("❌ Firebase Save Failed", err));
     saveLocal();
@@ -720,7 +720,6 @@
     const qty = parseFloat(document.getElementById("stock-qty").value);
     const unit = document.getElementById("stock-unit").value.trim();
     const price = parseFloat(document.getElementById("stock-price").value);
-
     if (!name || isNaN(qty) || qty <= 0 || isNaN(price))
       return alert("Enter valid name, quantity, and price.");
 
@@ -739,7 +738,7 @@
     if (typeof updateItemLists === "function") updateItemLists();
   };
 
-  // ✅ Render + handle edits & deletes
+  // ✅ Render edits/deletes
   window.renderStock = function() {
     const tbody = document.getElementById("stockTableBody");
     if (!tbody) return;
@@ -772,6 +771,7 @@
   };
 </script>
 <!-- ✅ END Firebase block -->
+
 
 
 </body>
