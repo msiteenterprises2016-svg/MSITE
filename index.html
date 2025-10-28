@@ -7,11 +7,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MSITE Inventory System</title>
   <meta name="theme-color" content="#004b8d">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="Pragma" content="no-cache">
-<meta http-equiv="Expires" content="0">
-  <link rel="icon" href="msite.png" type="image/png">
 
+  <!-- Force browsers not to use old cache -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
+  <!-- Your favicon -->
+  <link rel="icon" href="msite.png?v=2.0.0" type="image/png">
+
+  <!-- Version your styles and scripts -->
+  <link rel="stylesheet" href="style.css?v=2.0.0">
 <style>
   :root {
   --primary: #0a63a6;
@@ -276,8 +282,9 @@ tr:hover {
     </table>
   </main>
 
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+ <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js?v=2.0.0"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js?v=2.0.0"></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
