@@ -301,15 +301,18 @@ tr:hover {
         td.textContent = item[key];
         td.setAttribute("data-label", label);
         td.contentEditable = true;
-        td.onblur = () => {
-          const val = (key === "qty" || key === "price")
-            ? parseFloat(td.textContent) || 0
-            : td.textContent.trim();
-          window.stockData[i][key] = val;
-          saveToFirebase();
-        };
-        tr.appendChild(td);
-      });
+        td.oninput = () => {
+  const val = (key === "qty" || key === "price")
+    ? parseFloat(td.textContent) || 0
+    : td.textContent.trim();
+  window.stockData[i][key] = val;
+  saveLocal(); // quick local save only
+};
+td.onblur = () => {
+  saveToFirebase(); // full sync to Firebase after editing
+};
+
+      
 
       const tdAct = document.createElement("td");
       tdAct.setAttribute("data-label", "Action");
