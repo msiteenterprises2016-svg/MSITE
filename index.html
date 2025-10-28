@@ -438,5 +438,18 @@ function renderStock() {
 
     document.addEventListener("DOMContentLoaded", renderStock);
   </script>
+  <script>
+  // Automatically add a timestamp to bust cache
+  document.querySelectorAll('link[rel="stylesheet"], script[src]').forEach(el => {
+    const src = el.href || el.src;
+    if (src && !src.includes('https://www.gstatic.com')) { // avoid Firebase CDN
+      const separator = src.includes('?') ? '&' : '?';
+      const newSrc = src + separator + 'v=' + new Date().getTime();
+      if (el.tagName === 'LINK') el.href = newSrc;
+      if (el.tagName === 'SCRIPT') el.src = newSrc;
+    }
+  });
+</script>
+
 </body>
 </html>
