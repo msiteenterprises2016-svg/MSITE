@@ -1,118 +1,132 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MSITE Inventory System</title>
+  <meta charset="utf-8" />
+  <!-- PWA CONFIG -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#004b8d">
   <link rel="icon" href="msite.png" type="image/png">
-  <style>
-    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f5f7fb; color: #222; }
-    table { border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    .action-btn { background: #0a63a6; color: #fff; border: none; padding: 4px 8px; cursor: pointer; border-radius: 4px; }
-    .action-btn.delete-btn { background: #b00020; }
-  </style>
-</head>
 
-<body>
+  
 
-  <h1 style="text-align:center; color:#0a3d62;">MSITE Inventory System</h1>
 
-  <section id="stock-section" style="max-width:800px;margin:auto;">
-    <h2>Stock Management</h2>
-    <input id="stock-name" placeholder="Item name">
-    <input id="stock-qty" type="number" placeholder="Quantity">
-    <input id="stock-unit" placeholder="Unit">
-    <input id="stock-price" type="number" placeholder="Price">
-    <button onclick="addStock()">Add Stock</button>
 
-    <table id="stockTable" style="margin-top:15px;">
-      <thead>
-        <tr><th>Name</th><th>Qty</th><th>Unit</th><th>Price</th><th>Action</th></tr>
-      </thead>
-      <tbody id="stockTableBody"></tbody>
-    </table>
-  </section>
-
-  <script>
-    // Local data + helpers
-    function saveLocal() {
-      localStorage.setItem("stockData", JSON.stringify(window.stockData || []));
-    }
-    window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
-
+    /* ===========================
+       STOCK - render/manage
+       =========================== */
     function renderStock() {
-      const tbody = document.getElementById("stockTableBody");
-      if (!tbody) return;
-      tbody.innerHTML = "";
-      (window.stockData || []).forEach((item, i) => {
-        const tr = document.createElement("tr");
-        ["name", "qty", "unit", "price"].forEach((key) => {
-          const td = document.createElement("td");
-          td.textContent = item[key];
-          td.contentEditable = true;
-          td.onblur = () => {
-            const val = (key === "qty" || key === "price") ? parseFloat(td.textContent) || 0 : td.textContent.trim();
-            window.stockData[i][key] = val;
-            saveToFirebase();
-          };
-          tr.appendChild(td);
+      const tbody = document.getElementById('stockTableBody');
+      const datalist = document.getElementById('item-list');
+      const poListData = document.getElementById('po-item-list');
+      tbody.innerHTML = ''; if (datalist) datalist.innerHTML = ''; if (poListData) poListData.innerHTML = '';
+
+      stockData.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+
+        const tdName = document.createElement('td');
+        tdName.textContent = item.name;
+        tdName.contentEditable = true;
+        tdName.addEventListener('blur', () => {
+          const v = tdName.textContent.trim();
+          if (!v) { renderStock(); return; }
+          stockData[idx].name = v;
+          saveData();
+          updateItemLists();
         });
-        const tdAct = document.createElement("td");
-        const del = document.createElement("button");
-        del.textContent = "Delete";
-        del.className = "action-btn delete-btn";
-        del.onclick = () => {
-          window.stockData.splice(i, 1);
-          saveToFirebase();
-          renderStock();
-        };
-        tdAct.appendChild(del);
-        tr.appendChild(tdAct);
+        tr.appendChild(tdName);
+
+        const tdQty = document.createElement('td');
+        tdQty.textContent = item.qty;
+        tdQty.contentEditable = true;
+        tdQty.addEventListener('blur', () => {
+          const n = parseFloat(tdQty.textContent);
+          if (isNaN(n)) { renderStock(); return; }
+          stockData[idx].qty = n;
+          saveData();
+        });
+        tr.appendChild(tdQty);
+
+        const tdUnit = document.createElement('td');
+        tdUnit.textContent = item.unit || '';
+        tdUnit.contentEditable = true;
+        tdUnit.addEventListener('blur', () => {
+          stockData[idx].unit = tdUnit.textContent.trim();
+          saveData();
+          updateItemLists();
+        });
+        tr.appendChild(tdUnit);
+
+        const tdPrice = document.createElement('td');
+        tdPrice.textContent = item.price;
+        tdPrice.contentEditable = true;
+        tdPrice.addEventListener('blur', () => {
+          const n = parseFloat(tdPrice.textContent);
+          if (isNaN(n)) { renderStock(); return; }
+          stockData[idx].price = n;
+          saveData();
+        });
+        tr.appendChild(tdPrice);
+
+        const tdAction = document.createElement('td');
+        const delBtn = document.createElement('button');
+        delBtn.className = 'action-btn delete-btn';
+        delBtn.textContent = 'Delete';
+        delBtn.onclick = () => { if (confirm('Delete this item?')) { stockData.splice(idx, 1); saveData(); renderStock(); updateItemLists(); } };
+        tdAction.appendChild(delBtn);
+        tr.appendChild(tdAction);
+
         tbody.appendChild(tr);
+
+        if (datalist) datalist.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
+        if (poListData) poListData.insertAdjacentHTML("beforeend", `<option value="${escapeHtml(item.name)}">`);
       });
+      updateItemLists();
     }
-  </script>
 
-  <!-- Firebase compat version -->
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
-  <script>
-    console.log("🔥 Firebase compat script running");
-    const firebaseConfig = {
-      apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
-      authDomain: "msite-45cd2.firebaseapp.com",
-      databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
-      projectId: "msite-45cd2",
-      storageBucket: "msite-45cd2.firebasestorage.app",
-      messagingSenderId: "634058871629",
-      appId: "1:634058871629:web:e92190c30153f56cf41d04"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const stocksRef = db.ref("stocks");
-
-    // Load from Firebase
-    stocksRef.on("value", (snap) => {
-      const data = snap.val();
-      if (data) {
-        window.stockData = Array.isArray(data) ? data : Object.values(data);
-        saveLocal();
-        renderStock();
-        console.log("✅ Synced from Firebase");
-      }
+    // Real-time search in Stock Management
+    document.getElementById('stock-search').addEventListener('input', function () {
+      const query = this.value.toLowerCase();
+      const tbody = document.getElementById('stockTableBody');
+      Array.from(tbody.rows).forEach(row => {
+        const itemName = row.cells[0].textContent.toLowerCase();
+        if (itemName.includes(query)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
     });
 
-    function saveToFirebase() {
-      if (!window.stockData) return;
-      stocksRef.set(window.stockData)
-        .then(() => console.log("✅ Saved to Firebase"))
-        .catch((err) => console.error("❌ Firebase Save Failed", err));
-      saveLocal();
+    let confirmedOrders = JSON.parse(localStorage.getItem('confirmedOrders')) || [];
+
+    function confirmBuyList() {
+      if (buyList.length === 0) return alert('No items to confirm.');
+
+      // Calculate grand total
+      let grandTotal = buyList.reduce((sum, item) => sum + item.qty * item.price, 0);
+
+      // Create order object
+      const order = {
+        id: Date.now(),
+        date: new Date().toLocaleString(),
+        items: JSON.parse(JSON.stringify(buyList)),
+        total: grandTotal
+      };
+
+      // Save to confirmed orders
+      confirmedOrders.push(order);
+      localStorage.setItem('confirmedOrders', JSON.stringify(confirmedOrders));
+
+      // Clear current buy list
+      buyList = [];
+      saveBuyList();
+      renderBuyList();
+
+      alert(`Order confirmed! Total: ${grandTotal.toFixed(2)}`);
     }
+
+
 
     function addStock() {
       const name = document.getElementById("stock-name").value.trim();
@@ -121,29 +135,673 @@
       const price = parseFloat(document.getElementById("stock-price").value);
 
       if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
-        alert("Enter valid name, quantity, and price.");
-        return;
+        return alert("Please enter valid name, quantity and price.");
       }
 
-      const existing = window.stockData.find(s => s.name.toLowerCase() === name.toLowerCase());
+      const existing = stockData.find(s => s.name.toLowerCase() === name.toLowerCase());
       if (existing) {
         existing.qty += qty;
-        existing.unit = unit;
+        if (unit) existing.unit = unit;
         existing.price = price;
       } else {
-        window.stockData.push({ name, qty, unit, price });
+        stockData.push({ name, qty, unit: unit || '', price });
       }
-
-      saveToFirebase();
+      saveData();
       renderStock();
+      updateItemLists();
       document.getElementById("stock-name").value = "";
       document.getElementById("stock-qty").value = "";
       document.getElementById("stock-unit").value = "";
       document.getElementById("stock-price").value = "";
     }
 
-    document.addEventListener("DOMContentLoaded", renderStock);
-  </script>
+    function updateItemLists() {
+      const selects = document.querySelectorAll('.item-select');
+      selects.forEach(sel => {
+        const cur = sel.value;
+        sel.innerHTML = '';
+        const placeholder = document.createElement('option');
+        placeholder.value = '';
+        placeholder.text = '';
+        sel.appendChild(placeholder);
+        stockData.forEach(item => {
+          const opt = document.createElement('option');
+          opt.value = item.name;
+          opt.text = `${item.name} (${item.unit || ''})`;
+          sel.appendChild(opt);
+        });
+        sel.value = cur;
+      });
+    }
+
+    /* ===========================
+       PURCHASE ORDER (currentPO)
+       =========================== */
+    function addToCurrentPO() {
+      const name = document.getElementById('poItem').value.trim();
+      const qty = parseFloat(document.getElementById('poQty').value);
+      if (!name || isNaN(qty) || qty <= 0) return alert('Enter valid item and quantity');
+      const stock = stockData.find(s => s.name.toLowerCase() === name.toLowerCase());
+      if (!stock) return alert('Item not found in stock');
+      const price = Number(stock.price) || 0;
+      currentPO.push({ name: stock.name, qty, unit: stock.unit || '', price, total: qty * price });
+      renderPO();
+      document.getElementById('poItem').value = '';
+      document.getElementById('poQty').value = '';
+    }
+
+    function renderPO() {
+      const tbody = document.getElementById('poTableBody');
+      tbody.innerHTML = '';
+      let sum = 0;
+      currentPO.forEach((row, idx) => {
+        row.total = Number(row.qty) * Number(row.price);
+        sum += row.total;
+        const tr = document.createElement('tr');
+
+        const tdName = document.createElement('td'); tdName.textContent = row.name; tr.appendChild(tdName);
+        const tdQty = document.createElement('td'); tdQty.textContent = row.qty; tdQty.contentEditable = true; tr.appendChild(tdQty);
+        const tdUnit = document.createElement('td'); tdUnit.textContent = row.unit || ''; tdUnit.contentEditable = true; tr.appendChild(tdUnit);
+        const tdPrice = document.createElement('td'); tdPrice.textContent = Number(row.price).toFixed(2); tdPrice.contentEditable = true; tr.appendChild(tdPrice);
+        const tdTotal = document.createElement('td'); tdTotal.textContent = row.total.toFixed(2); tr.appendChild(tdTotal);
+
+        const tdAction = document.createElement('td');
+        const del = document.createElement('button'); del.className = 'action-btn delete-btn'; del.textContent = 'Delete';
+        del.onclick = () => { currentPO.splice(idx, 1); renderPO(); };
+        tdAction.appendChild(del);
+        tr.appendChild(tdAction);
+
+        // inline editable events
+        tdQty.addEventListener('blur', () => { const v = parseFloat(tdQty.textContent); if (isNaN(v) || v <= 0) { renderPO(); return; } currentPO[idx].qty = v; currentPO[idx].total = currentPO[idx].qty * currentPO[idx].price; saveData(); renderPO(); });
+        tdUnit.addEventListener('blur', () => { currentPO[idx].unit = tdUnit.textContent.trim(); saveData(); renderPO(); });
+        tdPrice.addEventListener('blur', () => { const v = parseFloat(tdPrice.textContent); if (isNaN(v) || v < 0) { renderPO(); return; } currentPO[idx].price = v; currentPO[idx].total = currentPO[idx].qty * currentPO[idx].price; saveData(); renderPO(); });
+
+        tbody.appendChild(tr);
+      });
+      document.getElementById('po-total').textContent = sum.toFixed(2);
+    }
+
+    function submitPO() {
+      const school = document.getElementById('po-school').value.trim();
+      if (!school) return alert('Enter school name');
+      if (currentPO.length === 0) return alert('No items in order');
+
+      // check stock
+      for (const it of currentPO) {
+        const s = stockData.find(x => x.name === it.name);
+        if (!s) return alert('Item not in stock: ' + it.name);
+        if (s.qty < it.qty) return alert('Not enough stock for: ' + it.name);
+      }
+
+      let total = 0;
+      currentPO.forEach(i => {
+        const s = stockData.find(x => x.name === i.name);
+        s.qty -= i.qty;
+        total += i.total;
+        salesData.push({
+          date: new Date().toLocaleString(),
+          name: i.name,
+          qty: i.qty,
+          unit: i.unit || '',
+          price: i.price,
+          total: i.total,
+          school
+        });
+      });
+
+      const po = { id: Date.now(), date: new Date().toLocaleString(), school, total, items: JSON.parse(JSON.stringify(currentPO)) };
+      poList.push(po);
+      saveData();
+      renderStock(); renderHistory(); renderPOList();
+      setUnifiedReceiptPreview('po', po);
+      currentPO = [];
+      renderPO();
+      document.getElementById('po-school').value = '';
+      alert('Purchase Order saved (preview available via "Preview & Print Receipt")');
+    }
+
+    function renderPOList() {
+      const tbody = document.getElementById('po-list-body');
+      tbody.innerHTML = '';
+      poList.forEach((po, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${po.date}</td><td>${escapeHtml(po.school)}</td><td>${Number(po.total).toFixed(2)}</td>
+          <td>
+            <button class="action-btn view-btn">View</button>
+            <button class="action-btn delete-btn">Delete</button>
+          </td>`;
+        tr.querySelector('.view-btn').onclick = () => { setUnifiedReceiptPreview('po', po); document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active')); document.querySelector('.menu-link[data-section="purchase-section"]').classList.add('active'); document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); document.getElementById('purchase-section').classList.add('active'); };
+        tr.querySelector('.delete-btn').onclick = () => { if (!confirm('Delete this Purchase Order?')) return; poList.splice(idx, 1); saveData(); renderPOList(); };
+        tbody.appendChild(tr);
+      });
+    }
+
+    /* ===========================
+       Unified Receipt Builder & Previews
+       =========================== */
+    function buildUnifiedReceiptHTML({ type, id, customer, items, total }) {
+      // Include Unit column
+      const header = (type === 'po') ? 'PURCHASE ORDER' : 'SALES RECEIPT';
+      const idLine = (type === 'po') ? `<div><strong>PO No:</strong> ${id}</div><div><strong>Customer:</strong> ${escapeHtml(customer || '')}</div>` : `<div><strong>Receipt No:</strong> ${id}</div><div><strong>Customer:</strong> ${escapeHtml(customer || '') || 'Walk-in'}</div>`;
+      const rows = items.map(it => {
+        return `<tr>
+          <td style="padding:6px 4px;border-bottom:1px dashed #ccc;">${escapeHtml(it.name)}</td>
+          <td style="padding:6px 4px;border-bottom:1px dashed #ccc;text-align:center;">${escapeHtml(it.unit || '')}</td>
+          <td style="padding:6px 4px;border-bottom:1px dashed #ccc;text-align:center;">${Number(it.qty)}</td>
+          <td style="padding:6px 4px;border-bottom:1px dashed #ccc;text-align:right;">${Number(it.price).toFixed(2)}</td>
+          <td style="padding:6px 4px;border-bottom:1px dashed #ccc;text-align:right;">${Number(it.total).toFixed(2)}</td>
+        </tr>`;
+      }).join('');
+
+      const html = `
+        <div style="font-family:'Segoe UI',sans-serif;">
+          <div style="text-align:center;margin-bottom:6px;">
+            <h2 style="margin:0;color:var(--msite-blue);">MSITE Enterprises</h2>
+            <div style="font-size:12px;margin-top:4px;">B20 L4 Cilrai, Cagayan De Oro City, Misamis Oriental</div>
+            <div style="font-size:12px;margin-top:2px;">Email: msite.enterprises2016@gmail.com </div>
+ 		<div style="font-size:12px;margin-top:4px;">Facebook: M'site En</div>
+		<div style="font-size:12px;margin-top:4px;">Contact: 09553303187</div>
+
+
+          <div style="margin-top:8px;font-weight:bold;text-align:center;">${header}</div>
+          <div style="margin-top:6px;font-size:13px;">${idLine}</div>
+          <hr style="border:none;border-top:1px dashed #333;margin:8px 0;">
+
+          <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <thead>
+              <tr>
+                <th style="text-align:left;padding:6px 4px;">Item</th>
+                <th style="text-align:center;padding:6px 4px;">Unit</th>
+                <th style="text-align:center;padding:6px 4px;">Qty</th>
+                <th style="text-align:right;padding:6px 4px;">Price</th>
+                <th style="text-align:right;padding:6px 4px;">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows}
+            </tbody>
+          </table>
+
+          <div style="margin-top:8px;text-align:right;font-weight:bold;">
+            Subtotal: ${Number(total).toFixed(2)}
+          </div>
+
+          <hr style="border:none;border-top:1px dashed #333;margin:8px 0;">
+          <div style="display:flex;justify-content:space-between;margin-top:6px;">
+            <div style="width:45%;text-align:center">
+              <div style="border-top:1px dashed #333;height:0;margin-top:12px"></div>
+              <p style="margin:6px 0 0 0;font-size:11px">Received by</p>
+            </div>
+            <div style="width:45%;text-align:center">
+              <div style="border-top:1px dashed #333;height:0;margin-top:12px"></div>
+              <p style="margin:6px 0 0 0;font-size:11px">Authorized by</p>
+            </div>
+          </div>
+
+          <hr style="border:none;border-top:1px dashed #333;margin:8px 0;">
+          <div style="text-align:center;font-style:italic;font-size:12px;">Thank you for purchasing at MSITE Enterprise!</div>
+        </div>
+      `;
+      return html;
+    }
+
+    function setUnifiedReceiptPreview(type, dataObj) {
+      const container = (type === 'po') ? document.getElementById('receipt') : document.getElementById('cashout-receipt');
+      const items = dataObj.items || [];
+      const total = dataObj.total || items.reduce((s, i) => s + Number(i.total || 0), 0);
+      const id = dataObj.id || (type === 'po' ? Date.now() : ('R' + Date.now()));
+      const customer = dataObj.school || dataObj.customer || '';
+      container.innerHTML = buildUnifiedReceiptHTML({ type: type === 'po' ? 'po' : 'cash', id, customer, items, total });
+      container.style.display = 'block';
+    }
+
+    /* preview window builder */
+    function openReceiptPreviewWindow(receiptHTML, sizeKey) {
+      let widthCss, fontSize, padding;
+      switch (sizeKey) {
+        case '80mm': widthCss = '80mm'; fontSize = '12px'; padding = '8px'; break;
+        case 'A5': widthCss = '148mm'; fontSize = '13px'; padding = '12px'; break;
+        case 'A4': widthCss = '210mm'; fontSize = '14px'; padding = '16px'; break;
+        default: widthCss = '58mm'; fontSize = '11px'; padding = '6px';
+      }
+
+      const w = window.open('', '_blank', 'scrollbars=yes,resizable=yes');
+      if (!w) { alert('Popup blocked. Allow popups to preview receipts.'); return; }
+
+      // prepare styles and script for preview window
+      const styles = `
+        <style>
+          body { font-family: "Segoe UI", sans-serif; margin:0; padding:${padding}; color:#000; -webkit-
+-color-adjust:exact; }
+          .preview-wrap { width:${widthCss}; margin:0 auto; box-sizing:border-box; }
+          h2 { color:var(--msite-blue); margin:0 0 6px 0; text-align:center; }
+          table { width:100%; border-collapse:collapse; margin-top:6px; font-size:${fontSize}; }
+          th, td { padding:6px 4px; border-bottom:1px dashed #999; }
+          th { text-align:left; }
+          .btn { display:inline-block; padding:8px 12px; background:var(--msite-blue-2); color:#fff; border-radius:6px; text-decoration:none; cursor:pointer; margin:6px 4px; }
+          .btn:hover { background:var(--msite-blue); }
+          @media print { @page { size: ${widthCss} auto; margin: 6mm; } .no-print { display:none; } }
+        </style>
+      `;
+
+      const script = `
+        
+
+
+    /* UI preview trigger functions */
+    function previewPOReceipt() {
+      const container = document.getElementById('receipt');
+      if (!container.innerHTML.trim()) return alert('No Purchase Order receipt available. Save or view a PO first.');
+      const sizeKey = document.getElementById('receipt-size-po').value || '58mm';
+      // mark last preview type for opener to clear only if it's cash
+      lastPreviewType = 'po';
+      lastPreviewPayload = { type: 'po' };
+      openReceiptPreviewWindow(container.innerHTML, sizeKey);
+    }
+
+    function previewCashoutReceipt() {
+      const container = document.getElementById('cashout-receipt');
+      if (!container.innerHTML.trim()) {
+        if (cashoutBuffer.length === 0) return alert('No cashout items available. Add items before printing.');
+        setUnifiedReceiptPreview('cash', { id: 'R' + Date.now(), items: JSON.parse(JSON.stringify(cashoutBuffer)), total: cashoutBuffer.reduce((s, i) => s + Number(i.total || 0), 0) });
+      }
+      const sizeKey = document.getElementById('receipt-size-cash').value || '58mm';
+      const html = document.getElementById('cashout-receipt').innerHTML;
+      const w = window.open('', '_blank');
+      w.document.write(`<html><head><title>Print</title></head><body>${html}
+
+
+
+
+
+</body></html>`);
+      w.document.close();
+      w.focus();
+      w.print();
+      w.close();
+      // optional: clear after print
+      cashoutBuffer = [];
+      saveData();
+      renderCashoutTable();
+      renderStock();
+    }
+
+
+    /* Listen for print-complete messages from preview window */
+    window.addEventListener('message', (ev) => {
+      try {
+        const data = ev.data || {};
+        if (data.action === 'receiptPrinted') {
+          // if last preview was cash, clear the buffer (auto-clear after successful print)
+          if (lastPreviewType === 'cash') {
+            cashoutBuffer = [];
+            saveData();
+            renderCashoutTable();
+            renderStock();
+            alert('Cashout printed  cart cleared.');
+          } else {
+            // PO printing doesn't clear cart
+            alert('Receipt printed.');
+          }
+        }
+      } catch (e) { /* ignore */ }
+    });
+
+    /* ===========================
+       Cashout functions
+       =========================== */
+    function addToCashout() {
+      const name = document.getElementById('cashout-item').value.trim();
+      const qty = parseFloat(document.getElementById('cashout-qty').value);
+      if (!name || isNaN(qty) || qty <= 0) return alert('Enter valid item and quantity');
+      const stock = stockData.find(s => s.name.toLowerCase() === name.toLowerCase());
+      if (!stock) return alert('Item not found in stock');
+      if (stock.qty < qty) return alert('Not enough stock available');
+      const price = Number(stock.price) || 0;
+      const record = { name: stock.name, qty, unit: stock.unit || '', price, total: qty * price };
+      cashoutBuffer.push(record);
+      stock.qty -= qty;
+      saveData();
+      renderStock(); renderCashoutTable();
+      document.getElementById('cashout-item').value = '';
+      document.getElementById('cashout-qty').value = '';
+    }
+
+    function renderCashoutTable() {
+      const tbody = document.getElementById('salesTableBody');
+      tbody.innerHTML = ''; let sum = 0;
+      cashoutBuffer.forEach((r, idx) => {
+        sum += r.total;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${escapeHtml(r.name)}</td>
+                        <td contenteditable="true">${r.qty}</td>
+                        <td contenteditable="true">${escapeHtml(r.unit || '')}</td>
+                        <td contenteditable="true">${Number(r.price).toFixed(2)}</td>
+                        <td>${Number(r.total).toFixed(2)}</td>
+                        <td><button class="action-btn delete-btn">Remove</button></td>`;
+        tr.querySelector('button').onclick = () => {
+          const stockItem = stockData.find(s => s.name === r.name);
+          if (stockItem) stockItem.qty += r.qty;
+          cashoutBuffer.splice(idx, 1);
+          saveData();
+          renderStock();
+          renderCashoutTable();
+        };
+
+        // inline edit handlers
+        const tdQty = tr.children[1];
+        const tdUnit = tr.children[2];
+        const tdPrice = tr.children[3];
+        tdQty.addEventListener('blur', () => { const v = parseFloat(tdQty.textContent); if (isNaN(v) || v <= 0) { renderCashoutTable(); return; } r.qty = v; r.total = r.qty * r.price; saveData(); renderCashoutTable(); });
+        tdUnit.addEventListener('blur', () => { r.unit = tdUnit.textContent.trim(); saveData(); renderCashoutTable(); });
+        tdPrice.addEventListener('blur', () => { const v = parseFloat(tdPrice.textContent); if (isNaN(v) || v < 0) { renderCashoutTable(); return; } r.price = v; r.total = r.qty * r.price; saveData(); renderCashoutTable(); });
+
+        tbody.appendChild(tr);
+      });
+      document.getElementById('salesTotal').textContent = sum.toFixed(2);
+    }
+
+    function finalizeCashout() {
+      if (cashoutBuffer.length === 0) return alert('No items to finalize');
+      const date = new Date().toLocaleString();
+      let grand = 0;
+      const idBase = Date.now();
+      cashoutBuffer.forEach((r, idx) => {
+        const entryId = idBase + idx;
+        salesData.push({ id: entryId, date, name: r.name, qty: r.qty, unit: r.unit || '', price: r.price, total: r.total, school: 'Walk-in' });
+        grand += r.total;
+      });
+      saveData();
+      // create preview in-app
+      setUnifiedReceiptPreview('cash', { id: 'R' + Date.now(), items: JSON.parse(JSON.stringify(cashoutBuffer)), total: grand });
+      // Promise: do NOT clear right away  only after print
+      // show toast
+      alert('Cashout saved to Sales History (preview available via "Preview & Print Receipt").');
+      renderHistory();
+    }
+
+    /* ===========================
+       Receipt preview actions from modal (in-page)
+       =========================== */
+    function openModalPreview(htmlContent) {
+      document.getElementById('preview-content').innerHTML = htmlContent;
+      document.getElementById('preview-modal').classList.add('show');
+    }
+    function closeModalPreview() {
+      document.getElementById('preview-modal').classList.remove('show');
+      document.getElementById('preview-content').innerHTML = '';
+    }
+    function openPrintWindowFromModal() {
+      const content = document.getElementById('preview-content').innerHTML;
+      if (!content.trim()) return alert('No content');
+      // choose size from cash or po dropdown - default to 58mm
+      const sizeKey = document.getElementById('receipt-size-cash').value || document.getElementById('receipt-size-po')?.value || '58mm';
+      openReceiptPreviewWindow(content, sizeKey);
+      closeModalPreview();
+    }
+
+    /* Preview triggers used by UI (fallback: in-page modal) */
+    function previewPOReceipt() {
+      const container = document.getElementById('receipt');
+      if (!container.innerHTML.trim()) return alert('No Purchase Order receipt available. Save or view a PO first.');
+      const sizeKey = document.getElementById('receipt-size-po').value || '58mm';
+      const html = container.innerHTML;
+      const w = window.open('', '_blank');
+      w.document.write(`<html><head><title>Print</title></head><body>${html}
+
+
+
+
+</body></html>`);
+      w.document.close();
+      w.focus();
+      w.print();
+      w.close();
+    }
+
+
+    function previewCashoutReceipt() {
+      const container = document.getElementById('cashout-receipt');
+      if (!container.innerHTML.trim()) {
+        if (cashoutBuffer.length === 0) return alert('No cashout items available. Add items before previewing.');
+        setUnifiedReceiptPreview('cash', { id: 'R' + Date.now(), items: JSON.parse(JSON.stringify(cashoutBuffer)), total: cashoutBuffer.reduce((s, i) => s + Number(i.total || 0), 0) });
+      }
+      const sizeKey = document.getElementById('receipt-size-cash').value || '58mm';
+      lastPreviewType = 'cash';
+      lastPreviewPayload = { type: 'cash' };
+      openReceiptPreviewWindow(document.getElementById('cashout-receipt').innerHTML, sizeKey);
+    }
+
+    /* ===========================
+       Sales history
+       =========================== */
+    function renderHistory() {
+      const tbody = document.getElementById('history-table-body');
+      tbody.innerHTML = '';
+      salesData.forEach(s => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${s.date}</td><td>${escapeHtml(s.name)}</td><td>${s.qty}</td><td>${escapeHtml(s.unit || '')}</td><td>${Number(s.price).toFixed(2)}</td><td>${Number(s.total).toFixed(2)}</td><td>${escapeHtml(s.school || '')}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function clearSalesHistory() {
+      if (!confirm('Clear history?')) return;
+      salesData = [];
+      saveData();
+      renderHistory();
+    }
+
+    /* ===========================
+       Initialization & navigation
+       =========================== */
+    if (!localStorage.getItem('stockData')) {
+      stockData = [
+        { name: 'Notebook A4', qty: 100, price: 30, unit: 'pcs' },
+        { name: 'Bond Paper A4', qty: 50, price: 200, unit: 'reams' }
+      ];
+      saveData();
+    } else {
+      stockData = JSON.parse(localStorage.getItem('stockData')) || [];
+    }
+    salesData = JSON.parse(localStorage.getItem('salesData')) || [];
+    poList = JSON.parse(localStorage.getItem('poList')) || [];
+
+    document.querySelectorAll('.menu-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
+        document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+        link.classList.add('active');
+        const sec = document.getElementById(link.dataset.section);
+        if (sec) sec.classList.add('active');
+      });
+    });
+
+    // start
+    renderStock();
+    updateItemLists();
+    renderPO();
+    renderCashoutTable();
+    renderHistory();
+    renderPOList();
+
+    /* ===========================
+       Message: print complete handling for auto-clear
+       =========================== */
+    // Already handled in window message listener above.
+
+    // (No more code below)
+    function printStockTable() {
+      const table = document.getElementById('stockTable');
+      if (!table || table.rows.length === 0) return alert('No stock data to print.');
+
+      // Clone table (to remove action buttons)
+      const clonedTable = table.cloneNode(true);
+      Array.from(clonedTable.querySelectorAll('th:last-child, td:last-child')).forEach(el => el.remove());
+
+      const printWindow = window.open('', '', 'height=800,width=1000');
+      printWindow.document.write(`
+    <html>
+      <head>
+        <title>Stock List - MSITE Enterprises</title>
+        <style>
+          body {
+            font-family: "Segoe UI", sans-serif;
+            background: #fff;
+            margin: 20px;
+            color: #333;
+          }
+          h2 {
+            text-align: center;
+            color: #0a3d62;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+          }
+          th {
+            background-color: #0a3d62;
+            color: white;
+          }
+          tr:nth-child(even) {
+            background-color: #f9fbff;
+          }
+          tr:hover {
+            background-color: #e8f0ff;
+          }
+          @media print {
+            body { margin: 10mm; }
+          }
+        </style>
+      </head>
+      <body>
+        <h2>MSITE Enterprises</h2>
+        <h3 style="text-align:center;margin:0;">Current Stock List</h3>
+        ${clonedTable.outerHTML}
+        <div style="text-align:right;margin-top:20px;font-weight:bold;">
+          Printed on: ${new Date().toLocaleString()}
+        </div>
+      
+
+
+
+
 
 </body>
-</html>
+    </html>
+  `);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+    }
+    // Collapsible sidebar toggle
+    document.getElementById("toggleSidebar").addEventListener("click", () => {
+      const sidebar = document.querySelector(".sidebar");
+      const content = document.querySelector(".content");
+      sidebar.classList.toggle("collapsed");
+      content.classList.toggle("sidebar-collapsed");
+    });
+
+
+
+
+  </script>
+
+<!-- ✅ Firebase Realtime Database for Stock Management -->
+
+<!-- ✅ END Firebase block -->
+
+
+<!-- Firebase compat (injected by assistant) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script>
+console.log('🔥 Firebase compat script running (injected)');
+const firebaseConfig = {
+  apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
+  authDomain: "msite-45cd2.firebaseapp.com",
+  databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
+  projectId: "msite-45cd2",
+  storageBucket: "msite-45cd2.firebasestorage.app",
+  messagingSenderId: "634058871629",
+  appId: "1:634058871629:web:e92190c30153f56cf41d04"
+};
+try{ firebase.initializeApp(firebaseConfig); }catch(e){ console.warn('Firebase init:', e); }
+const db = firebase.database();
+const stocksRef = db.ref('stocks');
+
+// local fallback load
+window.stockData = JSON.parse(localStorage.getItem('stockData') || '[]');
+
+stocksRef.on('value', snap => {
+  const data = snap.val();
+  if (data) {
+    window.stockData = Array.isArray(data) ? data : Object.values(data);
+    try{ localStorage.setItem('stockData', JSON.stringify(window.stockData || [])); }catch(e){}
+    if (typeof renderStock === 'function') renderStock();
+    if (typeof updateItemLists === 'function') updateItemLists();
+    console.log('✅ Synced from Firebase');
+  }
+}, err => { console.error('Firebase read error', err); });
+
+// unified save function
+function saveToFirebase(){
+  if(!window.stockData) return;
+  stocksRef.set(window.stockData)
+    .then(()=>console.log('✅ Saved to Firebase'))
+    .catch(err=>{ console.error('❌ Firebase Save Failed', err); try{ localStorage.setItem('stockData', JSON.stringify(window.stockData || [])); }catch(e){} });
+  try{ localStorage.setItem('stockData', JSON.stringify(window.stockData || [])); }catch(e){}
+}
+
+// override addStock to ensure firebase write
+window.addStock = function(){
+  const name = document.getElementById('stock-name')?.value.trim();
+  const qty = parseFloat(document.getElementById('stock-qty')?.value||'0');
+  const unit = document.getElementById('stock-unit')?.value.trim();
+  const price = parseFloat(document.getElementById('stock-price')?.value||'0');
+  if(!name || isNaN(qty) || qty<=0 || isNaN(price)) return alert('Enter valid name, quantity, and price.');
+  const existing = (window.stockData||[]).find(s=>s.name.toLowerCase()===name.toLowerCase());
+  if(existing){ existing.qty += qty; existing.unit = unit; existing.price = price; }
+  else (window.stockData ||= []).push({ name, qty, unit, price });
+  saveToFirebase();
+  ['stock-name','stock-qty','stock-unit','stock-price'].forEach(id=>{ if(document.getElementById(id)) document.getElementById(id).value=''; });
+  if(typeof renderStock==='function') renderStock();
+  if(typeof updateItemLists==='function') updateItemLists();
+};
+
+// attach editable cell blur handlers to save to firebase after original render
+(function attachSaveHandlers(){
+  const origRender = window.renderStock;
+  window.renderStock = function(){
+    if(typeof origRender==='function') origRender();
+    const tbody = document.getElementById('stockTableBody');
+    if(!tbody) return;
+    Array.from(tbody.rows).forEach((row,i)=>{
+      Array.from(row.cells).slice(0,4).forEach((cell,ci)=>{
+        cell.onblur = ()=>{
+          const key = ['name','qty','unit','price'][ci];
+          const val = key==='qty'||key==='price' ? parseFloat(cell.textContent)||0 : cell.textContent.trim();
+          if(window.stockData && window.stockData[i]) window.stockData[i][key]=val;
+          saveToFirebase();
+        };
+      });
+      const delBtn = row.querySelector('.action-btn.delete-btn');
+      if(delBtn) delBtn.onclick = ()=>{ if(confirm('Delete this item?')){ window.stockData.splice(i,1); saveToFirebase(); if(typeof renderStock==='function') renderStock(); if(typeof updateItemLists==='function') updateItemLists(); } };
+    });
+  };
+})();
+</script>
+<!-- end injected firebase compat -->
+</body>
+
+
+		</html>
+	
+
