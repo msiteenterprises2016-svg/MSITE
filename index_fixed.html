@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MSITE Inventory System</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#004b8d">
+  <link rel="icon" href="msite.png" type="image/png">
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; margin: 0; background: #f5f7fb; color: #222; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    .action-btn { background: #0a63a6; color: #fff; border: none; padding: 4px 8px; cursor: pointer; border-radius: 4px; }
+    .action-btn.delete-btn { background: #b00020; }
+  </style>
+</head>
+
+<body>
+
+  <h1 style="text-align:center; color:#0a3d62;">MSITE Inventory System</h1>
+
+  <section id="stock-section" style="max-width:800px;margin:auto;">
+    <h2>Stock Management</h2>
+    <input id="stock-name" placeholder="Item name">
+    <input id="stock-qty" type="number" placeholder="Quantity">
+    <input id="stock-unit" placeholder="Unit">
+    <input id="stock-price" type="number" placeholder="Price">
+    <button onclick="addStock()">Add Stock</button>
+
+    <table id="stockTable" style="margin-top:15px;">
+      <thead>
+        <tr><th>Name</th><th>Qty</th><th>Unit</th><th>Price</th><th>Action</th></tr>
+      </thead>
+      <tbody id="stockTableBody"></tbody>
+    </table>
+  </section>
+
+  <script>
+    // Local data + helpers
+    function saveLocal() {
+      localStorage.setItem("stockData", JSON.stringify(window.stockData || []));
+    }
+    window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
+
+    function renderStock() {
+      const tbody = document.getElementById("stockTableBody");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      (window.stockData || []).forEach((item, i) => {
+        const tr = document.createElement("tr");
+        ["name", "qty", "unit", "price"].forEach((key) => {
+          const td = document.createElement("td");
+          td.textContent = item[key];
+          td.contentEditable = true;
+          td.onblur = () => {
+            const val = (key === "qty" || key === "price") ? parseFloat(td.textContent) || 0 : td.textContent.trim();
+            window.stockData[i][key] = val;
+            saveToFirebase();
+          };
+          tr.appendChild(td);
+        });
+        const tdAct = document.createElement("td");
+        const del = document.createElement("button");
+        del.textContent = "Delete";
+        del.className = "action-btn delete-btn";
+        del.onclick = () => {
+          window.stockData.splice(i, 1);
+          saveToFirebase();
+          renderStock();
+        };
+        tdAct.appendChild(del);
+        tr.appendChild(tdAct);
+        tbody.appendChild(tr);
+      });
+    }
+  </script>
+
+  <!-- Firebase compat version -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+  <script>
+    console.log("🔥 Firebase compat script running");
+    const firebaseConfig = {
+      apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
+      authDomain: "msite-45cd2.firebaseapp.com",
+      databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
+      projectId: "msite-45cd2",
+      storageBucket: "msite-45cd2.firebasestorage.app",
+      messagingSenderId: "634058871629",
+      appId: "1:634058871629:web:e92190c30153f56cf41d04"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const stocksRef = db.ref("stocks");
+
+    // Load from Firebase
+    stocksRef.on("value", (snap) => {
+      const data = snap.val();
+      if (data) {
+        window.stockData = Array.isArray(data) ? data : Object.values(data);
+        saveLocal();
+        renderStock();
+        console.log("✅ Synced from Firebase");
+      }
+    });
+
+    function saveToFirebase() {
+      if (!window.stockData) return;
+      stocksRef.set(window.stockData)
+        .then(() => console.log("✅ Saved to Firebase"))
+        .catch((err) => console.error("❌ Firebase Save Failed", err));
+      saveLocal();
+    }
+
+    function addStock() {
+      const name = document.getElementById("stock-name").value.trim();
+      const qty = parseFloat(document.getElementById("stock-qty").value);
+      const unit = document.getElementById("stock-unit").value.trim();
+      const price = parseFloat(document.getElementById("stock-price").value);
+
+      if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
+        alert("Enter valid name, quantity, and price.");
+        return;
+      }
+
+      const existing = window.stockData.find(s => s.name.toLowerCase() === name.toLowerCase());
+      if (existing) {
+        existing.qty += qty;
+        existing.unit = unit;
+        existing.price = price;
+      } else {
+        window.stockData.push({ name, qty, unit, price });
+      }
+
+      saveToFirebase();
+      renderStock();
+      document.getElementById("stock-name").value = "";
+      document.getElementById("stock-qty").value = "";
+      document.getElementById("stock-unit").value = "";
+      document.getElementById("stock-price").value = "";
+    }
+
+    document.addEventListener("DOMContentLoaded", renderStock);
+  </script>
+
+</body>
+</html>
