@@ -63,8 +63,8 @@
 
   /* controls */
   .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-  input,select{padding:10px;border:1px solid var(--border);border-radius:10px;outline:none;font-size:0.95rem;background:#fff}
-  input:focus,select:focus{box-shadow:0 4px 18px rgba(0,95,184,0.06);border-color:var(--accent)}
+  input,select,textarea{padding:10px;border:1px solid var(--border);border-radius:10px;outline:none;font-size:0.95rem;background:#fff}
+  input:focus,select:focus,textarea:focus{box-shadow:0 4px 18px rgba(0,95,184,0.06);border-color:var(--accent)}
   .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
   .btn-primary{background:var(--accent);color:white;box-shadow:0 6px 18px rgba(0,95,184,0.12)}
   .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--accent-2)}
@@ -85,6 +85,9 @@
   .po-table tbody td{padding:10px}
   .line-number{width:48px;text-align:center;color:var(--muted);font-weight:700}
   .subtotal{font-weight:800;text-align:right;color:#0b2b3a}
+
+  /* pending table tint (option 2) */
+  .pending-head th{background:#eaf6ff;color:var(--accent-2);padding:12px;border-bottom:1px solid var(--border);font-weight:800}
 
   /* summary */
   .summary-row{display:flex;justify-content:space-between;align-items:center;padding-top:12px;gap:12px}
@@ -123,6 +126,8 @@
           <li><button id="nav-dashboard" class="active" onclick="openMenu('dashboard')">🏠 Dashboard</button></li>
           <li><button id="nav-stock" onclick="openMenu('stock')">📦 Stock Management</button></li>
           <li><button id="nav-po" onclick="openMenu('po')">🧾 Purchase Orders</button></li>
+          <!-- NEW: Pending menu -->
+          <li><button id="nav-pending" onclick="openMenu('pending')">🛒 Pending / To Purchase</button></li>
         </ul>
       </nav>
       <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
@@ -247,6 +252,39 @@
         </div>
       </section>
 
+      <!-- PENDING / TO PURCHASE -->
+      <section id="pending" class="card page" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
+          <div>
+            <h3 style="margin:0">Pending / To Purchase</h3>
+            <div class="muted small">Items to buy or pending deliveries to schools.</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select id="pending-filter" onchange="renderPendingList()" style="padding:8px;border-radius:8px;border:1px solid var(--border)">
+              <option value="all">All</option>
+              <option value="pending">Pending</option>
+              <option value="done">Done</option>
+            </select>
+            <button class="btn btn-primary" onclick="showPendingModal()">+ Add Pending Item</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px;overflow:auto">
+          <table id="pendingTable" style="width:100%;border-collapse:collapse">
+            <thead class="pending-head">
+              <tr>
+                <th>Item</th>
+                <th style="width:120px">Qty Needed</th>
+                <th>Reason</th>
+                <th style="width:140px">Status</th>
+                <th style="width:160px">Action</th>
+              </tr>
+            </thead>
+            <tbody id="pendingTableBody"></tbody>
+          </table>
+        </div>
+      </section>
+
     </main>
   </div>
 </div>
@@ -267,6 +305,22 @@
       <input id="modal-stock-price" type="number" placeholder="Price" style="width:160px" step="0.01">
       <button class="btn btn-primary" onclick="saveStockFromModal()">Save</button>
       <button class="btn btn-ghost" onclick="closeAddStockModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Pending modal (add/edit) -->
+<div id="modalPending" class="modal">
+  <div class="modal-box" style="max-width:520px">
+    <h3 style="margin:0 0 8px 0;color:var(--accent)">Add / Edit Pending Item</h3>
+    <div class="row" style="margin-bottom:8px">
+      <input id="pending-item" placeholder="Item name" style="flex:2">
+      <input id="pending-qty" type="number" placeholder="Qty needed" style="flex:1" min="1">
+    </div>
+    <textarea id="pending-reason" placeholder="Reason (e.g. out of stock or missing delivery)" style="width:100%;height:80px;border:1px solid var(--border);border-radius:8px;padding:8px"></textarea>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
+      <button class="btn btn-primary" onclick="savePendingItem()">Save</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalPending')">Cancel</button>
     </div>
   </div>
 </div>
@@ -303,12 +357,18 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const stocksRef = db.ref("stocks");
 const posRef = db.ref("purchaseOrders");
+/* NEW pending ref */
+const pendingRef = db.ref("pendingItems");
 
 /* ---------- Local state ---------- */
 window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
 window.poLines = [];
 let editingStockIndex = null;
 let lastViewedPO = null;
+
+/* pending state */
+let pendingItems = [];
+let editingPendingIndex = null;
 
 function saveLocal(){ localStorage.setItem("stockData", JSON.stringify(window.stockData || [])); }
 
@@ -325,11 +385,12 @@ function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 function openMenu(menuId){
   document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
   document.getElementById(menuId).style.display = 'block';
-  document.getElementById('pageTitle').textContent = menuId === 'dashboard' ? 'Dashboard' : (menuId==='stock' ? 'Stock Management' : 'Purchase Orders');
+  document.getElementById('pageTitle').textContent = menuId === 'dashboard' ? 'Dashboard' : (menuId==='stock' ? 'Stock Management' : (menuId==='po' ? 'Purchase Orders' : 'Pending / To Purchase'));
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   if(menuId==='dashboard') document.getElementById('nav-dashboard').classList.add('active');
   if(menuId==='stock') document.getElementById('nav-stock').classList.add('active');
   if(menuId==='po') document.getElementById('nav-po').classList.add('active');
+  if(menuId==='pending') document.getElementById('nav-pending').classList.add('active');
 }
 
 /* ---------- Stock logic ---------- */
@@ -362,6 +423,16 @@ function showAddStockModal(){
   showModal('modalAddStock');
 }
 function closeAddStockModal(){ closeModal('modalAddStock'); }
+
+/* prefill-capable openAddStock (used when auto-adding from pending) */
+function openAddStockPrefill(name){
+  editingStockIndex = null;
+  document.getElementById('modal-stock-name').value = name || '';
+  document.getElementById('modal-stock-qty').value = '';
+  document.getElementById('modal-stock-unit').value = '';
+  document.getElementById('modal-stock-price').value = '';
+  showModal('modalAddStock');
+}
 
 function openEditStock(i){
   editingStockIndex = i;
@@ -418,6 +489,8 @@ function saveStocksToFirebase(){
     renderStock();
     renderPOList();
     refreshSummary();
+    // after stock changes, check low stock to auto add pending items
+    setTimeout(()=> checkLowStock(), 300);
   }).catch(e => console.error(e));
 }
 
@@ -429,6 +502,8 @@ stocksRef.on('value', snap => {
     saveLocal();
     renderStock();
     refreshSummary();
+    // auto-check pending on sync
+    setTimeout(()=> checkLowStock(), 300);
   } else {
     window.stockData = JSON.parse(localStorage.getItem('stockData') || '[]');
     renderStock(); refreshSummary();
@@ -607,6 +682,149 @@ function openPrintableInvoice(p){
   setTimeout(()=> w.print(),300);
 }
 
+/* ---------- Pending / To Purchase ---------- */
+/* render pending list */
+function renderPendingList(){
+  const filter = document.getElementById('pending-filter').value;
+  const tbody = document.getElementById('pendingTableBody');
+  tbody.innerHTML = '';
+  const list = pendingItems.filter(p => {
+    if(filter === 'all') return true;
+    if(filter === 'pending') return p.status !== 'done';
+    if(filter === 'done') return p.status === 'done';
+    return true;
+  });
+  if(!list.length){
+    tbody.innerHTML = `<tr><td colspan="5" style="padding:14px;text-align:center;color:var(--muted)">No items</td></tr>`;
+    return;
+  }
+  list.forEach((p, idx)=>{
+    const i = pendingItems.indexOf(p); // real index
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><a href="#" onclick="openLinkedStock('${escape(p.item)}');return false;" style="color:var(--accent);text-decoration:none;font-weight:600">${escape(p.item)}</a></td>
+      <td class="text-right">${p.qty}</td>
+      <td>${escape(p.reason||'')}</td>
+      <td>${p.status === 'done' ? '✅ Done' : '🕒 Pending'}</td>
+      <td>
+         <button class="btn btn-ghost" onclick="editPendingItem(${i})">Edit</button>
+         ${p.status !== 'done' ? `<button class="btn btn-primary" onclick="markPendingDone(${i})">Mark Done</button>` : ''}
+         <button class="btn btn-ghost" onclick="deletePendingItem(${i})">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* show add modal for pending */
+function showPendingModal(){
+  editingPendingIndex = null;
+  document.getElementById('pending-item').value = '';
+  document.getElementById('pending-qty').value = '';
+  document.getElementById('pending-reason').value = '';
+  showModal('modalPending');
+}
+
+/* save pending item */
+function savePendingItem(){
+  const item = (document.getElementById('pending-item').value || '').trim();
+  const qty = parseFloat(document.getElementById('pending-qty').value) || 0;
+  const reason = (document.getElementById('pending-reason').value || '').trim();
+  if(!item){ showToast('Enter item name'); return; }
+  if(qty <= 0){ showToast('Invalid quantity'); return; }
+  const data = { item, qty, reason, status:'pending', createdAt: Date.now() };
+  if(editingPendingIndex !== null){
+    pendingItems[editingPendingIndex] = data;
+  } else {
+    pendingItems.push(data);
+  }
+  pendingRef.set(pendingItems).then(()=> {
+    closeModal('modalPending');
+    showToast('Saved ✔');
+  }).catch(err=> {
+    console.error(err);
+    showToast('Error saving');
+  });
+}
+
+/* edit pending */
+function editPendingItem(i){
+  const p = pendingItems[i];
+  if(!p) return;
+  editingPendingIndex = i;
+  document.getElementById('pending-item').value = p.item;
+  document.getElementById('pending-qty').value = p.qty;
+  document.getElementById('pending-reason').value = p.reason || '';
+  showModal('modalPending');
+}
+
+/* delete pending */
+function deletePendingItem(i){
+  if(!confirm('Delete this record?')) return;
+  pendingItems.splice(i,1);
+  pendingRef.set(pendingItems);
+}
+
+/* mark done */
+function markPendingDone(i){
+  if(!pendingItems[i]) return;
+  pendingItems[i].status = 'done';
+  pendingRef.set(pendingItems);
+}
+
+/* open linked stock and offer to add if missing */
+function openLinkedStock(itemName){
+  openMenu('stock');
+  setTimeout(()=>{
+    const rows = document.querySelectorAll('#stockTableBody tr');
+    let found = false;
+    rows.forEach(row=>{
+      const nameCell = row.querySelector('td');
+      if(nameCell && nameCell.textContent.trim().toLowerCase() === itemName.toLowerCase()){
+        row.scrollIntoView({behavior:'smooth',block:'center'});
+        row.style.transition = 'background 0.3s ease';
+        row.style.background = '#fff9c4'; // highlight yellow
+        setTimeout(()=>row.style.background = '',2500);
+        found = true;
+      }
+    });
+
+    if(!found){
+      if(confirm(`"${itemName}" not found in stock list.\nAdd it to stock now?`)){
+        // open add stock modal and prefill name
+        openAddStockPrefill(itemName);
+      } else {
+        showToast(`"${itemName}" not found in stock list`);
+      }
+    }
+  },300);
+}
+
+/* firebase listener for pending */
+pendingRef.on('value', snap=>{
+  const val = snap.val();
+  pendingItems = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
+  renderPendingList();
+});
+
+/* auto-detect low stock (<5) and add to pending if not present */
+function checkLowStock(){
+  try{
+    const low = (window.stockData||[]).filter(s => (parseFloat(s.qty)||0) < 5);
+    let changed = false;
+    low.forEach(s=>{
+      const exists = pendingItems.find(p => p.item.toLowerCase() === (s.name||'').toLowerCase());
+      if(!exists){
+        pendingItems.push({ item: s.name, qty: Math.max(1, 10 - (parseFloat(s.qty)||0)), reason: 'Low stock — auto-added', status:'pending', createdAt: Date.now() });
+        changed = true;
+      }
+    });
+    if(changed) pendingRef.set(pendingItems);
+  }catch(e){ console.error(e); }
+}
+
+/* ---------- End of Pending ---------- */
+
 /* ---------- Summary ---------- */
 function refreshSummary(){
   document.getElementById('summary-count').textContent = (window.stockData||[]).filter(Boolean).length;
@@ -619,16 +837,8 @@ function refreshSummary(){
 /* ---------- Utilities ---------- */
 function escape(s){ if(s===undefined || s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-/* ---------- Init ---------- */
-document.addEventListener('DOMContentLoaded',()=>{
-  openMenu('dashboard');
-  renderStock();
-  initPOForm();
-  renderPOList();
-  refreshSummary();
-  posRef.on('value', ()=> renderPOList());
-});
-  function printStockList() {
+/* ---------- Print Stock List (restored) ---------- */
+function printStockList() {
   const printWindow = window.open('', '_blank');
   const tableHTML = `
     <table style="width:100%;border-collapse:collapse;margin-top:14px">
@@ -673,7 +883,18 @@ document.addEventListener('DOMContentLoaded',()=>{
   setTimeout(()=>printWindow.print(),300);
 }
 
-
+/* ---------- Init ---------- */
+document.addEventListener('DOMContentLoaded',()=>{
+  openMenu('dashboard');
+  renderStock();
+  initPOForm();
+  renderPOList();
+  refreshSummary();
+  posRef.on('value', ()=> renderPOList());
+  // pendingRef listener is already registered above
+  // check low stock once on load
+  setTimeout(()=> checkLowStock(), 700);
+});
 /* ---------- End ---------- */
 </script>
 </body>
