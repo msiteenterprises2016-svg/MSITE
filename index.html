@@ -172,12 +172,13 @@
       }
     }
 
-  @media print {
+@media print {
   @page {
-    size: landscape; /* Print horizontally */
+    size: landscape; /* horizontal layout */
     margin: 0.4in;
   }
 
+  /* Make sure text and table are visible */
   body {
     background: white !important;
     color: black !important;
@@ -193,27 +194,35 @@
     padding: 8px 0;
     margin-bottom: 10px;
     text-align: center;
+    border-radius: 0;
   }
 
+  /* ✅ Keep the table visible */
+  main {
+    background: white !important;
+    color: black !important;
+    box-shadow: none !important;
+    border: none !important;
+    padding: 0;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  /* Hide only the controls */
   .input-row,
   .toolbar,
-  button,
+  button:not(.print-btn),
   #toast,
   #confirmModal {
     display: none !important;
   }
 
-  main {
-    box-shadow: none !important;
-    border: none !important;
-    padding: 0;
-    max-width: 100%;
-  }
-
+  /* Table style for printing */
   table {
     width: 100%;
     border-collapse: collapse;
     font-size: 11px;
+    color: black;
   }
 
   th, td {
@@ -229,14 +238,23 @@
   }
 
   tr:nth-child(even) {
-    background: #f9f9f9 !important;
+    background: #f8f8f8 !important;
   }
 
   tr:hover {
     background: none !important;
   }
 
-  main, table, t
+  /* Prevent rows from splitting across pages */
+  main, table, tr, td, th {
+    page-break-inside: avoid;
+  }
+
+  table {
+    margin: auto;
+  }
+}
+
 
 
     /* ====== Toast ====== */
