@@ -214,47 +214,51 @@
       </table>
     </section>
 
-    <!-- PURCHASE ORDERS -->
-    <section id="po" class="page" style="display:none;">
-      <h2>Purchase Orders</h2>
+<!-- PURCHASE ORDERS -->
+<section id="po" class="page" style="display:none;">
+  <h2>Purchase Orders</h2>
 
-      <div style="display:flex;gap:12px;flex-wrap:wrap;">
-        <div style="flex:1;min-width:220px;">
-          <label class="small">PO Number</label>
-          <div style="margin-top:6px"><input id="po-number" readonly></div>
-        </div>
-
-        <div style="flex:1;min-width:220px;">
-          <label class="small">Date</label>
-          <div style="margin-top:6px"><input id="po-date" type="date"></div>
-        </div>
-
-        <div style="flex:1;min-width:220px;">
-          <label class="small">School / Customer</label>
-          <div style="margin-top:6px"><input id="po-customer" placeholder="School name or Customer"></div>
-        </div>
+  <!-- PO FORM CARD -->
+  <div style="background:#f9fbff;border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:18px;">
+    <div class="input-row">
+      <div style="flex:1;min-width:220px;">
+        <label class="small">PO Number</label>
+        <input id="po-number" readonly>
       </div>
-
-      <div style="margin-top:12px">
-        <div class="po-lines" id="po-lines"></div>
-
-        <div style="display:flex;gap:8px;margin-top:8px;">
-          <button class="ghost" onclick="addPOLine()">+ Add line</button>
-          <button class="ghost" onclick="clearPOLines()">Clear lines</button>
-        </div>
-
-        <div class="po-summary">
-          <div class="small">Total:</div>
-          <div id="po-total">₱0.00</div>
-          <button class="primary" onclick="submitPO()">Submit PO</button>
-        </div>
+      <div style="flex:1;min-width:220px;">
+        <label class="small">Date</label>
+        <input id="po-date" type="date">
       </div>
+      <div style="flex:1;min-width:220px;">
+        <label class="small">School / Customer</label>
+        <input id="po-customer" placeholder="School name or Customer">
+      </div>
+    </div>
 
-      <hr style="margin:16px 0;border:none;border-top:1px solid var(--border)" />
+    <h4 style="margin-top:16px;color:var(--primary-dark);">Line Items</h4>
+    <div class="po-lines" id="po-lines"></div>
 
-      <h3>Existing Purchase Orders</h3>
-      <div id="poListContainer"><em class="muted">Loading POs...</em></div>
-    </section>
+    <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+      <button class="ghost" onclick="addPOLine()">+ Add line</button>
+      <button class="ghost" onclick="clearPOLines()">Clear lines</button>
+    </div>
+
+    <div class="po-summary">
+      <div class="small">Total:</div>
+      <div id="po-total">₱0.00</div>
+      <button class="primary" onclick="submitPO()">Submit PO</button>
+    </div>
+  </div>
+
+  <!-- EXISTING ORDERS -->
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <h3 style="margin:0;">Existing Purchase Orders</h3>
+    <button class="ghost" onclick="renderPOList()">⟳ Refresh</button>
+  </div>
+
+  <div id="poListContainer"><em class="muted">Loading POs...</em></div>
+</section>
+
 
   </main>
 </div>
@@ -668,6 +672,89 @@
 
   // ensure the main firebase stocks listener (already added above) initializes UI quickly
   // stocksRef.on handler earlier will update stockData and trigger UI changes when firebase responds.
+  /***** Enhanced PO Detail Modal + Print *****/
+const poModal = document.createElement('div');
+poModal.className = 'modal';
+poModal.innerHTML = `
+  <div class="modal-box" id="poDetailBox" style="max-width:650px;text-align:left;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <h3 style="margin:0;color:var(--primary-dark)">Purchase Order</h3>
+      <button class="ghost" onclick="closePOModal()">✕</button>
+    </div>
+    <div id="poDetailContent" style="font-size:0.95rem;line-height:1.5;"></div>
+    <div style="text-align:right;margin-top:16px;">
+      <button class="primary" onclick="printCurrentPO()">🖨 Print PO</button>
+    </div>
+  </div>`;
+document.body.appendChild(poModal);
+
+let currentPOToPrint = null;
+function viewPODetail(pObj){
+  currentPOToPrint = pObj;
+  const linesHtml = (pObj.lines||[]).map(l=>`
+    <tr>
+      <td>${escapeHtml(l.itemName)}</td>
+      <td class="right">${l.qty}</td>
+      <td>${escapeHtml(l.unit||'')}</td>
+      <td class="right">₱${(l.price||0).toFixed(2)}</td>
+      <td class="right">₱${(l.qty*l.price).toFixed(2)}</td>
+    </tr>`).join('');
+  const html = `
+    <div style="margin-bottom:8px;">
+      <div><strong>PO Number:</strong> ${pObj.poNumber}</div>
+      <div><strong>Customer:</strong> ${escapeHtml(pObj.customer)}</div>
+      <div><strong>Date:</strong> ${pObj.date}</div>
+    </div>
+    <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+      <thead>
+        <tr style="background:var(--primary);color:white;">
+          <th style="padding:6px;">Item</th>
+          <th style="padding:6px;">Qty</th>
+          <th style="padding:6px;">Unit</th>
+          <th style="padding:6px;">Price</th>
+          <th style="padding:6px;">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>${linesHtml}</tbody>
+    </table>
+    <div style="text-align:right;margin-top:8px;font-weight:700;">Total: ₱${(pObj.total||0).toFixed(2)}</div>
+  `;
+  document.getElementById('poDetailContent').innerHTML = html;
+  poModal.classList.add('show');
+}
+function closePOModal(){ poModal.classList.remove('show'); }
+function printCurrentPO(){
+  if(!currentPOToPrint){ showToast('No PO loaded'); return; }
+  const p = currentPOToPrint;
+  const w = window.open('', '_blank');
+  w.document.write(`
+    <html><head><title>${p.poNumber}</title>
+    <style>
+      body{font-family:Arial,Helvetica,sans-serif;padding:20px;}
+      table{width:100%;border-collapse:collapse;margin-top:12px;}
+      th,td{border:1px solid #999;padding:6px;text-align:left;}
+      th{background:#004b8d;color:white;}
+      td.right{text-align:right;}
+    </style></head><body>
+      <h2>Purchase Order</h2>
+      <div><strong>PO Number:</strong> ${p.poNumber}</div>
+      <div><strong>Customer:</strong> ${escapeHtml(p.customer)}</div>
+      <div><strong>Date:</strong> ${p.date}</div>
+      <table>
+        <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Price</th><th>Subtotal</th></tr></thead>
+        <tbody>${(p.lines||[]).map(l=>`<tr>
+          <td>${escapeHtml(l.itemName)}</td>
+          <td class="right">${l.qty}</td>
+          <td>${escapeHtml(l.unit||'')}</td>
+          <td class="right">₱${(l.price||0).toFixed(2)}</td>
+          <td class="right">₱${(l.qty*l.price).toFixed(2)}</td>
+        </tr>`).join('')}</tbody>
+      </table>
+      <h3 style="text-align:right;margin-top:10px;">Total: ₱${(p.total||0).toFixed(2)}</h3>
+    </body></html>`);
+  w.document.close(); w.print();
+}
+
 </script>
 </body>
 </html>
