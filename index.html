@@ -9,22 +9,28 @@
 
 <style>
   :root{
-    --bg-1: linear-gradient(135deg,#004b8d,#1976d2 60%,#63a4ff);
-    --card-bg:#ffffff;
-    --accent:#005fb8;           /* chosen Fluent-like blue */
-    --accent-2:#0a63a6;
-    --muted:#6b7a86;
-    --border:#e6eef8;
-    --danger:#e53935;
-    --success:#00796b;
-    --glass: rgba(255,255,255,0.9);
-    --radius:14px;
-    --shadow-1: 0 6px 20px rgba(8,30,60,0.12);
-    --shadow-2: 0 3px 8px rgba(8,30,60,0.06);
-    --max-width:1150px;
-    --sidebar-w:260px;
-    font-synthesis: none;
-  }
+  --bg-1: linear-gradient(135deg,#004b8d,#1976d2 60%,#63a4ff);
+  --card-bg:#ffffff;
+  --accent:#005fb8;           
+  --accent-2:#00509e;          /* slightly darker for buttons only */
+  --text-primary:#1a1a1a;      /* NEW: header/body text */
+  --muted:#5c6b7b;
+  --border:#e3ebf5;
+  --danger:#e53935;
+  --success:#00796b;
+  --glass: rgba(255,255,255,0.92);
+  --radius:14px;
+  --shadow-1: 0 8px 22px rgba(8,30,60,0.12);
+  --shadow-2: 0 4px 12px rgba(8,30,60,0.08);
+  --max-width:1150px;
+  --sidebar-w:260px;
+  font-synthesis:none;
+    h1, h2, h3, h4, h5, h6, .page-title {
+  color: var(--text-primary);
+}
+
+}
+
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;background:var(--bg-1);-webkit-font-smoothing:antialiased;color:#12202b;}
 
