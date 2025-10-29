@@ -1,455 +1,446 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-
-
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>MSITE Inventory System</title>
   <meta name="theme-color" content="#004b8d">
-
-  <!-- Force browsers not to use old cache -->
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
-
-  <!-- Your favicon -->
   <link rel="icon" href="msite.png?v=2.0.0" type="image/png">
+  <style>
+    :root {
+      --primary: #0a63a6;
+      --primary-dark: #004b8d;
+      --light-bg: #f5f8ff;
+      --border: #dbe3ef;
+      --danger: #e53935;
+      --success: #00796b;
+    }
 
-  <!-- Version your styles and scripts -->
-  <link rel="stylesheet" href="style.css?v=2.0.0">
-<style>
-  :root {
-  --primary: #0a63a6;
-  --primary-dark: #004b8d;
-  --light-bg: #f5f8ff;
-  --border: #dbe3ef;
-}
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      color: #222;
+      background: linear-gradient(135deg, #004b8d, #1976d2, #63a4ff);
+      background-attachment: fixed;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
 
-body {
-  font-family: "Segoe UI", Arial, sans-serif;
-  margin: 0;
-  color: #222;
-  background: linear-gradient(135deg, #004b8d, #1976d2, #63a4ff);
-  background-attachment: fixed;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 20px;
-}
+    header {
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--primary-dark);
+      width: 100%;
+      text-align: center;
+      padding: 1rem 0;
+      font-size: 1.8rem;
+      font-weight: 700;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+      backdrop-filter: blur(6px);
+    }
 
-header {
-  background: rgba(255, 255, 255, 0.9);
-  color: var(--primary-dark);
-  width: 100%;
-  text-align: center;
-  padding: 1rem 0;
-  font-size: 1.8rem;
-  font-weight: 700;
-  border-radius: 12px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-  margin-bottom: 20px;
-  backdrop-filter: blur(6px);
-}
+    main {
+      width: 100%;
+      max-width: 950px;
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
 
-main {
-  width: 100%;
-  max-width: 950px;
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-}
+    h2 { color: var(--primary-dark); }
 
-h2 {
-  color: var(--primary-dark);
-}
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 1rem;
+    }
 
-.input-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 1rem;
-}
+    input {
+      flex: 1;
+      min-width: 130px;
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      outline: none;
+      transition: 0.2s;
+    }
 
-input {
-  flex: 1;
-  min-width: 130px;
-  padding: 10px;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  outline: none;
-  transition: 0.2s;
-}
-input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 2px rgba(10, 99, 166, 0.2);
-}
+    input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(10, 99, 166, 0.2);
+    }
 
-button {
-  background: var(--primary);
-  color: white;
-  border: none;
-  padding: 10px 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.2s;
-}
-button:hover {
-  background: var(--primary-dark);
-}
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: 0.2s;
+    }
 
-.toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-bottom: 1rem;
-  gap: 10px;
-}
-.search-box {
-  flex: 1;
-  display: flex;
-  align-items: center;
-}
-.search-box input {
-  width: 100%;
-}
-.sort-buttons button {
-  margin-left: 5px;
-  background: #e9f3ff;
-  color: var(--primary-dark);
-  border: 1px solid var(--primary);
-}
-.sort-buttons button:hover {
-  background: var(--primary);
-  color: white;
-}
+    button:hover { background: var(--primary-dark); }
 
-/* TABLE VIEW (desktop) */
-table {
-  border-collapse: collapse;
-  width: 100%;
-  border-radius: 8px;
-  overflow: hidden;
-  box-shadow: 0 1px 5px rgba(0,0,0,0.05);
-}
-th, td {
-  border-bottom: 1px solid var(--border);
-  padding: 10px 12px;
-  text-align: left;
-}
-th {
-  background: var(--primary);
-  color: white;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-}
-tr:hover {
-  background: #f1f7ff;
-}
-.action-btn {
-  background: #1976d2;
-  padding: 6px 10px;
-  border-radius: 4px;
-}
-.action-btn.delete-btn {
-  background: #e53935;
-}
-.print-btn {
-  background: #00796b;
-  margin-left: 10px;
-}
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+      gap: 10px;
+    }
 
-/* ===== MOBILE CARD VIEW ===== */
-@media (max-width: 750px) {
-  table, thead, tbody, th, td, tr {
-    display: block;
-  }
-  thead {
-    display: none;
-  }
+    .search-box { flex: 1; display: flex; align-items: center; }
+    .search-box input { width: 100%; }
 
-  tr {
-    background: #fff;
-    border-radius: 14px;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-    padding: 15px;
-    margin-bottom: 15px;
-    position: relative;
-  }
+    .sort-buttons button {
+      margin-left: 5px;
+      background: #e9f3ff;
+      color: var(--primary-dark);
+      border: 1px solid var(--primary);
+    }
 
-  td {
-    display: flex;
-    align-items: center;
-    padding: 8px 0;
-    border: none;
-  }
+    .sort-buttons button:hover {
+      background: var(--primary);
+      color: white;
+    }
 
-  td::before {
-    content: attr(data-label);
-    flex-basis: 100px;
-    font-weight: 600;
-    color: var(--primary-dark);
-  }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 1px 5px rgba(0,0,0,0.05);
+    }
 
-  td[data-label="Name"] {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: var(--primary);
-    border-bottom: 1px solid #e3e9f4;
-    padding-bottom: 6px;
-    margin-bottom: 8px;
-  }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 10px 12px;
+      text-align: left;
+    }
 
-  .icon {
-    margin-right: 6px;
-    color: var(--primary-dark);
-  }
+    th {
+      background: var(--primary);
+      color: white;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+    }
 
-  .card-icons {
-    display: flex;
-    justify-content: space-around;
-    margin-top: 6px;
-    color: var(--primary-dark);
-  }
+    tr:hover { background: #f1f7ff; }
 
-  .action-btn {
-    width: 100%;
-    margin-top: 8px;
-  }
-}
+    .action-btn {
+      background: #1976d2;
+      padding: 6px 10px;
+      border-radius: 4px;
+    }
 
-/* === PRINT MODE === */
-@media print {
-  header, .input-row, .toolbar, button {
-    display: none !important;
-  }
-  main {
-    box-shadow: none;
-    border: none;
-    padding: 0;
-  }
-  th {
-    background: #004b8d !important;
-    color: white !important;
-  }
-}
+    .action-btn.delete-btn { background: var(--danger); }
+    .print-btn { background: var(--success); margin-left: 10px; }
 
+    tr.editing { background: #fff3cd; }
 
+    /* ===== MOBILE VIEW ===== */
+    @media (max-width: 750px) {
+      table, thead, tbody, th, td, tr { display: block; }
+      thead { display: none; }
+
+      tr {
+        background: #fff;
+        border-radius: 14px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+        padding: 15px;
+        margin-bottom: 15px;
+      }
+
+      td { display: flex; align-items: center; padding: 8px 0; border: none; }
+      td::before {
+        content: attr(data-label);
+        flex-basis: 100px;
+        font-weight: 600;
+        color: var(--primary-dark);
+      }
+    }
+
+    @media print {
+      header, .input-row, .toolbar, button { display: none !important; }
+      main { box-shadow: none; border: none; padding: 0; }
+    }
+
+    /* ====== Toast ====== */
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: var(--primary-dark);
+      color: white;
+      padding: 12px 18px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateY(20px);
+      transition: 0.3s ease;
+      z-index: 9999;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ====== Confirm Modal ====== */
+    .modal {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex; justify-content: center; align-items: center;
+      z-index: 1000;
+      visibility: hidden;
+      opacity: 0;
+      transition: 0.3s;
+    }
+
+    .modal.show { visibility: visible; opacity: 1; }
+
+    .modal-box {
+      background: white;
+      border-radius: 12px;
+      padding: 20px 25px;
+      text-align: center;
+      max-width: 320px;
+      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+      animation: pop 0.2s ease;
+    }
+
+    @keyframes pop {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .modal-box h3 { margin-bottom: 15px; color: var(--primary-dark); }
+    .modal-buttons { display: flex; justify-content: center; gap: 10px; }
   </style>
 </head>
 <body>
 
-  <header>MSITE Inventory System</header>
+<header>MSITE Inventory System</header>
 
-  <main>
-    <h2 id="stockTitle">Stock Management</h2>
+<main>
+  <h2>Stock Management</h2>
 
-    <div class="input-row">
-      <input id="stock-name" placeholder="Item name">
-      <input id="stock-qty" type="number" placeholder="Quantity">
-      <input id="stock-unit" placeholder="Unit">
-      <input id="stock-price" type="number" placeholder="Price">
-      <button onclick="addStock()">Add Stock</button>
+  <div class="input-row">
+    <input id="stock-name" placeholder="Item name">
+    <input id="stock-qty" type="number" placeholder="Quantity">
+    <input id="stock-unit" placeholder="Unit">
+    <input id="stock-price" type="number" placeholder="Price">
+    <button onclick="addStock()">Add Stock</button>
+  </div>
+
+  <div class="toolbar">
+    <div class="search-box">
+      <input id="search" placeholder="Search item..." oninput="renderStock()">
     </div>
-
-    <div class="toolbar">
-      <div class="search-box">
-        <input id="search" placeholder="Search item..." oninput="renderStock()">
-      </div>
-      <div class="sort-buttons">
-        <button onclick="sortStock('name')">Sort A–Z</button>
-        <button onclick="sortStock('qty')">Sort by Qty</button>
-        <button onclick="sortStock('price')">Sort by Price</button>
-        <button class="print-btn" onclick="printStock()">🖨 Print List</button>
-      </div>
+    <div class="sort-buttons">
+      <button onclick="sortStock('name')">Sort A–Z</button>
+      <button onclick="sortStock('qty')">Sort by Qty</button>
+      <button onclick="sortStock('price')">Sort by Price</button>
+      <button class="print-btn" onclick="window.print()">🖨 Print</button>
     </div>
+  </div>
 
-    <table id="stockTable">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Qty</th>
-          <th>Unit</th>
-          <th>Price</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="stockTableBody"></tbody>
-    </table>
-  </main>
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th><th>Qty</th><th>Unit</th><th>Price</th><th>Action</th>
+      </tr>
+    </thead>
+    <tbody id="stockTableBody"></tbody>
+  </table>
+</main>
 
- <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js?v=2.0.0"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js?v=2.0.0"></script>
+<div id="toast"></div>
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
-      authDomain: "msite-45cd2.firebaseapp.com",
-      databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
-      projectId: "msite-45cd2",
-      storageBucket: "msite-45cd2.firebasestorage.app",
-      messagingSenderId: "634058871629",
-      appId: "1:634058871629:web:e92190c30153f56cf41d04"
-    };
+<div id="confirmModal" class="modal">
+  <div class="modal-box">
+    <h3 id="confirmText">Are you sure?</h3>
+    <div class="modal-buttons">
+      <button onclick="confirmAction()">Yes</button>
+      <button onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const stocksRef = db.ref("stocks");
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
-    function saveLocal() {
-      localStorage.setItem("stockData", JSON.stringify(window.stockData || []));
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
+    authDomain: "msite-45cd2.firebaseapp.com",
+    databaseURL: "https://msite-45cd2-default-rtdb.firebaseio.com/",
+    projectId: "msite-45cd2",
+    storageBucket: "msite-45cd2.firebasestorage.app",
+    messagingSenderId: "634058871629",
+    appId: "1:634058871629:web:e92190c30153f56cf41d04"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
+  const stocksRef = db.ref("stocks");
+  window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
+
+  function saveLocal() {
+    localStorage.setItem("stockData", JSON.stringify(window.stockData || []));
+  }
+
+  function showToast(msg) {
+    const toast = document.getElementById("toast");
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2500);
+  }
+
+  let confirmCallback = null;
+  function showConfirm(message, callback) {
+    document.getElementById("confirmText").textContent = message;
+    document.getElementById("confirmModal").classList.add("show");
+    confirmCallback = callback;
+  }
+  function confirmAction() {
+    if (confirmCallback) confirmCallback();
+    closeModal();
+  }
+  function closeModal() {
+    document.getElementById("confirmModal").classList.remove("show");
+  }
+
+  function saveToFirebase() {
+    const updates = {};
+    window.stockData.forEach((item, index) => updates[index] = item);
+    stocksRef.update(updates)
+      .then(() => console.log("✅ Firebase updated"))
+      .catch(err => console.error("❌ Firebase error:", err));
+    saveLocal();
+  }
+
+  function addStock() {
+    const name = document.getElementById("stock-name").value.trim();
+    const qty = parseFloat(document.getElementById("stock-qty").value);
+    const unit = document.getElementById("stock-unit").value.trim();
+    const price = parseFloat(document.getElementById("stock-price").value);
+    if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
+      showToast("⚠ Please enter valid info.");
+      return;
     }
 
-    window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
+    const existing = window.stockData.find(s => s.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.qty += qty;
+      existing.unit = unit;
+      existing.price = price;
+    } else {
+      window.stockData.push({ name, qty, unit, price });
+    }
+    saveToFirebase();
+    renderStock();
+    showToast("✅ Stock added!");
+    document.querySelectorAll('#stock-name,#stock-qty,#stock-unit,#stock-price').forEach(e => e.value = "");
+  }
 
-function renderStock() {
-  const tbody = document.getElementById("stockTableBody");
-  const searchVal = document.getElementById("search").value.toLowerCase();
-  tbody.innerHTML = "";
-
-  (window.stockData || [])
-    .filter(item => item.name.toLowerCase().includes(searchVal))
-    .forEach((item, i) => {
-      const tr = document.createElement("tr");
-
-      // Data cells
-      const tdName = document.createElement("td");
-      tdName.setAttribute("data-label", "Name");
-      tdName.textContent = item.name;
-      tr.appendChild(tdName);
-
-      const tdQty = document.createElement("td");
-      tdQty.setAttribute("data-label", "Qty");
-      tdQty.innerHTML = `<span class="icon">📦</span> ${item.qty}`;
-      tdQty.contentEditable = true;
-      tdQty.onblur = () => {
-        window.stockData[i].qty = parseFloat(tdQty.textContent) || 0;
-        saveToFirebase();
-      };
-      tr.appendChild(tdQty);
-
-      const tdUnit = document.createElement("td");
-      tdUnit.setAttribute("data-label", "Unit");
-      tdUnit.innerHTML = `<span class="icon">⚖️</span> ${item.unit}`;
-      tdUnit.contentEditable = true;
-      tdUnit.onblur = () => {
-        window.stockData[i].unit = tdUnit.textContent.trim();
-        saveToFirebase();
-      };
-      tr.appendChild(tdUnit);
-
-      const tdPrice = document.createElement("td");
-      tdPrice.setAttribute("data-label", "Price");
-      tdPrice.innerHTML = `<span class="icon">💰</span> ${item.price}`;
-      tdPrice.contentEditable = true;
-      tdPrice.onblur = () => {
-        window.stockData[i].price = parseFloat(tdPrice.textContent) || 0;
-        saveToFirebase();
-      };
-      tr.appendChild(tdPrice);
-
-      const tdAct = document.createElement("td");
-      tdAct.setAttribute("data-label", "Action");
-      const del = document.createElement("button");
-      del.textContent = "Delete";
-      del.className = "action-btn delete-btn";
-      del.onclick = () => {
-        window.stockData.splice(i, 1);
-        saveToFirebase();
-        renderStock();
-      };
-      tdAct.appendChild(del);
-      tr.appendChild(tdAct);
-
-      tbody.appendChild(tr);
-    });
-}
-
-
-
-    function sortStock(type) {
-      window.stockData.sort((a, b) => {
-        if (type === 'name') return a.name.localeCompare(b.name);
-        return a[type] - b[type];
+  function renderStock() {
+    const tbody = document.getElementById("stockTableBody");
+    const searchVal = document.getElementById("search").value.toLowerCase();
+    tbody.innerHTML = "";
+    (window.stockData || [])
+      .filter(item => item.name.toLowerCase().includes(searchVal))
+      .forEach((item, i) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td data-label="Name">${item.name}</td>
+          <td data-label="Qty">${item.qty}</td>
+          <td data-label="Unit">${item.unit}</td>
+          <td data-label="Price">${item.price}</td>
+          <td data-label="Action">
+            <button class="action-btn" onclick="startEdit(${i}, this)">Edit</button>
+            <button class="action-btn delete-btn" onclick="deleteStock(${i})">Delete</button>
+          </td>`;
+        tbody.appendChild(tr);
       });
-      renderStock();
-      saveToFirebase();
+  }
+
+  function startEdit(i, btn) {
+    const row = btn.closest("tr");
+    const item = window.stockData[i];
+    row.classList.add("editing");
+    row.innerHTML = `
+      <td><input id="edit-name" value="${item.name}" disabled></td>
+      <td><input id="edit-qty" type="number" value="${item.qty}"></td>
+      <td><input id="edit-unit" value="${item.unit}"></td>
+      <td><input id="edit-price" type="number" value="${item.price}"></td>
+      <td>
+        <button onclick="saveEdit(${i})">Save</button>
+        <button class="delete-btn" onclick="renderStock()">Cancel</button>
+      </td>`;
+  }
+
+  function saveEdit(i) {
+    const qty = parseFloat(document.getElementById("edit-qty").value);
+    const price = parseFloat(document.getElementById("edit-price").value);
+    const unit = document.getElementById("edit-unit").value.trim();
+    if (isNaN(qty) || qty < 0 || isNaN(price) || price < 0 || !unit) {
+      showToast("⚠ Invalid values!");
+      return;
     }
 
-    function printStock() {
-      const now = new Date().toLocaleString();
-      document.querySelector("#stockTitle").setAttribute("data-date", now);
-      window.print();
-    }
-
- function saveToFirebase() {
-  if (!window.stockData) return;
-
-  const updates = {};
-  window.stockData.forEach((item, index) => {
-    updates[index] = item;
-  });
-
-  stocksRef.update(updates)
-    .then(() => console.log("✅ Updated Firebase"))
-    .catch((err) => console.error("❌ Firebase Update Failed", err));
-
-  saveLocal();
-}
-
-
-    function addStock() {
-      const name = document.getElementById("stock-name").value.trim();
-      const qty = parseFloat(document.getElementById("stock-qty").value);
-      const unit = document.getElementById("stock-unit").value.trim();
-      const price = parseFloat(document.getElementById("stock-price").value);
-
-      if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
-        alert("Enter valid name, quantity, and price.");
-        return;
-      }
-
-      const existing = window.stockData.find(s => s.name.toLowerCase() === name.toLowerCase());
-      if (existing) {
-        existing.qty += qty;
-        existing.unit = unit;
-        existing.price = price;
-      } else {
-        window.stockData.push({ name, qty, unit, price });
-      }
-
+    showConfirm("Save changes?", () => {
+      window.stockData[i].qty = qty;
+      window.stockData[i].unit = unit;
+      window.stockData[i].price = price;
       saveToFirebase();
       renderStock();
-      document.querySelectorAll('#stock-name,#stock-qty,#stock-unit,#stock-price').forEach(e => e.value = "");
-    }
-
-    stocksRef.on("value", (snap) => {
-      const data = snap.val();
-      if (data) {
-        window.stockData = Array.isArray(data) ? data : Object.values(data);
-        saveLocal();
-        renderStock();
-      }
+      showToast("✅ Updated successfully!");
     });
+  }
 
-    document.addEventListener("DOMContentLoaded", renderStock);
-  </script>
-  <script>
-  // Automatically add a timestamp to bust cache
-  document.querySelectorAll('link[rel="stylesheet"], script[src]').forEach(el => {
-    const src = el.href || el.src;
-    if (src && !src.includes('https://www.gstatic.com')) { // avoid Firebase CDN
-      const separator = src.includes('?') ? '&' : '?';
-      const newSrc = src + separator + 'v=' + new Date().getTime();
-      if (el.tagName === 'LINK') el.href = newSrc;
-      if (el.tagName === 'SCRIPT') el.src = newSrc;
+  function deleteStock(i) {
+    showConfirm("Delete this item?", () => {
+      window.stockData.splice(i, 1);
+      saveToFirebase();
+      renderStock();
+      showToast("🗑 Deleted");
+    });
+  }
+
+  function sortStock(type) {
+    window.stockData.sort((a, b) => {
+      if (type === "name") return a.name.localeCompare(b.name);
+      return a[type] - b[type];
+    });
+    renderStock();
+    saveToFirebase();
+  }
+
+  stocksRef.on("value", snap => {
+    const data = snap.val();
+    if (data) {
+      window.stockData = Array.isArray(data) ? data : Object.values(data);
+      saveLocal();
+      renderStock();
     }
   });
-</script>
 
+  document.addEventListener("DOMContentLoaded", renderStock);
+</script>
 </body>
 </html>
