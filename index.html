@@ -1,507 +1,283 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>MSITE Inventory System</title>
-  <meta name="theme-color" content="#004b8d">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MSITE Inventory — Dashboard</title>
+  <meta name="theme-color" content="#004b8d" />
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <link rel="icon" href="msite.png?v=2.0.0" type="image/png">
+
   <style>
-    :root {
-      --primary: #0a63a6;
-      --primary-dark: #004b8d;
-      --light-bg: #f5f8ff;
-      --border: #dbe3ef;
-      --danger: #e53935;
-      --success: #00796b;
+    :root{
+      --primary:#0a63a6;
+      --primary-dark:#004b8d;
+      --light-bg:#f5f8ff;
+      --border:#dbe3ef;
+      --danger:#e53935;
+      --success:#00796b;
+      --sidebar-w:260px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0;font-family:"Segoe UI",Arial,sans-serif;color:#222;background:linear-gradient(135deg,#004b8d,#1976d2,#63a4ff);}
+
+    /* Layout */
+    .app {
+      min-height:100vh;
+      display:flex;
+      gap:20px;
+      padding:20px;
+      align-items:flex-start;
     }
 
-    body {
-      font-family: "Segoe UI", Arial, sans-serif;
-      margin: 0;
-      color: #222;
-      background: linear-gradient(135deg, #004b8d, #1976d2, #63a4ff);
-      background-attachment: fixed;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
+    /* Sidebar */
+    .sidebar {
+      width:var(--sidebar-w);
+      background:rgba(255,255,255,0.95);
+      border-radius:12px;
+      padding:12px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.12);
+      position:sticky;
+      top:20px;
+      height:calc(100vh - 40px);
+      overflow:auto;
+    }
+    .brand { font-size:18px;font-weight:800;color:var(--primary-dark);text-align:center;padding:10px 6px;margin-bottom:6px;border-bottom:1px solid var(--border); }
+    .nav { list-style:none;padding:0;margin:12px 0; }
+    .nav li { margin:8px 0; }
+    .nav button {
+      width:100%;
+      text-align:left;
+      background:none;border:0;padding:10px;border-radius:8px;cursor:pointer;font-weight:600;
+      color:var(--primary-dark);
+    }
+    .nav button.active, .nav button:hover { background:linear-gradient(90deg, #e9f3ff, #f4fbff); color:var(--primary); box-shadow:0 2px 8px rgba(10,99,166,0.06); }
+
+    /* Content area */
+    .content {
+      flex:1;
+      max-width:950px;
+      width:100%;
+      background:white;
+      border-radius:12px;
+      padding:20px;
+      box-shadow:0 6px 18px rgba(0,0,0,0.12);
+      min-height:420px;
     }
 
-    header {
-      background: rgba(255, 255, 255, 0.9);
-      color: var(--primary-dark);
-      width: 100%;
-      text-align: center;
-      padding: 1rem 0;
-      font-size: 1.8rem;
-      font-weight: 700;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-      backdrop-filter: blur(6px);
+    header.app-top {
+      display:flex;align-items:center;gap:12px;margin-bottom:12px;
+    }
+    .hamburger { display:none; background:var(--primary); color:white; border:0;padding:10px;border-radius:8px; cursor:pointer; }
+    .page-title { font-size:1.4rem;color:var(--primary-dark);font-weight:800; }
+
+    /* Form / table styles reuse from your file, refined */
+    .input-row { display:flex;flex-wrap:wrap;gap:10px;margin:12px 0; }
+    input, select, textarea { padding:10px;border:1px solid var(--border);border-radius:6px;outline:none;min-width:120px; }
+    input:focus, select:focus, textarea:focus { box-shadow:0 0 0 2px rgba(10,99,166,0.12);border-color:var(--primary); }
+    button.primary { background:var(--primary); color:white;border:0;padding:10px 14px;border-radius:8px;font-weight:700;cursor:pointer; }
+    button.ghost { background:#f6f9ff;border:1px solid var(--border); color:var(--primary-dark); padding:8px 10px;border-radius:8px; cursor:pointer; }
+    .muted { color:#6a7a8a;font-size:0.95rem; }
+
+    /* Table */
+    table { width:100%; border-collapse:collapse; margin-top:8px; }
+    th,td { padding:8px 10px;border-bottom:1px solid var(--border); text-align:left; }
+    th { background:var(--primary); color:#fff;font-weight:700; }
+    tr:hover td { background:#fbfdff; }
+
+    /* PO lines UI */
+    .po-lines { border:1px dashed var(--border); padding:10px;border-radius:8px; margin:8px 0; }
+    .po-line { display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+    .po-line > * { flex:1; }
+    .po-line .qty { max-width:120px; flex:0 0 110px; }
+    .po-line .price { max-width:140px; flex:0 0 140px; }
+
+    .po-summary { display:flex; justify-content:flex-end; gap:16px; align-items:center; margin-top:12px; font-weight:700; }
+
+    /* Responsive sidebar behavior */
+    @media (max-width:900px) {
+      .app { padding:12px; }
+      .sidebar { position:fixed; left:-320px; top:0; height:100%; width:260px; z-index:9999; transition:0.25s; box-shadow: 12px 0 30px rgba(0,0,0,0.25); border-radius:0; padding-top:28px; }
+      .sidebar.open { left:0; }
+      .hamburger { display:inline-block; }
+      .content { padding-top:16px; }
+      .overlay { display:block; position:fixed; inset:0;background:rgba(0,0,0,0.35); z-index:9998; opacity:0; pointer-events:none; transition:0.18s; }
+      .overlay.show { opacity:1; pointer-events:auto; }
     }
 
-    main {
-      width: 100%;
-      max-width: 950px;
-      background: white;
-      border-radius: 12px;
-      padding: 2rem;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    /* Mobile single column forms */
+    @media (max-width:600px) {
+      .po-line { flex-direction:column; align-items:stretch; }
+      .po-line > * { width:100%; }
     }
 
-    h2 { color: var(--primary-dark); }
+    /* Toast and modal */
+    #toast { position:fixed; bottom:30px; right:30px; background:var(--primary-dark); color:#fff; padding:12px 16px; border-radius:10px; opacity:0; transform:translateY(20px); transition:0.35s; z-index:10001; }
+    #toast.show { opacity:1; transform:translateY(0); }
+    .modal { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; background:rgba(0,0,0,0.45); z-index:10002; visibility:hidden; opacity:0; transition:0.2s; }
+    .modal.show { visibility:visible; opacity:1; }
+    .modal .modal-box { background:#fff;padding:18px;border-radius:10px; max-width:420px; box-shadow:0 8px 30px rgba(0,0,0,0.18); text-align:center; }
 
-    .input-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 1rem;
-    }
-
-    input {
-      flex: 1;
-      min-width: 130px;
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      outline: none;
-      transition: 0.2s;
-    }
-
-    input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 2px rgba(10, 99, 166, 0.2);
-    }
-
-    button {
-      background: var(--primary);
-      color: white;
-      border: none;
-      padding: 10px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: 0.2s;
-    }
-
-    button:hover { background: var(--primary-dark); }
-
-    .toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      margin-bottom: 1rem;
-      gap: 10px;
-    }
-
-    .search-box { flex: 1; display: flex; align-items: center; }
-    .search-box input { width: 100%; }
-
-    .sort-buttons button {
-      margin-left: 5px;
-      background: #e9f3ff;
-      color: var(--primary-dark);
-      border: 1px solid var(--primary);
-    }
-
-    .sort-buttons button:hover {
-      background: var(--primary);
-      color: white;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 1px 5px rgba(0,0,0,0.05);
-    }
-
-    th, td {
-      border-bottom: 1px solid var(--border);
-      padding: 10px 12px;
-      text-align: left;
-    }
-
-    th {
-      background: var(--primary);
-      color: white;
-      font-weight: 600;
-      letter-spacing: 0.3px;
-    }
-
-    tr:hover { background: #f1f7ff; }
-
-    .action-btn {
-      background: #1976d2;
-      padding: 6px 10px;
-      border-radius: 4px;
-    }
-
-    .action-btn.delete-btn { background: var(--danger); }
-    .print-btn { background: var(--success); margin-left: 10px; }
-
-    tr.editing { background: #fff3cd; }
-
-    /* ===== MOBILE VIEW ===== */
-    @media (max-width: 750px) {
-      table, thead, tbody, th, td, tr { display: block; }
-      thead { display: none; }
-
-      tr {
-        background: #fff;
-        border-radius: 14px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-        padding: 15px;
-        margin-bottom: 15px;
-      }
-
-      td { display: flex; align-items: center; padding: 8px 0; border: none; }
-      td::before {
-        content: attr(data-label);
-        flex-basis: 100px;
-        font-weight: 600;
-        color: var(--primary-dark);
-      }
-    }
-
-@media print {
-  @page {
-    size: landscape;
-    margin: 0.4in;
-  }
-
-  /* Reset everything for print */
-  * {
-    all: revert !important;
-    box-sizing: border-box !important;
-  }
-
-  html, body {
-    background: #fff !important;
-    color: #000 !important;
-    font-family: Arial, Helvetica, sans-serif !important;
-    font-size: 11px !important;
-    -webkit-print-color-adjust: exact !important;
-  }
-
-  header {
-    display: block !important;
-    background: #004b8d !important;
-    color: white !important;
-    font-size: 16px !important;
-    font-weight: bold !important;
-    padding: 8px 0 !important;
-    text-align: center !important;
-    border-radius: 0 !important;
-    margin-bottom: 10px !important;
-    box-shadow: none !important;
-  }
-
-  /* Hide UI controls */
-  .input-row,
-  .toolbar,
-  button,
-  #toast,
-  #confirmModal,
-  .action-btn,
-  .print-btn {
-    display: none !important;
-  }
-
-  /* Table should always be visible */
-  main {
-    background: white !important;
-    box-shadow: none !important;
-    border: none !important;
-    padding: 0 !important;
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  /* 🔥 FORCE NORMAL TABLE STRUCTURE */
-  table,
-  thead,
-  tbody,
-  tr,
-  th,
-  td {
-    display: table !important;
-    width: auto !important;
-    float: none !important;
-  }
-
-  table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    table-layout: fixed !important;
-    font-size: 10.5px !important;
-    margin: 0 auto !important;
-  }
-
-  th, td {
-    border: 1px solid #bfc9d4 !important;
-    padding: 5px 8px !important;
-    text-align: left !important;
-    vertical-align: middle !important;
-    white-space: nowrap !important;
-    overflow: hidden !important;
-    text-overflow: ellipsis !important;
-  }
-
-  th {
-    background: #004b8d !important;
-    color: white !important;
-    font-weight: 600 !important;
-    text-align: center !important;
-  }
-
-  td {
-    text-align: center !important;
-  }
-
-  td:first-child, th:first-child {
-    text-align: left !important;
-  }
-
-  tr:nth-child(even) td {
-    background: #f8f8f8 !important;
-  }
-
-  tr:hover { background: none !important; }
-
-  /* Hide action column */
-  table thead th:last-child,
-  table tbody td:last-child {
-    display: none !important;
-  }
-
-  /* Column widths */
-  table th:nth-child(1),
-  table td:nth-child(1) { width: 55% !important; }
-  table th:nth-child(2),
-  table td:nth-child(2) { width: 10% !important; }
-  table th:nth-child(3),
-  table td:nth-child(3) { width: 15% !important; }
-  table th:nth-child(4),
-  table td:nth-child(4) { width: 20% !important; }
-
-  /* ❗ Prevent mobile/card layout from applying */
-  @media (max-width: 750px) {
-    table, thead, tbody, tr, th, td {
-      display: table !important;
-    }
-  }
-
-  tr, td, th {
-    page-break-inside: avoid !important;
-  }
-}
-
-
-
-    /* ====== Toast ====== */
-    #toast {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      background: var(--primary-dark);
-      color: white;
-      padding: 12px 18px;
-      border-radius: 10px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-      opacity: 0;
-      transform: translateY(20px);
-      transition: 0.3s ease;
-      z-index: 9999;
-    }
-
-    #toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* ====== Confirm Modal ====== */
-    .modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
-      display: flex; justify-content: center; align-items: center;
-      z-index: 1000;
-      visibility: hidden;
-      opacity: 0;
-      transition: 0.3s;
-    }
-
-    .modal.show { visibility: visible; opacity: 1; }
-
-    .modal-box {
-      background: white;
-      border-radius: 12px;
-      padding: 20px 25px;
-      text-align: center;
-      max-width: 320px;
-      box-shadow: 0 6px 15px rgba(0,0,0,0.2);
-      animation: pop 0.2s ease;
-    }
-
-    @keyframes pop {
-      from { transform: scale(0.95); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
-    }
-
-    .modal-box h3 { margin-bottom: 15px; color: var(--primary-dark); }
-    .modal-buttons { display: flex; justify-content: center; gap: 10px; }
-
-    /* --- HARD PRINT FIX: force normal table layout when printing --- */
-@media print {
-  /* force real table layout */
-  table, thead, tbody, tr, th, td {
-    display: table !important;
-    width: auto !important;
-    float: none !important;
-  }
-
-  thead { display: table-header-group !important; }
-  tbody { display: table-row-group !important; }
-  tr { display: table-row !important; }
-  th, td { display: table-cell !important; }
-
-  /* remove mobile/card rules completely */
-  *[data-label]::before { content: none !important; }
-
-  /* compact print style */
-  @page { size: landscape; margin: 0.4in; }
-
-  body {
-    font-family: Arial, Helvetica, sans-serif !important;
-    font-size: 11px !important;
-    color: #000 !important;
-    background: #fff !important;
-    -webkit-print-color-adjust: exact !important;
-  }
-
-  header {
-    display: block !important;
-    background: #004b8d !important;
-    color: white !important;
-    font-size: 16px !important;
-    font-weight: 700 !important;
-    text-align: center !important;
-    padding: 6px 0 !important;
-    margin-bottom: 10px !important;
-  }
-
-  /* hide interactive UI */
-  .input-row, .toolbar, button, #toast, #confirmModal, .action-btn, .print-btn {
-    display: none !important;
-  }
-
-  main {
-    background: white !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    width: 100% !important;
-  }
-
-  table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    table-layout: fixed !important;
-    font-size: 10.5px !important;
-  }
-
-  th, td {
-    border: 1px solid #bfc9d4 !important;
-    padding: 5px 8px !important;
-    text-align: center !important;
-    white-space: nowrap !important;
-  }
-
-  th:first-child, td:first-child { text-align: left !important; }
-
-  th {
-    background: #004b8d !important;
-    color: #fff !important;
-  }
-
-  tr:nth-child(even) td { background: #f7f9fc !important; }
-
-  /* hide action column */
-  th:last-child, td:last-child { display: none !important; }
-
-  /* column widths */
-  th:nth-child(1), td:nth-child(1) { width: 55% !important; }
-  th:nth-child(2), td:nth-child(2) { width: 10% !important; }
-  th:nth-child(3), td:nth-child(3) { width: 15% !important; }
-  th:nth-child(4), td:nth-child(4) { width: 20% !important; }
-
-  tr, td, th { page-break-inside: avoid !important; }
-}
-
+    /* small helper */
+    .right { text-align:right; }
+    .small { font-size:0.9rem; color:#495b6a; }
+    .tag { background:#eaf4ff;color:var(--primary);padding:4px 8px;border-radius:6px;font-weight:700; }
   </style>
 </head>
 <body>
 
-<header>MSITE Inventory System</header>
+<div class="app">
 
-<main>
-  <h2>Stock Management</h2>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand">MSITE Inventory</div>
+    <nav>
+      <ul class="nav">
+        <li><button id="nav-dashboard" class="active" onclick="openMenu('dashboard')">🏠 Dashboard</button></li>
+        <li><button id="nav-stock" onclick="openMenu('stock')">📦 Stock Management</button></li>
+        <li><button id="nav-po" onclick="openMenu('po')">🧾 Purchase Orders</button></li>
+      </ul>
+    </nav>
 
-  <div class="input-row">
-    <input id="stock-name" placeholder="Item name">
-    <input id="stock-qty" type="number" placeholder="Quantity">
-    <input id="stock-unit" placeholder="Unit">
-    <input id="stock-price" type="number" placeholder="Price">
-    <button onclick="addStock()">Add Stock</button>
-  </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:12px 0;" />
+    <div class="small muted">Signed in: <strong>MSITE</strong></div>
+    <div style="height:18px"></div>
+  </aside>
 
-  <div class="toolbar">
-    <div class="search-box">
-      <input id="search" placeholder="Search item..." oninput="renderStock()">
+  <!-- Overlay for mobile sidebar -->
+  <div class="overlay" id="overlay" onclick="closeSidebar()" style="display:none"></div>
+
+  <!-- Main content -->
+  <main class="content">
+    <div class="app-top">
+      <button class="hamburger" id="hambtn" onclick="toggleSidebar()">☰</button>
+      <div class="page-title" id="pageTitle">Dashboard</div>
     </div>
-    <div class="sort-buttons">
-      <button onclick="sortStock('name')">Sort A–Z</button>
-      <button onclick="sortStock('qty')">Sort by Qty</button>
-      <button onclick="sortStock('price')">Sort by Price</button>
-      <button class="print-btn" onclick="window.print()">🖨 Print</button>
-    </div>
-  </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th><th>Qty</th><th>Unit</th><th>Price</th><th>Action</th>
-      </tr>
-    </thead>
-    <tbody id="stockTableBody"></tbody>
-  </table>
-</main>
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="page">
+      <h2>Welcome ✨</h2>
+      <p class="muted">Use the sidebar to manage your stock and file purchase orders. Below is a quick summary.</p>
 
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;">
+        <div style="flex:1;min-width:220px;background:#fbfdff;padding:12px;border-radius:10px;border:1px solid var(--border)">
+          <div class="small muted">Total unique items</div>
+          <div style="font-size:1.25rem;font-weight:800" id="summary-count">0</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fbfdff;padding:12px;border-radius:10px;border:1px solid var(--border)">
+          <div class="small muted">Total stock (sum qty)</div>
+          <div style="font-size:1.25rem;font-weight:800" id="summary-total">0</div>
+        </div>
+        <div style="flex:1;min-width:220px;background:#fbfdff;padding:12px;border-radius:10px;border:1px solid var(--border)">
+          <div class="small muted">Purchase orders filed</div>
+          <div style="font-size:1.25rem;font-weight:800" id="summary-pos">0</div>
+        </div>
+      </div>
+
+      <hr style="margin:18px 0;border:none;border-top:1px solid var(--border)" />
+
+      <h3>Recent Purchase Orders</h3>
+      <div id="recentPOsContainer"><em class="muted">Loading...</em></div>
+    </section>
+
+    <!-- STOCK MANAGEMENT -->
+    <section id="stock" class="page" style="display:none;">
+      <h2>Stock Management</h2>
+
+      <div class="input-row">
+        <input id="stock-name" placeholder="Item name">
+        <input id="stock-qty" type="number" placeholder="Quantity">
+        <input id="stock-unit" placeholder="Unit">
+        <input id="stock-price" type="number" placeholder="Price">
+        <button class="primary" onclick="addStock()">Add Stock</button>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:10px;">
+        <div style="flex:1">
+          <input id="search" placeholder="Search item..." oninput="renderStock()" style="width:100%" />
+        </div>
+        <div>
+          <button class="ghost" onclick="sortStock('name')">Sort A–Z</button>
+          <button class="ghost" onclick="sortStock('qty')">Qty</button>
+          <button class="ghost" onclick="sortStock('price')">Price</button>
+          <button class="ghost" onclick="window.print()">🖨 Print</button>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Name</th><th>Qty</th><th>Unit</th><th>Price</th><th>Action</th></tr>
+        </thead>
+        <tbody id="stockTableBody"></tbody>
+      </table>
+    </section>
+
+    <!-- PURCHASE ORDERS -->
+    <section id="po" class="page" style="display:none;">
+      <h2>Purchase Orders</h2>
+
+      <div style="display:flex;gap:12px;flex-wrap:wrap;">
+        <div style="flex:1;min-width:220px;">
+          <label class="small">PO Number</label>
+          <div style="margin-top:6px"><input id="po-number" readonly></div>
+        </div>
+
+        <div style="flex:1;min-width:220px;">
+          <label class="small">Date</label>
+          <div style="margin-top:6px"><input id="po-date" type="date"></div>
+        </div>
+
+        <div style="flex:1;min-width:220px;">
+          <label class="small">School / Customer</label>
+          <div style="margin-top:6px"><input id="po-customer" placeholder="School name or Customer"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="po-lines" id="po-lines"></div>
+
+        <div style="display:flex;gap:8px;margin-top:8px;">
+          <button class="ghost" onclick="addPOLine()">+ Add line</button>
+          <button class="ghost" onclick="clearPOLines()">Clear lines</button>
+        </div>
+
+        <div class="po-summary">
+          <div class="small">Total:</div>
+          <div id="po-total">₱0.00</div>
+          <button class="primary" onclick="submitPO()">Submit PO</button>
+        </div>
+      </div>
+
+      <hr style="margin:16px 0;border:none;border-top:1px solid var(--border)" />
+
+      <h3>Existing Purchase Orders</h3>
+      <div id="poListContainer"><em class="muted">Loading POs...</em></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- Toast + Confirm Modal -->
 <div id="toast"></div>
 
 <div id="confirmModal" class="modal">
   <div class="modal-box">
     <h3 id="confirmText">Are you sure?</h3>
-    <div class="modal-buttons">
-      <button onclick="confirmAction()">Yes</button>
-      <button onclick="closeModal()">Cancel</button>
+    <div style="margin-top:12px">
+      <button class="primary" onclick="confirmAction()">Yes</button>
+      <button class="ghost" onclick="closeModal()" style="margin-left:8px">Cancel</button>
     </div>
   </div>
 </div>
 
+<!-- Firebase compat (same as your file) -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
 <script>
+  /***** Firebase config (kept from your original file) *****/
   const firebaseConfig = {
     apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
     authDomain: "msite-45cd2.firebaseapp.com",
@@ -515,149 +291,383 @@
   firebase.initializeApp(firebaseConfig);
   const db = firebase.database();
   const stocksRef = db.ref("stocks");
+  const posRef = db.ref("purchaseOrders");
+
+  /***** Local state (localStorage fallback as before) *****/
   window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
+  function saveLocal() { localStorage.setItem("stockData", JSON.stringify(window.stockData || [])); }
 
-  function saveLocal() {
-    localStorage.setItem("stockData", JSON.stringify(window.stockData || []));
-  }
-
-  function showToast(msg) {
-    const toast = document.getElementById("toast");
-    toast.textContent = msg;
-    toast.classList.add("show");
-    setTimeout(() => toast.classList.remove("show"), 2500);
-  }
-
+  /***** UI helpers *****/
+  function showToast(msg){ const t=document.getElementById("toast"); t.textContent=msg; t.classList.add("show"); setTimeout(()=>t.classList.remove("show"),2400); }
   let confirmCallback = null;
-  function showConfirm(message, callback) {
-    document.getElementById("confirmText").textContent = message;
-    document.getElementById("confirmModal").classList.add("show");
-    confirmCallback = callback;
-  }
-  function confirmAction() {
-    if (confirmCallback) confirmCallback();
-    closeModal();
-  }
-  function closeModal() {
-    document.getElementById("confirmModal").classList.remove("show");
+  function showConfirm(message, callback){ document.getElementById("confirmText").textContent=message; document.getElementById("confirmModal").classList.add("show"); confirmCallback = callback; }
+  function confirmAction(){ if(confirmCallback) confirmCallback(); closeModal(); }
+  function closeModal(){ document.getElementById("confirmModal").classList.remove("show"); }
+
+  /***** Sidebar controls (mobile) *****/
+  const sidebar = document.getElementById("sidebar");
+  const overlay = document.getElementById("overlay");
+  function toggleSidebar(){ sidebar.classList.toggle("open"); overlay.classList.toggle("show"); overlay.style.display = sidebar.classList.contains("open") ? "block" : "none"; }
+  function closeSidebar(){ sidebar.classList.remove("open"); overlay.classList.remove("show"); overlay.style.display = "none"; }
+
+  /***** Page navigation (single-file SPA) *****/
+  function openMenu(menuId){
+    document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
+    document.getElementById(menuId).style.display = 'block';
+    document.getElementById('pageTitle').textContent = {
+      'dashboard':'Dashboard',
+      'stock':'Stock Management',
+      'po':'Purchase Orders'
+    }[menuId] || 'MSITE';
+    document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+    if(menuId === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
+    if(menuId === 'stock') document.getElementById('nav-stock').classList.add('active');
+    if(menuId === 'po') document.getElementById('nav-po').classList.add('active');
+    closeSidebar();
   }
 
-  function saveToFirebase() {
+  /***** Stock functions (based on your original code) *****/
+  function saveToFirebase(){
+    // store as array-like object to match your previous behavior
     const updates = {};
-    window.stockData.forEach((item, index) => updates[index] = item);
+    window.stockData.forEach((item,index) => updates[index] = item);
     stocksRef.update(updates)
-      .then(() => console.log("✅ Firebase updated"))
-      .catch(err => console.error("❌ Firebase error:", err));
+      .then(()=> console.log('Firebase stocks updated'))
+      .catch(e => console.error('Stocks update err', e));
     saveLocal();
+    refreshSummary();
+    renderStock();
+    renderPOStockSelect();
   }
 
-  function addStock() {
+  function addStock(){
     const name = document.getElementById("stock-name").value.trim();
     const qty = parseFloat(document.getElementById("stock-qty").value);
     const unit = document.getElementById("stock-unit").value.trim();
     const price = parseFloat(document.getElementById("stock-price").value);
-    if (!name || isNaN(qty) || qty <= 0 || isNaN(price)) {
+    if(!name || isNaN(qty) || qty <= 0 || isNaN(price) || price < 0){
       showToast("⚠ Please enter valid info.");
       return;
     }
-
     const existing = window.stockData.find(s => s.name.toLowerCase() === name.toLowerCase());
-    if (existing) {
+    if(existing){
       existing.qty += qty;
-      existing.unit = unit;
+      existing.unit = unit || existing.unit;
       existing.price = price;
     } else {
       window.stockData.push({ name, qty, unit, price });
     }
     saveToFirebase();
-    renderStock();
+    document.querySelectorAll('#stock-name,#stock-qty,#stock-unit,#stock-price').forEach(e=>e.value='');
     showToast("✅ Stock added!");
-    document.querySelectorAll('#stock-name,#stock-qty,#stock-unit,#stock-price').forEach(e => e.value = "");
   }
 
-  function renderStock() {
+  function renderStock(){
     const tbody = document.getElementById("stockTableBody");
     const searchVal = document.getElementById("search").value.toLowerCase();
     tbody.innerHTML = "";
-    (window.stockData || [])
-      .filter(item => item.name.toLowerCase().includes(searchVal))
-      .forEach((item, i) => {
+    (window.stockData || []).filter(item => item && item.name && item.name.toLowerCase().includes(searchVal))
+      .forEach((item,i) => {
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td data-label="Name">${item.name}</td>
-          <td data-label="Qty">${item.qty}</td>
-          <td data-label="Unit">${item.unit}</td>
-          <td data-label="Price">${item.price}</td>
-          <td data-label="Action">
-            <button class="action-btn" onclick="startEdit(${i}, this)">Edit</button>
-            <button class="action-btn delete-btn" onclick="deleteStock(${i})">Delete</button>
-          </td>`;
+          <td>${item.name}</td>
+          <td>${item.qty}</td>
+          <td>${item.unit || ''}</td>
+          <td>₱${(parseFloat(item.price)||0).toFixed(2)}</td>
+          <td>
+            <button class="ghost" onclick="startEdit(${i}, this)">Edit</button>
+            <button class="ghost" onclick="deleteStock(${i})" style="margin-left:6px;background:#fffef0;border:1px solid var(--border)">Delete</button>
+          </td>
+        `;
         tbody.appendChild(tr);
       });
   }
 
-  function startEdit(i, btn) {
-    const row = btn.closest("tr");
+  function startEdit(i, btn){
+    const row = btn.closest('tr');
     const item = window.stockData[i];
-    row.classList.add("editing");
+    row.classList.add('editing');
     row.innerHTML = `
       <td><input id="edit-name" value="${item.name}" disabled></td>
       <td><input id="edit-qty" type="number" value="${item.qty}"></td>
-      <td><input id="edit-unit" value="${item.unit}"></td>
+      <td><input id="edit-unit" value="${item.unit || ''}"></td>
       <td><input id="edit-price" type="number" value="${item.price}"></td>
       <td>
-        <button onclick="saveEdit(${i})">Save</button>
-        <button class="delete-btn" onclick="renderStock()">Cancel</button>
-      </td>`;
+        <button class="primary" onclick="saveEdit(${i})">Save</button>
+        <button class="ghost" onclick="renderStock()">Cancel</button>
+      </td>
+    `;
   }
-
-  function saveEdit(i) {
+  function saveEdit(i){
     const qty = parseFloat(document.getElementById("edit-qty").value);
     const price = parseFloat(document.getElementById("edit-price").value);
     const unit = document.getElementById("edit-unit").value.trim();
-    if (isNaN(qty) || qty < 0 || isNaN(price) || price < 0 || !unit) {
+    if(isNaN(qty) || qty < 0 || isNaN(price) || price < 0){
       showToast("⚠ Invalid values!");
       return;
     }
-
-    showConfirm("Save changes?", () => {
+    showConfirm("Save changes?", ()=> {
       window.stockData[i].qty = qty;
       window.stockData[i].unit = unit;
       window.stockData[i].price = price;
       saveToFirebase();
-      renderStock();
-      showToast("✅ Updated successfully!");
+      showToast("✅ Updated!");
     });
   }
 
-  function deleteStock(i) {
-    showConfirm("Delete this item?", () => {
-      window.stockData.splice(i, 1);
+  function deleteStock(i){
+    showConfirm("Delete this item?", ()=> {
+      window.stockData.splice(i,1);
       saveToFirebase();
       renderStock();
       showToast("🗑 Deleted");
     });
   }
 
-  function sortStock(type) {
-    window.stockData.sort((a, b) => {
-      if (type === "name") return a.name.localeCompare(b.name);
-      return a[type] - b[type];
+  function sortStock(type){
+    window.stockData.sort((a,b)=>{
+      if(type==='name') return a.name.localeCompare(b.name);
+      return (a[type]||0) - (b[type]||0);
     });
     renderStock();
     saveToFirebase();
   }
 
+  /***** Firebase listener for stocks: keep local data in sync ******/
   stocksRef.on("value", snap => {
     const data = snap.val();
-    if (data) {
+    if(data){
+      // firebase may store as object with numeric keys or array-like; convert to array
       window.stockData = Array.isArray(data) ? data : Object.values(data);
       saveLocal();
       renderStock();
+      renderPOStockSelect();
+      refreshSummary();
+    } else {
+      // no data yet
+      window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
+      renderStock();
+      renderPOStockSelect();
+      refreshSummary();
     }
   });
 
-  document.addEventListener("DOMContentLoaded", renderStock);
+  /***** Purchase Order logic *****/
+  // PO in-memory lines
+  window.poLines = [];
+
+  // auto-generate PO number (simple date + random)
+  function genPONumber(){
+    const d = new Date();
+    const mm = String(d.getMonth()+1).padStart(2,'0');
+    const dd = String(d.getDate()).padStart(2,'0');
+    const yy = String(d.getFullYear()).slice(-2);
+    return `PO-${d.getFullYear()}${mm}${dd}-${Math.floor(Math.random()*9000)+1000}`;
+  }
+
+  function initPOForm(){
+    document.getElementById('po-number').value = genPONumber();
+    const today = new Date().toISOString().slice(0,10);
+    document.getElementById('po-date').value = today;
+    document.getElementById('po-customer').value = '';
+    window.poLines = [];
+    renderPOLines();
+    renderPOList();
+  }
+
+  function addPOLine(prefill){
+    // prefill optionally with {name, price}
+    window.poLines.push(prefill || { itemName:'', qty:1, price:0, unit:'' });
+    renderPOLines();
+  }
+
+  function clearPOLines(){
+    window.poLines = [];
+    renderPOLines();
+  }
+
+  function removePOLine(i){
+    window.poLines.splice(i,1);
+    renderPOLines();
+  }
+
+  function updatePOLine(i, field, value){
+    if(!window.poLines[i]) return;
+    if(field === 'qty') value = parseFloat(value) || 0;
+    if(field === 'price') value = parseFloat(value) || 0;
+    window.poLines[i][field] = value;
+    // if name changed, copy unit & price from stock if possible
+    if(field === 'itemName'){
+      const st = window.stockData.find(s => s.name === value);
+      if(st){
+        window.poLines[i].unit = st.unit || '';
+        window.poLines[i].price = st.price || 0;
+      }
+    }
+    renderPOLines(); // refresh total
+  }
+
+  function renderPOLines(){
+    const container = document.getElementById('po-lines');
+    container.innerHTML = '';
+    window.poLines.forEach((line,i) => {
+      const div = document.createElement('div');
+      div.className = 'po-line';
+      div.innerHTML = `
+        <select onchange="updatePOLine(${i}, 'itemName', this.value)">
+          <option value="">-- select item --</option>
+          ${window.stockData.map(s=>`<option ${s.name===line.itemName?'selected':''} value="${escapeHtml(s.name)}">${escapeHtml(s.name)} (${s.qty} ${s.unit||''})</option>`).join('')}
+        </select>
+        <input class="qty" type="number" min="1" value="${line.qty||1}" onchange="updatePOLine(${i}, 'qty', this.value)" />
+        <input class="price" type="number" step="0.01" min="0" value="${line.price||0}" onchange="updatePOLine(${i}, 'price', this.value)" />
+        <input style="max-width:140px" placeholder="unit" value="${line.unit||''}" onchange="updatePOLine(${i}, 'unit', this.value)" />
+        <button class="ghost" onclick="removePOLine(${i})">Remove</button>
+      `;
+      container.appendChild(div);
+    });
+    // if no lines, show a placeholder
+    if(window.poLines.length === 0){
+      container.innerHTML = `<div class="muted small">No lines yet. Click "Add line" and choose items from stock.</div>`;
+    }
+    document.getElementById('po-total').textContent = `₱${calcPOTotal().toFixed(2)}`;
+  }
+
+  function calcPOTotal(){
+    return (window.poLines || []).reduce((s,l)=> s + (parseFloat(l.qty||0) * parseFloat(l.price||0)), 0);
+  }
+
+  // helper to populate stock selects elsewhere
+  function renderPOStockSelect(){
+    // used only when rendering lines - lines read window.stockData directly
+  }
+
+  // Submit PO: write to Firebase and deduct from stocks
+  function submitPO(){
+    const customer = document.getElementById('po-customer').value.trim();
+    const date = document.getElementById('po-date').value;
+    const poNumber = document.getElementById('po-number').value;
+    if(!customer) { showToast("Enter school/customer name"); return; }
+    if(!date) { showToast("Select date"); return; }
+    if(!window.poLines.length) { showToast("Add at least one PO line"); return; }
+
+    // Validate each line: item exists and qty <= stock qty
+    const missing = [];
+    for(const line of window.poLines){
+      if(!line.itemName) { missing.push("Select item"); break; }
+      const st = window.stockData.find(s => s.name === line.itemName);
+      if(!st) { missing.push(`Item not found: ${line.itemName}`); break; }
+      if((line.qty||0) <= 0) { missing.push(`Invalid qty for ${line.itemName}`); break; }
+      if(line.qty > st.qty) { missing.push(`Not enough stock for ${line.itemName} (available ${st.qty})`); break; }
+    }
+    if(missing.length){ showToast("⚠ " + missing[0]); return; }
+
+    // Confirm submission
+    showConfirm(`Submit PO ${poNumber}?`, ()=> {
+      // create PO object
+      const poObj = {
+        poNumber,
+        customer,
+        date,
+        createdAt: Date.now(),
+        total: calcPOTotal(),
+        lines: JSON.parse(JSON.stringify(window.poLines))
+      };
+
+      // push PO to Firebase
+      const newPoRef = posRef.push();
+      newPoRef.set(poObj)
+        .then(()=> {
+          // deduct stocks atomically: compute new stock array
+          window.poLines.forEach(line => {
+            const st = window.stockData.find(s => s.name === line.itemName);
+            if(st){
+              st.qty = Math.max(0, (st.qty||0) - (line.qty||0));
+            }
+          });
+          saveToFirebase(); // update stocks on Firebase
+          showToast("✅ PO submitted!");
+          // reset form
+          initPOForm();
+          renderPOList();
+        })
+        .catch(err => {
+          console.error(err);
+          showToast("❌ Error saving PO");
+        });
+    });
+  }
+
+  /***** PO List and details *****/
+  function renderPOList(){
+    const container = document.getElementById('poListContainer');
+    container.innerHTML = '<em class="muted">Loading POs...</em>';
+    posRef.orderByChild('createdAt').limitToLast(50).once('value').then(snap => {
+      const data = snap.val();
+      if(!data){ container.innerHTML = '<div class="muted">No purchase orders yet.</div>'; refreshSummary(); return; }
+      const arr = Object.keys(data).map(k => ({ id:k, ...data[k] })).sort((a,b)=> b.createdAt - a.createdAt);
+      // simple list
+      container.innerHTML = `<table><thead><tr><th>PO#</th><th>Customer</th><th>Date</th><th>Total</th><th>Action</th></tr></thead><tbody>
+        ${arr.map(p => `<tr>
+          <td>${p.poNumber}</td>
+          <td>${escapeHtml(p.customer)}</td>
+          <td>${escapeHtml(p.date)}</td>
+          <td>₱${(p.total||0).toFixed(2)}</td>
+          <td><button class="ghost" onclick='viewPODetail(${JSON.stringify(p).replace(/'/g,"\\'")})'>View</button></td>
+        </tr>`).join('')}
+      </tbody></table>`;
+      // update dashboard recent
+      const recent = arr.slice(0,5);
+      const recCont = document.getElementById('recentPOsContainer');
+      recCont.innerHTML = recent.length ? `<ul>${recent.map(r=>`<li><strong>${r.poNumber}</strong> — ${escapeHtml(r.customer)} (${r.date}) ₱${(r.total||0).toFixed(2)}</li>`).join('')}</ul>` : '<div class="muted">No recent POs</div>';
+      refreshSummary();
+    }).catch(err => {
+      container.innerHTML = '<div class="muted">Error loading POs</div>';
+      console.error(err);
+    });
+  }
+
+  function viewPODetail(pObj){
+    // show a modal with details (simple alert-like)
+    const linesHtml = (pObj.lines || []).map(l => `${escapeHtml(l.itemName)} — ${l.qty} ${escapeHtml(l.unit||'')} @ ₱${(l.price||0).toFixed(2)}`).join('\n');
+    alert(`PO#: ${pObj.poNumber}\nCustomer: ${pObj.customer}\nDate: ${pObj.date}\nTotal: ₱${(pObj.total||0).toFixed(2)}\n\nLines:\n${linesHtml}`);
+  }
+
+  /***** Dashboard summary refresh *****/
+  function refreshSummary(){
+    const count = (window.stockData || []).filter(Boolean).length;
+    const totalQty = (window.stockData || []).reduce((s,i)=> s + (parseFloat(i.qty)||0), 0);
+    document.getElementById('summary-count').textContent = count;
+    document.getElementById('summary-total').textContent = totalQty;
+    // update PO count from firebase
+    posRef.once('value').then(snap => {
+      const data = snap.val();
+      const poCount = data ? Object.keys(data).length : 0;
+      document.getElementById('summary-pos').textContent = poCount;
+    });
+  }
+
+  /***** Utilities ******/
+  function escapeHtml(str){ if(!str && str !== 0) return ''; return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+  /***** Initialization on load ******/
+  document.addEventListener('DOMContentLoaded', ()=>{
+    // show dashboard by default
+    openMenu('dashboard');
+    // populate stock from localStorage (until firebase syncs)
+    renderStock();
+    renderPOStockSelect();
+    initPOForm();
+    renderPOList();
+    refreshSummary();
+
+    // When POs change, refresh lists automatically
+    posRef.on('value', snap => {
+      renderPOList();
+    });
+  });
+
+  // ensure the main firebase stocks listener (already added above) initializes UI quickly
+  // stocksRef.on handler earlier will update stockData and trigger UI changes when firebase responds.
 </script>
 </body>
 </html>
