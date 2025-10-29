@@ -170,6 +170,8 @@
           <div class="row">
             <input id="search" placeholder="Search items..." oninput="renderStock()" />
             <button class="btn btn-primary" onclick="showAddStockModal()">+ Add Item</button>
+            <button class="btn btn-ghost" onclick="printStockList()">🖨 Print Stock List</button>
+
           </div>
         </div>
 
@@ -626,6 +628,51 @@ document.addEventListener('DOMContentLoaded',()=>{
   refreshSummary();
   posRef.on('value', ()=> renderPOList());
 });
+  function printStockList() {
+  const printWindow = window.open('', '_blank');
+  const tableHTML = `
+    <table style="width:100%;border-collapse:collapse;margin-top:14px">
+      <thead>
+        <tr style="background:#004b8d;color:white">
+          <th style="padding:8px;border:1px solid #ccc;text-align:left">Item</th>
+          <th style="padding:8px;border:1px solid #ccc;text-align:right">Quantity</th>
+          <th style="padding:8px;border:1px solid #ccc;text-align:left">Unit</th>
+          <th style="padding:8px;border:1px solid #ccc;text-align:right">Price</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${window.stockData.map(s=>`
+          <tr>
+            <td style="padding:8px;border:1px solid #ccc">${escape(s.name)}</td>
+            <td style="padding:8px;border:1px solid #ccc;text-align:right">${s.qty}</td>
+            <td style="padding:8px;border:1px solid #ccc">${escape(s.unit||'')}</td>
+            <td style="padding:8px;border:1px solid #ccc;text-align:right">₱${(parseFloat(s.price)||0).toFixed(2)}</td>
+          </tr>`).join('')}
+      </tbody>
+    </table>`;
+
+  printWindow.document.write(`
+    <html><head><title>Stock List</title>
+    <style>
+      body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#222;}
+      h2{margin:0;text-align:center;color:#004b8d;}
+      table{width:100%;border-collapse:collapse;}
+      th,td{border:1px solid #ccc;padding:8px;text-align:left;}
+      th{background:#004b8d;color:#fff;}
+      tr:nth-child(even){background:#f8faff;}
+    </style></head>
+    <body>
+      <h2>MSITE Stock List</h2>
+      <div style="text-align:center;font-size:0.9rem;color:#555;">
+        Printed: ${new Date().toLocaleString()}
+      </div>
+      ${tableHTML}
+    </body></html>
+  `);
+  printWindow.document.close();
+  setTimeout(()=>printWindow.print(),300);
+}
+
 
 /* ---------- End ---------- */
 </script>
