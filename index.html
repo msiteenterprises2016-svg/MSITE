@@ -9,27 +9,23 @@
 
 <style>
   :root{
-  --bg-1: linear-gradient(135deg,#004b8d,#1976d2 60%,#63a4ff);
-  --card-bg:#ffffff;
-  --accent:#005fb8;           
-  --accent-2:#00509e;          /* slightly darker for buttons only */
-  --text-primary:#1a1a1a;      /* NEW: header/body text */
-  --muted:#5c6b7b;
-  --border:#e3ebf5;
-  --danger:#e53935;
-  --success:#00796b;
-  --glass: rgba(255,255,255,0.92);
-  --radius:14px;
-  --shadow-1: 0 8px 22px rgba(8,30,60,0.12);
-  --shadow-2: 0 4px 12px rgba(8,30,60,0.08);
-  --max-width:1150px;
-  --sidebar-w:260px;
-  font-synthesis:none;
-    h1, h2, h3, h4, h5, h6, .page-title {
-  color: var(--text-primary);
-}
-
-}
+    --bg-1: linear-gradient(135deg,#004b8d,#1976d2 60%,#63a4ff);
+    --card-bg:#ffffff;
+    --accent:#005fb8;
+    --accent-2:#00509e;
+    --text-primary:#1a1a1a;
+    --muted:#5c6b7b;
+    --border:#e3ebf5;
+    --danger:#e53935;
+    --success:#00796b;
+    --glass: rgba(255,255,255,0.92);
+    --radius:14px;
+    --shadow-1: 0 8px 22px rgba(8,30,60,0.12);
+    --shadow-2: 0 4px 12px rgba(8,30,60,0.08);
+    --max-width:1150px;
+    --sidebar-w:260px;
+    font-synthesis:none;
+  }
 
   *{box-sizing:border-box}
   html,body{height:100%;margin:0;font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;background:var(--bg-1);-webkit-font-smoothing:antialiased;color:#12202b;}
@@ -89,14 +85,21 @@
   /* pending table tint (option 2) */
   .pending-head th{background:#eaf6ff;color:var(--accent-2);padding:12px;border-bottom:1px solid var(--border);font-weight:800}
 
+  /* delivery tracker tint */
+  .delivery-head th{background:#e8f4ff;color:var(--accent-2);padding:12px;border-bottom:1px solid var(--border);font-weight:800}
+
   /* summary */
   .summary-row{display:flex;justify-content:space-between;align-items:center;padding-top:12px;gap:12px}
   .total-chip{background:#f4f9ff;border-radius:10px;padding:8px 12px;border:1px solid var(--border);font-weight:800;color:var(--accent-2)}
 
-  /* modal */
+  /* modals & accordions */
   .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(6,12,20,0.45);z-index:999;visibility:hidden;opacity:0;transition:all .18s}
   .modal.show{visibility:visible;opacity:1}
   .modal-box{background:#fff;border-radius:12px;padding:18px;max-width:880px;width:94%;box-shadow:var(--shadow-1);}
+
+  .accordion{border-radius:10px;border:1px solid var(--border);overflow:hidden}
+  .accordion .acc-head{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#fff}
+  .accordion .acc-body{padding:12px;border-top:1px solid var(--border);background:#fbfdff}
 
   /* responsive */
   @media (max-width:980px){ .container{padding:0 8px} .sidebar{display:none} .hamburger{display:inline-block} }
@@ -126,8 +129,9 @@
           <li><button id="nav-dashboard" class="active" onclick="openMenu('dashboard')">🏠 Dashboard</button></li>
           <li><button id="nav-stock" onclick="openMenu('stock')">📦 Stock Management</button></li>
           <li><button id="nav-po" onclick="openMenu('po')">🧾 Purchase Orders</button></li>
-          <!-- NEW: Pending menu -->
           <li><button id="nav-pending" onclick="openMenu('pending')">🛒 Pending / To Purchase</button></li>
+          <!-- NEW Delivery Tracker -->
+          <li><button id="nav-delivery" onclick="openMenu('delivery')">🏫 Delivery Tracker</button></li>
         </ul>
       </nav>
       <hr style="border:none;border-top:1px solid var(--border);margin:12px 0">
@@ -176,7 +180,6 @@
             <input id="search" placeholder="Search items..." oninput="renderStock()" />
             <button class="btn btn-primary" onclick="showAddStockModal()">+ Add Item</button>
             <button class="btn btn-ghost" onclick="printStockList()">🖨 Print Stock List</button>
-
           </div>
         </div>
 
@@ -285,6 +288,30 @@
         </div>
       </section>
 
+      <!-- DELIVERY TRACKER (NEW - grouped by school) -->
+      <section id="delivery" class="card page" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+          <div style="min-width:260px">
+            <h3 style="margin:0">Delivery Tracker</h3>
+            <div class="muted small">Track missing / undelivered items per school. Add multiple items at once per school.</div>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <input id="delivery-search" placeholder="Search school or item..." oninput="renderDeliveryTracker()" style="padding:8px;border-radius:8px;border:1px solid var(--border)" />
+            <select id="delivery-filter" onchange="renderDeliveryTracker()" style="padding:8px;border-radius:8px;border:1px solid var(--border)">
+              <option value="all">All</option>
+              <option value="pending">Pending</option>
+              <option value="delivered">Delivered</option>
+            </select>
+            <button class="btn btn-primary" onclick="showAddDeliveryModal()">+ Add Delivery Item</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div id="deliveryListContainer"></div>
+        </div>
+      </section>
+
     </main>
   </div>
 </div>
@@ -311,7 +338,7 @@
 
 <!-- Pending modal (add/edit) -->
 <div id="modalPending" class="modal">
-  <div class="modal-box" style="max-width:520px">
+  <div class="modal-box">
     <h3 style="margin:0 0 8px 0;color:var(--accent)">Add / Edit Pending Item</h3>
     <div class="row" style="margin-bottom:8px">
       <input id="pending-item" placeholder="Item name" style="flex:2">
@@ -325,6 +352,33 @@
   </div>
 </div>
 
+<!-- Delivery modal (grouped by school) -->
+<div id="modalDelivery" class="modal">
+  <div class="modal-box" style="max-width:760px">
+    <h3 style="margin:0 0 8px 0;color:var(--accent)">Add / Edit Delivery Group (School)</h3>
+
+    <div style="margin-bottom:10px">
+      <label class="small muted">School / Customer</label>
+      <input id="delivery-school" placeholder="School or customer name" style="width:100%;margin-top:6px" />
+    </div>
+
+    <div id="delivery-lines-area" style="margin-bottom:8px">
+      <!-- dynamic lines go here -->
+    </div>
+
+    <div style="display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <button class="btn btn-primary" onclick="addDeliveryLine()">+ Add Item Line</button>
+      <div class="muted small">Add multiple items for the same school before saving.</div>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      <button class="btn btn-primary" onclick="saveDeliveryGroup()">Save Group</button>
+      <button class="btn btn-ghost" onclick="closeModal('modalDelivery')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- PO Viewer modal -->
 <div id="poViewerModal" class="modal">
   <div class="modal-box">
     <div style="display:flex;justify-content:space-between;align-items:center">
@@ -357,8 +411,8 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const stocksRef = db.ref("stocks");
 const posRef = db.ref("purchaseOrders");
-/* NEW pending ref */
 const pendingRef = db.ref("pendingItems");
+const deliveryRef = db.ref("deliveryTracker"); // new delivery tracker node
 
 /* ---------- Local state ---------- */
 window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
@@ -369,6 +423,11 @@ let lastViewedPO = null;
 /* pending state */
 let pendingItems = [];
 let editingPendingIndex = null;
+
+/* delivery state (groups) */
+let deliveryGroups = []; // each group is { key, school, items: [{item,qty,reason,status,createdAt,deliveredAt}], createdAt }
+let editingDeliveryKey = null;
+let tempDeliveryLines = []; // used inside modal
 
 function saveLocal(){ localStorage.setItem("stockData", JSON.stringify(window.stockData || [])); }
 
@@ -385,12 +444,13 @@ function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 function openMenu(menuId){
   document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
   document.getElementById(menuId).style.display = 'block';
-  document.getElementById('pageTitle').textContent = menuId === 'dashboard' ? 'Dashboard' : (menuId==='stock' ? 'Stock Management' : (menuId==='po' ? 'Purchase Orders' : 'Pending / To Purchase'));
+  document.getElementById('pageTitle').textContent = { dashboard:'Dashboard', stock:'Stock Management', po:'Purchase Orders', pending:'Pending / To Purchase', delivery:'Delivery Tracker' }[menuId] || 'MSITE';
   document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
   if(menuId==='dashboard') document.getElementById('nav-dashboard').classList.add('active');
   if(menuId==='stock') document.getElementById('nav-stock').classList.add('active');
   if(menuId==='po') document.getElementById('nav-po').classList.add('active');
   if(menuId==='pending') document.getElementById('nav-pending').classList.add('active');
+  if(menuId==='delivery') document.getElementById('nav-delivery').classList.add('active');
 }
 
 /* ---------- Stock logic ---------- */
@@ -424,7 +484,7 @@ function showAddStockModal(){
 }
 function closeAddStockModal(){ closeModal('modalAddStock'); }
 
-/* prefill-capable openAddStock (used when auto-adding from pending) */
+/* prefill-capable openAddStock (used when auto-adding from pending/delivery) */
 function openAddStockPrefill(name){
   editingStockIndex = null;
   document.getElementById('modal-stock-name').value = name || '';
@@ -510,7 +570,7 @@ stocksRef.on('value', snap => {
   }
 });
 
-/* ---------- Purchase Order logic ---------- */
+/* ---------- Purchase Order logic (unchanged) ---------- */
 function genPONumber(){
   const d = new Date(); const mm = String(d.getMonth()+1).padStart(2,'0'), dd = String(d.getDate()).padStart(2,'0');
   return `PO-${d.getFullYear()}${mm}${dd}-${Math.floor(Math.random()*9000)+1000}`;
@@ -580,7 +640,6 @@ function renderPOLines(){
   document.getElementById('po-total').textContent = `₱${calcPOTotal().toFixed(2)}`;
 }
 
-/* Submit PO: validate, push to firebase, deduct stock */
 function submitPO(){
   const cust = (document.getElementById('po-customer').value || '').trim();
   const date = (document.getElementById('po-date').value || '').trim();
@@ -589,7 +648,6 @@ function submitPO(){
   if(!date){ showToast('Choose a date'); return; }
   if(!window.poLines.length){ showToast('Add at least one line'); return; }
 
-  // validation
   for(const l of window.poLines){
     if(!l.itemName){ showToast('Select product on all lines'); return; }
     if(!(parseFloat(l.qty) > 0)){ showToast(`Invalid qty for ${l.itemName}`); return; }
@@ -682,7 +740,7 @@ function openPrintableInvoice(p){
   setTimeout(()=> w.print(),300);
 }
 
-/* ---------- Pending / To Purchase ---------- */
+/* ---------- Pending / To Purchase (unchanged) ---------- */
 /* render pending list */
 function renderPendingList(){
   const filter = document.getElementById('pending-filter').value;
@@ -726,7 +784,7 @@ function showPendingModal(){
 }
 
 /* save pending item */
-function savePendingItem(){
+function savePendingItem(){ /* ... existing code preserved below ... */ 
   const item = (document.getElementById('pending-item').value || '').trim();
   const qty = parseFloat(document.getElementById('pending-qty').value) || 0;
   const reason = (document.getElementById('pending-reason').value || '').trim();
@@ -823,21 +881,252 @@ function checkLowStock(){
   }catch(e){ console.error(e); }
 }
 
-/* ---------- End of Pending ---------- */
+/* ---------- Delivery Tracker (grouped by school) ---------- */
 
-/* ---------- Summary ---------- */
-function refreshSummary(){
-  document.getElementById('summary-count').textContent = (window.stockData||[]).filter(Boolean).length;
-  document.getElementById('summary-total').textContent = (window.stockData||[]).reduce((s,i)=> s + (parseFloat(i.qty)||0), 0);
-  posRef.once('value').then(snap => {
-    const val = snap.val(); document.getElementById('summary-pos').textContent = val ? Object.keys(val).length : 0;
-  }).catch(()=>{});
+/* Render the delivery groups (accordion style) */
+function renderDeliveryTracker(){
+  const container = document.getElementById('deliveryListContainer');
+  const filter = document.getElementById('delivery-filter')?.value || 'all';
+  const q = (document.getElementById('delivery-search')?.value || '').toLowerCase().trim();
+  container.innerHTML = '';
+
+  const list = (deliveryGroups || []).filter(g => {
+    // filter by status: if filter = pending, show groups that have any pending items
+    if(filter === 'pending') return g.items.some(it => it.status !== 'delivered');
+    if(filter === 'delivered') return g.items.every(it => it.status === 'delivered');
+    return true;
+  }).filter(g => {
+    if(!q) return true;
+    return (g.school || '').toLowerCase().includes(q) || g.items.some(it => (it.item||'').toLowerCase().includes(q));
+  });
+
+  if(!list.length){
+    container.innerHTML = `<div class="muted" style="padding:12px">No delivery groups found.</div>`;
+    return;
+  }
+
+  // build accordion
+  list.forEach(g => {
+    const key = g.key || g._key || '';
+    const acc = document.createElement('div');
+    acc.className = 'accordion';
+    // header shows school, counts
+    const pendingCount = g.items.filter(it => it.status !== 'delivered').length;
+    const totalCount = g.items.length;
+    const head = document.createElement('div');
+    head.className = 'acc-head';
+    head.innerHTML = `<div style="display:flex;gap:12px;align-items:center">
+        <div style="font-weight:800">${escape(g.school || '—')}</div>
+        <div class="muted small">${totalCount} item(s)</div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        ${pendingCount ? `<div class="small" style="color:#d98200">🕒 ${pendingCount} pending</div>` : `<div class="small" style="color:var(--success)">✅ All delivered</div>`}
+        <button class="btn btn-ghost" onclick="editDeliveryGroup('${key}')">Edit</button>
+        <button class="btn btn-ghost" onclick="deleteDeliveryGroup('${key}')">Delete</button>
+        ${pendingCount ? `<button class="btn btn-primary" onclick="markGroupDelivered('${key}')">Mark All Delivered</button>` : ''}
+      </div>`;
+    head.onclick = function(e){
+      // toggle body (but don't toggle when clicking buttons)
+      if(e.target.tagName.toLowerCase()==='button') return;
+      body.style.display = body.style.display === 'block' ? 'none' : 'block';
+    };
+
+    const body = document.createElement('div');
+    body.className = 'acc-body';
+    body.style.display = 'none';
+    // body contains a table of items for this school
+    let rows = `<table style="width:100%;border-collapse:collapse"><thead class="delivery-head"><tr><th>Item</th><th style="width:110px">Qty</th><th>Reason</th><th style="width:120px">Status</th><th style="width:200px">Action</th></tr></thead><tbody>`;
+    g.items.forEach((it, idx) => {
+      rows += `<tr>
+        <td><a href="#" onclick="openLinkedStockFromDelivery('${escape(it.item)}','${key}');return false;" style="color:var(--accent);text-decoration:none;font-weight:600">${escape(it.item)}</a></td>
+        <td class="text-right">${it.qty}</td>
+        <td>${escape(it.reason||'')}</td>
+        <td>${it.status === 'delivered' ? '✅ Delivered' : '🕒 Pending'}</td>
+        <td>
+          ${it.status !== 'delivered' ? `<button class="btn btn-primary" onclick="markItemDelivered('${key}', ${idx})">Mark Delivered</button>` : ''}
+          <button class="btn btn-ghost" onclick="removeDeliveryItem('${key}', ${idx})">Remove</button>
+        </td>
+      </tr>`;
+    });
+    rows += '</tbody></table>';
+    body.innerHTML = rows;
+
+    acc.appendChild(head);
+    acc.appendChild(body);
+    container.appendChild(acc);
+  });
 }
 
-/* ---------- Utilities ---------- */
-function escape(s){ if(s===undefined || s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+/* Show modal to add/edit a delivery group */
+function showAddDeliveryModal(){
+  editingDeliveryKey = null;
+  tempDeliveryLines = [];
+  document.getElementById('delivery-school').value = '';
+  renderDeliveryLinesInModal();
+  showModal('modalDelivery');
+}
 
-/* ---------- Print Stock List (restored) ---------- */
+/* Add a blank line in modal */
+function addDeliveryLine(prefill){
+  tempDeliveryLines.push(prefill || { item:'', qty:1, reason:'', status:'pending', createdAt: Date.now() });
+  renderDeliveryLinesInModal();
+}
+
+/* Remove line in modal */
+function removeDeliveryLine(idx){
+  tempDeliveryLines.splice(idx,1);
+  renderDeliveryLinesInModal();
+}
+
+/* Render the dynamic lines inside the delivery modal */
+function renderDeliveryLinesInModal(){
+  const area = document.getElementById('delivery-lines-area');
+  area.innerHTML = '';
+  if(!tempDeliveryLines.length){
+    area.innerHTML = `<div class="muted" style="padding:10px">No item lines yet. Click "+ Add Item Line" to add missing items for this school.</div>`;
+    return;
+  }
+  tempDeliveryLines.forEach((ln, idx) => {
+    const div = document.createElement('div');
+    div.style.display = 'flex';
+    div.style.gap = '8px';
+    div.style.marginBottom = '8px';
+    div.innerHTML = `
+      <input placeholder="Item name" value="${escape(ln.item)}" style="flex:2;padding:8px;border:1px solid var(--border);border-radius:8px" oninput="updateTempLine(${idx}, 'item', this.value)">
+      <input type="number" min="1" value="${ln.qty}" style="width:96px;padding:8px;border:1px solid var(--border);border-radius:8px" oninput="updateTempLine(${idx}, 'qty', this.value)">
+      <input placeholder="Reason" value="${escape(ln.reason)}" style="flex:1;padding:8px;border:1px solid var(--border);border-radius:8px" oninput="updateTempLine(${idx}, 'reason', this.value)">
+      <button class="btn btn-ghost" onclick="removeDeliveryLine(${idx})">Remove</button>
+    `;
+    area.appendChild(div);
+  });
+}
+
+/* update a temp line field */
+function updateTempLine(idx, field, value){
+  if(field === 'qty') value = parseFloat(value) || 0;
+  tempDeliveryLines[idx][field] = value;
+}
+
+/* Save the delivery group (new or edit) */
+function saveDeliveryGroup(){
+  const school = (document.getElementById('delivery-school').value || '').trim();
+  if(!school){ showToast('Enter school / customer name'); return; }
+  if(!tempDeliveryLines.length){ showToast('Add at least one item line'); return; }
+  // validate lines
+  for(const ln of tempDeliveryLines){
+    if(!ln.item || (parseFloat(ln.qty)||0) <= 0){ showToast('Each line needs item and qty'); return; }
+  }
+
+  // Prepare group
+  const group = {
+    school,
+    items: tempDeliveryLines.map(l => ({ item: l.item, qty: (parseFloat(l.qty)||0), reason: l.reason||'', status: l.status||'pending', createdAt: l.createdAt || Date.now() })),
+    createdAt: Date.now()
+  };
+
+  if(editingDeliveryKey){
+    // update existing group
+    deliveryRef.child(editingDeliveryKey).set(group).then(()=> {
+      showToast('Group updated');
+      closeModal('modalDelivery');
+    }).catch(e=> { console.error(e); showToast('Error saving group'); });
+  } else {
+    // push new group
+    const p = deliveryRef.push();
+    p.set(group).then(()=> {
+      showToast('Group saved');
+      closeModal('modalDelivery');
+    }).catch(e=> { console.error(e); showToast('Error saving'); });
+  }
+}
+
+/* Edit an existing group: open modal with prefilled lines */
+function editDeliveryGroup(key){
+  const g = deliveryGroups.find(x => x.key === key);
+  if(!g) return;
+  editingDeliveryKey = key;
+  document.getElementById('delivery-school').value = g.school || '';
+  tempDeliveryLines = (g.items || []).map(it => ({ item: it.item, qty: it.qty, reason: it.reason || '', status: it.status || 'pending', createdAt: it.createdAt || Date.now() }));
+  renderDeliveryLinesInModal();
+  showModal('modalDelivery');
+}
+
+/* Delete group */
+function deleteDeliveryGroup(key){
+  if(!confirm('Delete this delivery group?')) return;
+  deliveryRef.child(key).remove();
+}
+
+/* mark group delivered (all items marked) */
+function markGroupDelivered(key){
+  const g = deliveryGroups.find(x => x.key === key);
+  if(!g) return;
+  g.items = g.items.map(it => ({ ...it, status: 'delivered', deliveredAt: Date.now() }));
+  deliveryRef.child(key).set({ school: g.school, items: g.items, createdAt: g.createdAt || Date.now() });
+}
+
+/* remove a single item from a group */
+function removeDeliveryItem(key, idx){
+  const g = deliveryGroups.find(x=> x.key === key);
+  if(!g) return;
+  g.items.splice(idx,1);
+  deliveryRef.child(key).set({ school: g.school, items: g.items, createdAt: g.createdAt || Date.now() });
+}
+
+/* mark a single item delivered */
+function markItemDelivered(key, idx){
+  const g = deliveryGroups.find(x=> x.key === key);
+  if(!g) return;
+  if(!g.items[idx]) return;
+  g.items[idx].status = 'delivered';
+  g.items[idx].deliveredAt = Date.now();
+  deliveryRef.child(key).set({ school: g.school, items: g.items, createdAt: g.createdAt || Date.now() });
+}
+
+/* clicking item in delivery opens linked stock; if missing offers to add and prefill school when adding */
+function openLinkedStockFromDelivery(itemName, groupKey){
+  openMenu('stock');
+  setTimeout(()=>{
+    const rows = document.querySelectorAll('#stockTableBody tr');
+    let found = false;
+    rows.forEach(row=>{
+      const nameCell = row.querySelector('td');
+      if(nameCell && nameCell.textContent.trim().toLowerCase() === itemName.toLowerCase()){
+        row.scrollIntoView({behavior:'smooth',block:'center'});
+        row.style.transition = 'background 0.3s ease';
+        row.style.background = '#fff9c4'; // highlight
+        setTimeout(()=>row.style.background = '',2500);
+        found = true;
+      }
+    });
+
+    if(!found){
+      if(confirm(`"${itemName}" not found in stock list.\nAdd it to stock now?`)){
+        openAddStockPrefill(itemName);
+      } else {
+        showToast(`"${itemName}" not found in stock list`);
+      }
+    }
+  },300);
+}
+
+/* listen to deliveryRef changes */
+deliveryRef.on('value', snap=>{
+  const val = snap.val();
+  // convert to array of { key, school, items, createdAt }
+  deliveryGroups = [];
+  if(val){
+    if(typeof val === 'object'){
+      Object.keys(val).forEach(k => {
+        const v = val[k];
+        deliveryGroups.push({ key: k, school: v.school || '', items: Array.isArray(v.items) ? v.items : (v.items ? Object.values(v.items) : []), createdAt: v.createdAt || Date.now() });
+      });
+    }
+  }
+  renderDeliveryTracker();
+});
+
+/* ---------- Print Stock List (unchanged) ---------- */
 function printStockList() {
   const printWindow = window.open('', '_blank');
   const tableHTML = `
@@ -883,6 +1172,18 @@ function printStockList() {
   setTimeout(()=>printWindow.print(),300);
 }
 
+/* ---------- Summary ---------- */
+function refreshSummary(){
+  document.getElementById('summary-count').textContent = (window.stockData||[]).filter(Boolean).length;
+  document.getElementById('summary-total').textContent = (window.stockData||[]).reduce((s,i)=> s + (parseFloat(i.qty)||0), 0);
+  posRef.once('value').then(snap => {
+    const val = snap.val(); document.getElementById('summary-pos').textContent = val ? Object.keys(val).length : 0;
+  }).catch(()=>{});
+}
+
+/* ---------- Utilities ---------- */
+function escape(s){ if(s===undefined || s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
 /* ---------- Init ---------- */
 document.addEventListener('DOMContentLoaded',()=>{
   openMenu('dashboard');
@@ -891,8 +1192,12 @@ document.addEventListener('DOMContentLoaded',()=>{
   renderPOList();
   refreshSummary();
   posRef.on('value', ()=> renderPOList());
-  // pendingRef listener is already registered above
-  // check low stock once on load
+  pendingRef.on('value', snap=>{
+    const val = snap.val();
+    pendingItems = val ? (Array.isArray(val) ? val : Object.values(val)) : [];
+    renderPendingList();
+  });
+  // initial delivery load handled by deliveryRef.on above
   setTimeout(()=> checkLowStock(), 700);
 });
 /* ---------- End ---------- */
