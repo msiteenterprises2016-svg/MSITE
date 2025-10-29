@@ -174,13 +174,19 @@
 
 @media print {
   @page {
-    size: landscape; /* print horizontally */
+    size: landscape;
     margin: 0.4in;
   }
 
-  body {
-    background: white !important;
-    color: black !important;
+  /* Reset everything for print */
+  * {
+    all: revert !important;
+    box-sizing: border-box !important;
+  }
+
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
     font-family: Arial, Helvetica, sans-serif !important;
     font-size: 11px !important;
     -webkit-print-color-adjust: exact !important;
@@ -190,15 +196,16 @@
     display: block !important;
     background: #004b8d !important;
     color: white !important;
-    padding: 6px 0 !important;
-    text-align: center !important;
     font-size: 16px !important;
-    font-weight: 700 !important;
+    font-weight: bold !important;
+    padding: 8px 0 !important;
+    text-align: center !important;
     border-radius: 0 !important;
     margin-bottom: 10px !important;
+    box-shadow: none !important;
   }
 
-  /* Hide all unnecessary elements */
+  /* Hide UI controls */
   .input-row,
   .toolbar,
   button,
@@ -209,17 +216,17 @@
     display: none !important;
   }
 
+  /* Table should always be visible */
   main {
     background: white !important;
     box-shadow: none !important;
     border: none !important;
     padding: 0 !important;
-    margin: 0 auto !important;
     width: 100% !important;
     max-width: 100% !important;
   }
 
-  /* Ensure proper table layout */
+  /* 🔥 FORCE NORMAL TABLE STRUCTURE */
   table,
   thead,
   tbody,
@@ -227,6 +234,8 @@
   th,
   td {
     display: table !important;
+    width: auto !important;
+    float: none !important;
   }
 
   table {
@@ -258,26 +267,23 @@
     text-align: center !important;
   }
 
-  td:first-child,
-  th:first-child {
+  td:first-child, th:first-child {
     text-align: left !important;
   }
 
   tr:nth-child(even) td {
-    background: #f7f9fc !important;
+    background: #f8f8f8 !important;
   }
 
-  tr:hover {
-    background: none !important;
-  }
+  tr:hover { background: none !important; }
 
-  /* Hide the Action column to save space */
+  /* Hide action column */
   table thead th:last-child,
   table tbody td:last-child {
     display: none !important;
   }
 
-  /* Column widths similar to your screenshot */
+  /* Column widths */
   table th:nth-child(1),
   table td:nth-child(1) { width: 55% !important; }
   table th:nth-child(2),
@@ -287,19 +293,17 @@
   table th:nth-child(4),
   table td:nth-child(4) { width: 20% !important; }
 
-  /* Prevent card/mobile layout */
+  /* ❗ Prevent mobile/card layout from applying */
   @media (max-width: 750px) {
     table, thead, tbody, tr, th, td {
       display: table !important;
     }
   }
 
-  /* Avoid page breaks inside rows */
   tr, td, th {
     page-break-inside: avoid !important;
   }
 }
-
 
 
 
