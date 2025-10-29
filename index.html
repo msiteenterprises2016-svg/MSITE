@@ -173,86 +173,114 @@
     }
 
 @media print {
-  @page {
-    size: landscape; /* horizontal layout */
-    margin: 0.4in;
+  /* Landscape + tighter margins */
+  @page { size: landscape; margin: 0.35in; }
+
+  /* General page styling for print */
+  html, body {
+    background: #fff !important;
+    color: #000 !important;
+    font-family: Arial, Helvetica, sans-serif !important;
+    font-size: 11px !important;
+    -webkit-print-color-adjust: exact;
   }
 
-  /* Make sure text and table are visible */
-  body {
-    background: white !important;
-    color: black !important;
-    font-size: 12px;
-  }
-
+  /* Keep header, but make it compact and printable */
   header {
     display: block !important;
     background: #004b8d !important;
-    color: white !important;
-    font-size: 1.4rem;
-    font-weight: 700;
-    padding: 8px 0;
-    margin-bottom: 10px;
-    text-align: center;
-    border-radius: 0;
-  }
-
-  /* ✅ Keep the table visible */
-  main {
-    background: white !important;
-    color: black !important;
+    color: #fff !important;
+    padding: 6px 8px !important;
+    margin-bottom: 8px !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
-    border: none !important;
-    padding: 0;
-    width: 100%;
-    max-width: 100%;
+    text-align: center;
+    font-size: 14px !important;
+    font-weight: 700 !important;
   }
 
-  /* Hide only the controls */
+  /* Hide interactive UI, keep only content */
   .input-row,
   .toolbar,
-  button:not(.print-btn),
+  button,
   #toast,
-  #confirmModal {
+  #confirmModal,
+  .action-btn,
+  .print-btn {
     display: none !important;
   }
 
-  /* Table style for printing */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 11px;
-    color: black;
+  /* Main area full width */
+  main {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 
+  /* Make table compact and fixed-layout so columns don't expand */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    table-layout: fixed !important;
+    font-size: 10.5px !important;
+    margin: 0 auto !important;
+  }
+
+  /* Hide "Action" column (last column) for printing to save space */
+  table thead th:last-child,
+  table tbody td:last-child {
+    display: none !important;
+    width: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+  }
+
+  /* Tight row spacing */
   th, td {
-    border: 1px solid #ccc !important;
-    padding: 5px 8px !important;
-    text-align: left;
+    padding: 6px 8px !important;
+    border: 1px solid #ddd !important;
+    vertical-align: middle !important;
+    white-space: nowrap !important;         /* keep each cell to one line */
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;    /* shorten long text */
   }
 
   th {
     background: #004b8d !important;
-    color: white !important;
-    font-weight: 600;
+    color: #fff !important;
+    font-weight: 600 !important;
+    font-size: 11px !important;
   }
 
-  tr:nth-child(even) {
-    background: #f8f8f8 !important;
+  /* Strip hover effects for print */
+  tr:hover { background: none !important; }
+
+  /* Alternate row shading but subtle */
+  tbody tr:nth-child(even) td { background: #fafafa !important; }
+
+  /* Avoid breaking a row across pages */
+  tr, td, th {
+    page-break-inside: avoid !important;
   }
 
-  tr:hover {
-    background: none !important;
-  }
+  /* Prevent big gaps at page bottom */
+  footer, header + main { page-break-after: auto !important; }
 
-  /* Prevent rows from splitting across pages */
-  main, table, tr, td, th {
-    page-break-inside: avoid;
-  }
+  /* If you have icons inside cells, hide them for print */
+  .icon { display: none !important; }
 
-  table {
-    margin: auto;
-  }
+  /* If names are long, allow name column a bit more space */
+  table thead th:first-child { width: 40% !important; }
+  table thead th:nth-child(2) { width: 15% !important; } /* qty */
+  table thead th:nth-child(3) { width: 15% !important; } /* unit */
+  table thead th:nth-child(4) { width: 20% !important; } /* price */
+
+  /* Reduce margin around the printed page content */
+  body { margin: 0.05in; }
 }
 
 
