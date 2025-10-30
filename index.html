@@ -4,75 +4,78 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>MSITE Inventory — Modern Dashboard</title>
-<meta name="theme-color" content="#005fb8" />
+<meta name="theme-color" content="#0073e6" />
 <link rel="icon" href="msite.png?v=2.0.0" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
 <style>
   :root{
-    --bg-1: linear-gradient(135deg,#004b8d,#1976d2 60%,#63a4ff);
-    --card-bg:#ffffff;
-    --accent:#005fb8;
-    --accent-2:#00509e;
-    --text-primary:#1a1a1a;
-    --muted:#5c6b7b;
-    --border:#e3ebf5;
-    --danger:#e53935;
-    --success:#00796b;
-    --glass: rgba(255,255,255,0.92);
-    --radius:14px;
-    --shadow-1: 0 8px 22px rgba(8,30,60,0.12);
-    --shadow-2: 0 4px 12px rgba(8,30,60,0.08);
-    --max-width:1150px;
+    --bg-1: linear-gradient(135deg,#f7fbff 0%, #f2f8ff 40%, #eaf6ff 100%);
+    --card-bg:#f9fbfd;
+    --accent:#0073e6; /* primary */
+    --accent-2:#0050b3; /* dark accent for headers */
+    --text-primary:#1e293b;
+    --muted:#64748b;
+    --border:#dce3ef;
+    --danger:#ef4444;
+    --success:#0d9488;
+    --glass: rgba(255,255,255,0.95);
+    --radius:12px;
+    --shadow-1: 0 10px 30px rgba(16,24,40,0.06);
+    --shadow-2: 0 6px 18px rgba(16,24,40,0.04);
+    --max-width:1200px;
     --sidebar-w:260px;
     font-synthesis:none;
   }
 
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0;font-family:Inter, "Segoe UI", Roboto, Arial, sans-serif;background:var(--bg-1);-webkit-font-smoothing:antialiased;color:#12202b;}
+  html,body{height:100%;margin:0;font-family:'Poppins', 'Segoe UI', Roboto, Arial, sans-serif;background:var(--bg-1);-webkit-font-smoothing:antialiased;color:var(--text-primary);}
 
   /* App grid */
-  .app{min-height:100vh;display:flex;gap:22px;padding:28px;align-items:flex-start;justify-content:center;}
-  .container{width:100%;max-width:var(--max-width);display:flex;gap:20px;align-items:flex-start;}
+  .app{min-height:100vh;display:flex;gap:24px;padding:30px;align-items:flex-start;justify-content:center;}
+  .container{width:100%;max-width:var(--max-width);display:flex;gap:22px;align-items:flex-start;}
 
   /* Sidebar */
   .sidebar{
-    width:var(--sidebar-w);background:var(--glass);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow-1);
-    position:sticky;top:28px;height:calc(100vh - 56px);overflow:auto;border:1px solid rgba(255,255,255,0.32);
+    width:var(--sidebar-w);background:var(--glass);border-radius:14px;padding:18px;box-shadow:var(--shadow-1);
+    position:sticky;top:28px;height:calc(100vh - 56px);overflow:auto;border:1px solid var(--border);
   }
-  .brand{font-weight:800;color:var(--accent);text-align:center;padding:10px 6px;font-size:18px;margin-bottom:6px}
+  .brand{font-weight:800;color:var(--accent);text-align:center;padding:12px 6px;font-size:18px;margin-bottom:8px; background: linear-gradient(90deg,var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent;}
   .nav{list-style:none;padding:0;margin:10px 0}
-  .nav button{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border-radius:10px;border:0;background:transparent;color:#083049;font-weight:700;cursor:pointer}
-  .nav button:hover{background:linear-gradient(90deg,rgba(2,86,163,0.06),rgba(2,86,163,0.03))}
-  .nav button.active{background:linear-gradient(90deg,rgba(0,95,184,0.12),rgba(0,95,184,0.04));box-shadow:var(--shadow-2)}
+  .nav button{display:flex;align-items:center;gap:10px;width:100%;padding:10px;border-radius:10px;border:0;background:transparent;color:var(--text-primary);font-weight:600;cursor:pointer}
+  .nav button:hover{background:rgba(3,102,214,0.06)}
+  .nav button.active{background:linear-gradient(90deg,rgba(0,115,230,0.10),rgba(0,115,230,0.04));box-shadow:var(--shadow-2)}
 
   /* Main area */
-  .main{
-    flex:1;display:flex;flex-direction:column;gap:16px;min-width:0;
-  }
+  .main{flex:1;display:flex;flex-direction:column;gap:16px;min-width:0;}
   .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
-  .page-title{font-size:1.3rem;font-weight:800;color:var(--accent-2)}
+  .page-title{font-size:1.6rem;font-weight:700;color:var(--accent-2);letter-spacing: -0.01em}
   .hamburger{display:none;background:var(--accent);color:white;border:0;padding:10px;border-radius:10px;cursor:pointer}
 
   /* Card */
   .card{background:var(--card-bg);border-radius:12px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow-2)}
-  .card-lg{padding:20px;border-radius:16px}
+  .card-lg{padding:22px;border-radius:14px}
 
   /* controls */
   .row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-  input,select,textarea{padding:10px;border:1px solid var(--border);border-radius:10px;outline:none;font-size:0.95rem;background:#fff}
-  input:focus,select:focus,textarea:focus{box-shadow:0 4px 18px rgba(0,95,184,0.06);border-color:var(--accent)}
-  .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
-  .btn-primary{background:var(--accent);color:white;box-shadow:0 6px 18px rgba(0,95,184,0.12)}
+  input,select,textarea{padding:10px;border:1px solid var(--border);border-radius:10px;outline:none;font-size:0.95rem;background:white;color:var(--text-primary)}
+  input::placeholder, textarea::placeholder{color:var(--muted)}
+  input:focus,select:focus,textarea:focus{box-shadow:0 8px 26px rgba(3,102,214,0.06);border-color:var(--accent)}
+  .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer;transition:all .16s ease}
+  .btn-primary{background:var(--accent);color:white;box-shadow:0 8px 24px rgba(3,102,214,0.08)}
+  .btn-primary:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(3,102,214,0.12)}
   .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--accent-2)}
+  .btn-ghost:hover{background:rgba(2,86,163,0.04)}
   .btn-danger{background:var(--danger);color:white}
   .muted{color:var(--muted);font-size:0.95rem}
   .small{font-size:0.9rem;color:var(--muted)}
 
   /* Stock table */
   table{width:100%;border-collapse:collapse;font-size:0.95rem}
-  thead th{background:linear-gradient(180deg,#f6fbff,#eef7ff);color:var(--accent-2);text-align:left;padding:12px;border-bottom:1px solid var(--border);font-weight:800}
-  tbody td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle}
-  tbody tr:hover td{background:#fbfdff}
+  thead th{background:linear-gradient(180deg,#f6fbff,#eef7ff);color:var(--accent-2);text-align:left;padding:12px;border-bottom:1px solid var(--border);font-weight:700}
+  tbody td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--text-primary)}
+  tbody tr:hover td{background:#fff}
+  tbody tr:nth-child(even) td{background: #fbfdff}
   .icon-btn{padding:8px;border-radius:8px;border:0;background:transparent;cursor:pointer}
   .float-add{position:sticky;bottom:18px;display:flex;justify-content:flex-end;gap:8px;margin-top:10px}
 
@@ -80,7 +83,7 @@
   .po-table thead th{padding:12px}
   .po-table tbody td{padding:10px}
   .line-number{width:48px;text-align:center;color:var(--muted);font-weight:700}
-  .subtotal{font-weight:800;text-align:right;color:#0b2b3a}
+  .subtotal{font-weight:800;text-align:right;color:var(--accent-2)}
 
   /* pending table tint (option 2) */
   .pending-head th{background:#eaf6ff;color:var(--accent-2);padding:12px;border-bottom:1px solid var(--border);font-weight:800}
@@ -95,7 +98,7 @@
   /* modals & accordions */
   .modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(6,12,20,0.45);z-index:999;visibility:hidden;opacity:0;transition:all .18s}
   .modal.show{visibility:visible;opacity:1}
-  .modal-box{background:#fff;border-radius:12px;padding:18px;max-width:880px;width:94%;box-shadow:var(--shadow-1);}
+  .modal-box{background:#fff;border-radius:12px;padding:18px;max-width:880px;width:94%;box-shadow:var(--shadow-1);max-height:80vh;overflow:auto}
 
   .accordion{border-radius:10px;border:1px solid var(--border);overflow:hidden}
   .accordion .acc-head{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#fff}
@@ -114,6 +117,12 @@
   /* small helpers */
   .text-right{text-align:right}
   .muted-2{color:#9aa6b3}
+
+  /* floating labels (small) */
+  .form-label{display:block;font-size:0.85rem;color:var(--muted);margin-bottom:6px;font-weight:600}
+
+  /* subtle transitions */
+  input, select, textarea, .btn, .icon-btn { transition: all .12s ease-in-out }
 </style>
 </head>
 <body>
@@ -150,22 +159,22 @@
       <!-- DASHBOARD -->
       <section id="dashboard" class="card card-lg page">
         <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap">
-          <div style="flex:1;min-width:200px;background:#fbfeff;padding:14px;border-radius:10px;border:1px solid var(--border)">
+          <div style="flex:1;min-width:200px;background:#fff;padding:14px;border-radius:10px;border:1px solid var(--border)">
             <div class="small muted">Total unique items</div>
-            <div style="font-size:1.2rem;font-weight:800" id="summary-count">0</div>
+            <div style="font-size:1.2rem;font-weight:800;color:var(--accent-2)" id="summary-count">0</div>
           </div>
-          <div style="flex:1;min-width:200px;background:#fbfeff;padding:14px;border-radius:10px;border:1px solid var(--border)">
+          <div style="flex:1;min-width:200px;background:#fff;padding:14px;border-radius:10px;border:1px solid var(--border)">
             <div class="small muted">Total stock (sum qty)</div>
-            <div style="font-size:1.2rem;font-weight:800" id="summary-total">0</div>
+            <div style="font-size:1.2rem;font-weight:800;color:var(--accent-2)" id="summary-total">0</div>
           </div>
-          <div style="flex:1;min-width:200px;background:#fbfeff;padding:14px;border-radius:10px;border:1px solid var(--border)">
+          <div style="flex:1;min-width:200px;background:#fff;padding:14px;border-radius:10px;border:1px solid var(--border)">
             <div class="small muted">Purchase orders filed</div>
-            <div style="font-size:1.2rem;font-weight:800" id="summary-pos">0</div>
+            <div style="font-size:1.2rem;font-weight:800;color:var(--accent-2)" id="summary-pos">0</div>
           </div>
         </div>
 
         <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
-        <h3 style="margin:0 0 8px 0">Recent Purchase Orders</h3>
+        <h3 style="margin:0 0 8px 0;color:var(--accent-2)">Recent Purchase Orders</h3>
         <div id="recentPOsContainer" class="muted-2">Loading...</div>
       </section>
 
@@ -173,7 +182,7 @@
       <section id="stock" class="card page" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
           <div>
-            <h3 style="margin:0">Stock Management</h3>
+            <h3 style="margin:0;color:var(--accent-2)">Stock Management</h3>
             <div class="muted small">Add and manage products — edits sync to Firebase.</div>
           </div>
           <div class="row">
@@ -197,7 +206,7 @@
       <section id="po" class="card page" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:220px">
-            <h3 style="margin:0">Purchase Orders</h3>
+            <h3 style="margin:0;color:var(--accent-2)">Purchase Orders</h3>
             <div class="muted small">Create a PO and deduct stock automatically.</div>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
@@ -209,15 +218,15 @@
         <div style="margin-top:12px" class="card">
           <div class="row" style="margin-bottom:8px">
             <div style="flex:1">
-              <label class="small muted">PO Number</label>
+              <label class="small muted form-label">PO Number</label>
               <input id="po-number" readonly>
             </div>
             <div style="flex:1">
-              <label class="small muted">Date</label>
+              <label class="small muted form-label">Date</label>
               <input id="po-date" type="date">
             </div>
             <div style="flex:2">
-              <label class="small muted">School / Customer</label>
+              <label class="small muted form-label">School / Customer</label>
               <input id="po-customer" placeholder="School or customer name">
             </div>
           </div>
@@ -250,7 +259,7 @@
         </div>
 
         <div style="margin-top:14px">
-          <h4 style="margin:6px 0">Existing Purchase Orders</h4>
+          <h4 style="margin:6px 0;color:var(--accent-2)">Existing Purchase Orders</h4>
           <div id="poListContainer" class="muted-2">Loading POs...</div>
         </div>
       </section>
@@ -259,7 +268,7 @@
       <section id="pending" class="card page" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px">
           <div>
-            <h3 style="margin:0">Pending / To Purchase</h3>
+            <h3 style="margin:0;color:var(--accent-2)">Pending / To Purchase</h3>
             <div class="muted small">Items to buy or pending deliveries to schools.</div>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
@@ -292,7 +301,7 @@
       <section id="delivery" class="card page" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <div style="min-width:260px">
-            <h3 style="margin:0">Delivery Tracker</h3>
+            <h3 style="margin:0;color:var(--accent-2)">Delivery Tracker</h3>
             <div class="muted small">Track missing / undelivered items per school. Add multiple items at once per school.</div>
           </div>
 
@@ -324,14 +333,28 @@
   <div class="modal-box">
     <h3 style="margin:0 0 8px 0;color:var(--accent)">Add / Edit Stock</h3>
     <div class="row" style="margin-bottom:8px">
-      <input id="modal-stock-name" placeholder="Item name" style="flex:2">
-      <input id="modal-stock-qty" type="number" placeholder="Quantity" style="flex:1" min="0">
-      <input id="modal-stock-unit" placeholder="Unit" style="flex:1">
+      <div style="flex:2">
+        <label class="form-label">Item name</label>
+        <input id="modal-stock-name" placeholder="Item name" style="width:100%">
+      </div>
+      <div style="flex:1">
+        <label class="form-label">Quantity</label>
+        <input id="modal-stock-qty" type="number" placeholder="Quantity" min="0">
+      </div>
+      <div style="flex:1">
+        <label class="form-label">Unit</label>
+        <input id="modal-stock-unit" placeholder="Unit">
+      </div>
     </div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
-      <input id="modal-stock-price" type="number" placeholder="Price" style="width:160px" step="0.01">
-      <button class="btn btn-primary" onclick="saveStockFromModal()">Save</button>
-      <button class="btn btn-ghost" onclick="closeAddStockModal()">Cancel</button>
+      <div style="width:160px">
+        <label class="form-label">Price</label>
+        <input id="modal-stock-price" type="number" placeholder="0.00" step="0.01">
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn btn-primary" onclick="saveStockFromModal()">Save</button>
+        <button class="btn btn-ghost" onclick="closeAddStockModal()">Cancel</button>
+      </div>
     </div>
   </div>
 </div>
@@ -341,9 +364,16 @@
   <div class="modal-box">
     <h3 style="margin:0 0 8px 0;color:var(--accent)">Add / Edit Pending Item</h3>
     <div class="row" style="margin-bottom:8px">
-      <input id="pending-item" placeholder="Item name" style="flex:2">
-      <input id="pending-qty" type="number" placeholder="Qty needed" style="flex:1" min="1">
+      <div style="flex:2">
+        <label class="form-label">Item name</label>
+        <input id="pending-item" placeholder="Item name">
+      </div>
+      <div style="flex:1">
+        <label class="form-label">Qty needed</label>
+        <input id="pending-qty" type="number" placeholder="Qty" min="1">
+      </div>
     </div>
+    <label class="form-label">Reason</label>
     <textarea id="pending-reason" placeholder="Reason (e.g. out of stock or missing delivery)" style="width:100%;height:80px;border:1px solid var(--border);border-radius:8px;padding:8px"></textarea>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px">
       <button class="btn btn-primary" onclick="savePendingItem()">Save</button>
@@ -358,7 +388,7 @@
     <h3 style="margin:0 0 8px 0;color:var(--accent)">Add / Edit Delivery Group (School)</h3>
 
     <div style="margin-bottom:10px">
-      <label class="small muted">School / Customer</label>
+      <label class="form-label">School / Customer</label>
       <input id="delivery-school" placeholder="School or customer name" style="width:100%;margin-top:6px" />
     </div>
 
@@ -1132,7 +1162,7 @@ function printStockList() {
   const tableHTML = `
     <table style="width:100%;border-collapse:collapse;margin-top:14px">
       <thead>
-        <tr style="background:#004b8d;color:white">
+        <tr style="background:#0073e6;color:white">
           <th style="padding:8px;border:1px solid #ccc;text-align:left">Item</th>
           <th style="padding:8px;border:1px solid #ccc;text-align:right">Quantity</th>
           <th style="padding:8px;border:1px solid #ccc;text-align:left">Unit</th>
@@ -1154,10 +1184,10 @@ function printStockList() {
     <html><head><title>Stock List</title>
     <style>
       body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#222;}
-      h2{margin:0;text-align:center;color:#004b8d;}
+      h2{margin:0;text-align:center;color:#0073e6;}
       table{width:100%;border-collapse:collapse;}
       th,td{border:1px solid #ccc;padding:8px;text-align:left;}
-      th{background:#004b8d;color:#fff;}
+      th{background:#0073e6;color:#fff;}
       tr:nth-child(even){background:#f8faff;}
     </style></head>
     <body>
