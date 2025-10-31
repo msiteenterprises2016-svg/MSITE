@@ -807,25 +807,33 @@ function addPOLine(prefill){
 function clearPOLines(){ window.poLines = []; renderPOLines(); }
 function removePOLine(i){ window.poLines.splice(i,1); renderPOLines(); }
 
-  function calcLineSubtotal(line){ return ((parseFloat(line.qty)||0) * (parseFloat(line.price)||0)) || 0; }
-function calcPOTotal(){ return (window.poLines||[]).reduce((s,l)=> s + calcLineSubtotal(l), 0); }
+ 
 
-/* ---------- Purchase Order Lines (Enhanced with Stock Integration) ---------- */
 
+/* ---------- Purchase Order Lines (Compact + Organized + Auto Dropdown Refresh) ---------- */
+
+// ✅ Auto-calculate subtotal and total
+function calcLineSubtotal(line) {
+  return ((parseFloat(line.qty) || 0) * (parseFloat(line.price) || 0)) || 0;
+}
+
+function calcPOTotal() {
+  return (window.poLines || []).reduce((sum, l) => sum + calcLineSubtotal(l), 0);
+}
+
+// ✅ Update a line when user changes item/qty/price
 function updatePOLine(i, field, value) {
   if (!window.poLines[i]) return;
-
   if (field === 'qty' || field === 'price') value = parseFloat(value) || 0;
   window.poLines[i][field] = value;
 
-  // 🧩 Auto-fill unit and price when item selected
+  // Auto-fill from stock data
   if (field === 'itemName') {
-    const stock = window.stockData.find(s => s.name === value);
+    const stock = (window.stockData || []).find(s => s.name === value);
     if (stock) {
       window.poLines[i].unit = stock.unit || '';
       window.poLines[i].price = parseFloat(stock.price) || 0;
     } else {
-      // If item not found in stock, clear fields
       window.poLines[i].unit = '';
       window.poLines[i].price = 0;
     }
@@ -834,11 +842,14 @@ function updatePOLine(i, field, value) {
   renderPOLines();
 }
 
+// ✅ Render all PO item lines
 function renderPOLines() {
   const tbody = document.getElementById('poLineTableBody');
+  if (!tbody) return;
   tbody.innerHTML = '';
 
-  if (!window.poLines.length) {
+  // No items yet
+  if (!window.poLines?.length) {
     tbody.innerHTML = `
       <tr>
         <td colspan="6" style="padding:16px;text-align:center;color:var(--muted)">
@@ -848,6 +859,65 @@ function renderPOLines() {
     document.getElementById('poTotal').textContent = '₱0.00';
     return;
   }
+
+  // Dropdown options from stock
+  const stockOptions = (window.stockData || [])
+    .map(s => `<option value="${s.name}">${s.name} (${s.qty} ${s.unit || ''})</option>`)
+    .join('');
+
+  // Render each PO line
+  window.poLines.forEach((line, i) => {
+    const subtotal = calcLineSubtotal(line);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>
+        <select onchange="updatePOLine(${i}, 'itemName', this.value)" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border)">
+          <option value="">-- Select item --</option>
+          ${stockOptions.replace(`value="${line.itemName}"`, `value="${line.itemName}" selected`)}
+        </select>
+      </td>
+      <td style="text-align:center">
+        <input type="number" min="1" value="${line.qty || 1}" onchange="updatePOLine(${i}, 'qty', this.value)" style="width:80px;text-align:center">
+      </td>
+      <td style="text-align:center">
+        <input value="${line.unit || ''}" onchange="updatePOLine(${i}, 'unit', this.value)" style="width:80px;text-align:center">
+      </td>
+      <td style="text-align:center">
+        <input type="number" step="0.01" min="0" value="${line.price || 0}" onchange="updatePOLine(${i}, 'price', this.value)" style="width:100px;text-align:center">
+      </td>
+      <td style="text-align:right">₱${subtotal.toFixed(2)}</td>
+      <td style="text-align:center">
+        <button class="btn btn-ghost" onclick="removePOLine(${i})">🗑 Remove</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Update total
+  document.getElementById('poTotal').textContent = `₱${calcPOTotal().toFixed(2)}`;
+}
+
+// ✅ Refresh dropdowns when PO page opens
+function openMenu(menuId) {
+  document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
+  const page = document.getElementById(menuId);
+  if (page) page.style.display = 'block';
+  if (menuId === 'po') renderPOLines(); // refresh dropdowns
+}
+
+// ✅ Refresh dropdowns after stock loads
+stocksRef.on('value', snap => {
+  const val = snap.val();
+  if (val) {
+    window.stockData = Array.isArray(val) ? val : Object.values(val || {});
+    saveLocal();
+    renderStock();
+    refreshSummary();
+    renderPOLines(); // update dropdowns
+    setTimeout(() => checkLowStock(), 300);
+  }
+});
+
 
   // 🧩 Generate item dropdown options from stock
   const stockOptions = (window.stockData || [])
