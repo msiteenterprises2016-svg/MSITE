@@ -1300,6 +1300,30 @@ document.addEventListener('DOMContentLoaded', () => {
   hamburger.onclick = () => sidebar.classList.toggle('show');
   document.querySelector('.topbar').prepend(hamburger);
 });
+  /* Keep hamburger always visible on mobile */
+.hamburger {
+  position: relative;
+  z-index: 2001; /* above sidebar */
+}
+
+@media (max-width:980px) {
+  .sidebar {
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+  }
+  .sidebar.show {
+    transform: translateX(0);
+  }
+}
+document.addEventListener('click', (e) => {
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar.classList.contains('show') &&
+      !sidebar.contains(e.target) &&
+      !e.target.classList.contains('hamburger')) {
+    sidebar.classList.remove('show');
+  }
+});
+
   // Register the service worker
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
