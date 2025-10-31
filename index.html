@@ -773,13 +773,13 @@ stocksRef.on('value', snap => {
     saveLocal();
     renderStock();
     refreshSummary();
-    renderPOLines(); // ✅ refresh dropdowns after stocks load
+
     setTimeout(() => checkLowStock(), 300);
   } else {
     window.stockData = JSON.parse(localStorage.getItem('stockData') || '[]');
     renderStock();
     refreshSummary();
-    renderPOLines(); // ✅ also refresh dropdowns if offline data is used
+   
   }
 });
 
