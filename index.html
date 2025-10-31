@@ -108,7 +108,7 @@
   .accordion .acc-head{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#fff}
   .accordion .acc-body{padding:12px;border-top:1px solid var(--border);background:#fbfdff}
 
-/* responsive improvements */
+  /* responsive improvements */
 @media (max-width:980px) {
   .app {
     flex-direction: column;
@@ -122,26 +122,20 @@
     padding: 0;
   }
 
-  /* ✅ Mobile sidebar: slides in/out and stays above everything */
   .sidebar {
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 240px;
     height: 100vh;
+    z-index: 1000;
     background: var(--glass);
     box-shadow: var(--shadow-1);
-    border: 1px solid var(--border);
-    border-radius: 0 12px 12px 0;
-    z-index: 2000;
-    transform: translateX(-100%);
-    transition: transform 0.25s ease;
-    pointer-events: auto;
-
   }
 
   .sidebar.show {
-    transform: translateX(0);
+    display: block;
   }
 
   .hamburger {
@@ -161,7 +155,6 @@
     width: 100%;
   }
 }
-
 
 @media (max-width:640px) {
   .row { flex-direction: column; align-items: stretch; }
@@ -212,25 +205,6 @@
   border-radius: 10px;
   font-weight: 600;
 }
-  /* --- FIX: Make sure the hamburger menu and sidebar always stay on top --- */
-.hamburger {
-  position: fixed;          /* stays in place even when scrolling */
-  top: 16px;                /* adjust as needed */
-  left: 16px;               /* adjust as needed */
-  z-index: 9999;            /* 🔥 ensures it's always above everything */
-  background: var(--accent);
-  color: white;
-  border: none;
-  padding: 10px 14px;
-  border-radius: 10px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.sidebar {
-  z-index: 9998;            /* sidebar just under the button but above all pages */
-}
-
 
 </style>
 </head>
@@ -636,33 +610,17 @@ function showModal(id){ document.getElementById(id).classList.add('show'); }
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 
 /* ---------- Navigation ---------- */
-function openMenu(menuId) {
-  // Hide all pages first
+function openMenu(menuId){
   document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
-  const page = document.getElementById(menuId);
-  if (page) page.style.display = 'block';
-
-  // Update page title
-  const titles = {
-    dashboard: 'Dashboard',
-    stock: 'Stock Management',
-    po: 'Purchase Orders',
-    pending: 'Pending / To Purchase',
-    delivery: 'Delivery Tracker'
-  };
-  document.getElementById('pageTitle').textContent = titles[menuId] || 'MSITE';
-
-  // Highlight the active button
-  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-  const activeBtn = document.getElementById('nav-' + menuId);
-  if (activeBtn) activeBtn.classList.add('active');
-
-  // ✅ Close the sidebar automatically (mobile)
-  const sidebar = document.getElementById('sidebar');
-  sidebar.classList.remove('show');
+  document.getElementById(menuId).style.display = 'block';
+  document.getElementById('pageTitle').textContent = { dashboard:'Dashboard', stock:'Stock Management', po:'Purchase Orders', pending:'Pending / To Purchase', delivery:'Delivery Tracker' }[menuId] || 'MSITE';
+  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+  if(menuId==='dashboard') document.getElementById('nav-dashboard').classList.add('active');
+  if(menuId==='stock') document.getElementById('nav-stock').classList.add('active');
+  if(menuId==='po') document.getElementById('nav-po').classList.add('active');
+  if(menuId==='pending') document.getElementById('nav-pending').classList.add('active');
+  if(menuId==='delivery') document.getElementById('nav-delivery').classList.add('active');
 }
-
-
 
 /* ---------- Stock logic ---------- */
 function renderStock(){
@@ -768,21 +726,18 @@ function saveStocksToFirebase(){
 /* Firebase listener for stocks */
 stocksRef.on('value', snap => {
   const val = snap.val();
-  if (val) {
+  if(val){
     window.stockData = Array.isArray(val) ? val : Object.values(val || {});
     saveLocal();
     renderStock();
     refreshSummary();
-
-    setTimeout(() => checkLowStock(), 300);
+    // auto-check pending on sync
+    setTimeout(()=> checkLowStock(), 300);
   } else {
     window.stockData = JSON.parse(localStorage.getItem('stockData') || '[]');
-    renderStock();
-    refreshSummary();
-   
+    renderStock(); refreshSummary();
   }
 });
-
 
 /* ---------- Purchase Order logic (unchanged) ---------- */
 function genPONumber(){
@@ -810,136 +765,49 @@ function addPOLine(prefill){
 function clearPOLines(){ window.poLines = []; renderPOLines(); }
 function removePOLine(i){ window.poLines.splice(i,1); renderPOLines(); }
 
- 
-
-
-/* ---------- Purchase Order Lines (Compact + Organized + Auto Dropdown Refresh) ---------- */
-
-// ✅ Auto-calculate subtotal and total
-function calcLineSubtotal(line) {
-  return ((parseFloat(line.qty) || 0) * (parseFloat(line.price) || 0)) || 0;
-}
-
-function calcPOTotal() {
-  return (window.poLines || []).reduce((sum, l) => sum + calcLineSubtotal(l), 0);
-}
-
-// ✅ Update a line when user changes item/qty/price
-function updatePOLine(i, field, value) {
-  if (!window.poLines[i]) return;
-  if (field === 'qty' || field === 'price') value = parseFloat(value) || 0;
+function updatePOLine(i, field, value){
+  if(!window.poLines[i]) return;
+  if(field === 'qty') value = parseFloat(value) || 0;
+  if(field === 'price') value = parseFloat(value) || 0;
   window.poLines[i][field] = value;
-
-  // Auto-fill from stock data
-  if (field === 'itemName') {
-    const stock = (window.stockData || []).find(s => s.name === value);
-    if (stock) {
-      window.poLines[i].unit = stock.unit || '';
-      window.poLines[i].price = parseFloat(stock.price) || 0;
-    } else {
-      window.poLines[i].unit = '';
-      window.poLines[i].price = 0;
-    }
+  if(field === 'itemName'){
+    const st = window.stockData.find(s => s.name === value);
+    if(st){ window.poLines[i].unit = st.unit || ''; window.poLines[i].price = st.price || 0; }
+    else { window.poLines[i].unit = ''; }
   }
-
   renderPOLines();
 }
-  // ✅ Load stock data instantly from local storage (before Firebase sync)
-function preloadStockData() {
-  const local = localStorage.getItem('stockData');
-  if (local) {
-    try {
-      window.stockData = JSON.parse(local);
-    } catch (e) {
-      console.warn('Invalid local stock data', e);
-      window.stockData = [];
-    }
-  }
-}
+function calcLineSubtotal(line){ return ((parseFloat(line.qty)||0) * (parseFloat(line.price)||0)) || 0; }
+function calcPOTotal(){ return (window.poLines||[]).reduce((s,l)=> s + calcLineSubtotal(l), 0); }
 
-
-// ✅ Render all PO item lines
-function renderPOLines() {
-  const tbody = document.getElementById('poLineTableBody');
-  if (!tbody) return;
-  tbody.innerHTML = '';
-
-  // No items yet
-  if (!window.poLines?.length) {
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="6" style="padding:16px;text-align:center;color:var(--muted)">
-          No items added yet. Click "<strong>+ Add Item</strong>" to start.
-        </td>
-      </tr>`;
-    document.getElementById('poTotal').textContent = '₱0.00';
+function renderPOLines(){
+  const tbody = document.getElementById('poTableBody'); tbody.innerHTML = '';
+  if(!window.poLines.length){
+    tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--muted)">No items. Click "Add Line" to start.</td></tr>`;
+    document.getElementById('po-total').textContent = `₱${calcPOTotal().toFixed(2)}`;
     return;
   }
-
-  // Dropdown options from stock
-  const stockOptions = (window.stockData || [])
-    .map(s => `<option value="${s.name}">${s.name} (${s.qty} ${s.unit || ''})</option>`)
-    .join('');
-
-  // Render each PO line
-  window.poLines.forEach((line, i) => {
+  window.poLines.forEach((line,i)=>{
     const subtotal = calcLineSubtotal(line);
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td class="line-number">${i+1}</td>
       <td>
-        <select onchange="updatePOLine(${i}, 'itemName', this.value)" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border)">
-          <option value="">-- Select item --</option>
-          ${stockOptions.replace(`value="${line.itemName}"`, `value="${line.itemName}" selected`)}
+        <select class="item-select" onchange="updatePOLine(${i}, 'itemName', this.value)">
+          <option value="">-- select product --</option>
+          ${ (window.stockData||[]).map(s => `<option ${s.name===line.itemName?'selected':''} value="${escape(s.name)}">${escape(s.name)} (${s.qty} ${escape(s.unit||'')})</option>`).join('') }
         </select>
       </td>
-      <td style="text-align:center">
-        <input type="number" min="1" value="${line.qty || 1}" onchange="updatePOLine(${i}, 'qty', this.value)" style="width:80px;text-align:center">
-      </td>
-      <td style="text-align:center">
-        <input value="${line.unit || ''}" onchange="updatePOLine(${i}, 'unit', this.value)" style="width:80px;text-align:center">
-      </td>
-      <td style="text-align:center">
-        <input type="number" step="0.01" min="0" value="${line.price || 0}" onchange="updatePOLine(${i}, 'price', this.value)" style="width:100px;text-align:center">
-      </td>
-      <td style="text-align:right">₱${subtotal.toFixed(2)}</td>
-      <td style="text-align:center">
-        <button class="btn btn-ghost" onclick="removePOLine(${i})">🗑 Remove</button>
-      </td>
+      <td><input type="number" min="1" value="${line.qty||1}" onchange="updatePOLine(${i}, 'qty', this.value)"></td>
+      <td><input value="${escape(line.unit||'')}" onchange="updatePOLine(${i}, 'unit', this.value)"></td>
+      <td><input type="number" step="0.01" min="0" value="${line.price||0}" onchange="updatePOLine(${i}, 'price', this.value)"></td>
+      <td class="subtotal">₱${subtotal.toFixed(2)}</td>
+      <td class="text-right"><button class="btn btn-ghost" onclick="removePOLine(${i})">Remove</button></td>
     `;
     tbody.appendChild(tr);
   });
-
-  // Update total
-  document.getElementById('poTotal').textContent = `₱${calcPOTotal().toFixed(2)}`;
+  document.getElementById('po-total').textContent = `₱${calcPOTotal().toFixed(2)}`;
 }
-
-// ✅ Refresh dropdowns when PO page opens (with instant preload)
-function openMenu(menuId) {
-  document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
-  const page = document.getElementById(menuId);
-  if (page) page.style.display = 'block';
-
-  // ✅ When opening Purchase Order, load cached stock instantly
-  if (menuId === 'po') {
-    preloadStockData();  // load from localStorage first
-    renderPOLines();     // render dropdown right away
-  }
-}
-
-
-// ✅ Refresh dropdowns after stock loads
-stocksRef.on('value', snap => {
-  const val = snap.val();
-  if (val) {
-    window.stockData = Array.isArray(val) ? val : Object.values(val || {});
-    saveLocal();
-    renderStock();
-    refreshSummary();
-    renderPOLines(); // update dropdowns
-    setTimeout(() => checkLowStock(), 300);
-  }
-});
-
 
 function submitPO(){
   const cust = (document.getElementById('po-customer').value || '').trim();
