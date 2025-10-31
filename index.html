@@ -919,45 +919,6 @@ stocksRef.on('value', snap => {
 });
 
 
-  // 🧩 Generate item dropdown options from stock
-  const stockOptions = (window.stockData || [])
-    .map(s => `<option value="${s.name}">${s.name} (${s.qty} ${s.unit || ''})</option>`)
-    .join('');
-
-  window.poLines.forEach((line, i) => {
-    const subtotal = (line.qty || 0) * (line.price || 0);
-
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>
-        <select onchange="updatePOLine(${i}, 'itemName', this.value)" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border)">
-          <option value="">-- Select item --</option>
-          ${stockOptions.replace(`value="${line.itemName}"`, `value="${line.itemName}" selected`)}
-        </select>
-      </td>
-      <td style="text-align:center">
-        <input type="number" min="1" value="${line.qty || 1}" onchange="updatePOLine(${i}, 'qty', this.value)" style="width:80px;text-align:center">
-      </td>
-      <td style="text-align:center">
-        <input value="${line.unit || ''}" onchange="updatePOLine(${i}, 'unit', this.value)" style="width:80px;text-align:center">
-      </td>
-      <td style="text-align:center">
-        <input type="number" step="0.01" min="0" value="${line.price || 0}" onchange="updatePOLine(${i}, 'price', this.value)" style="width:100px;text-align:center">
-      </td>
-      <td class="subtotal" style="text-align:right">₱${subtotal.toFixed(2)}</td>
-      <td style="text-align:center">
-        <button class="btn btn-ghost" onclick="removePOLine(${i})">🗑 Remove</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-
-  // 🧮 Update total
-  const total = window.poLines.reduce((sum, l) => sum + ((l.qty || 0) * (l.price || 0)), 0);
-  document.getElementById('poTotal').textContent = `₱${total.toFixed(2)}`;
-}
-
-
 function submitPO(){
   const cust = (document.getElementById('po-customer').value || '').trim();
   const date = (document.getElementById('po-date').value || '').trim();
