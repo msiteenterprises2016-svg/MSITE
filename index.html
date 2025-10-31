@@ -303,7 +303,7 @@
       </section>
 
       <!-- PURCHASE ORDERS -->
-      <section id="po" class="card page" style="display:none">
+    
         <section id="po" class="page" style="display:none">
   <div class="page-header">
     <h2 style="color:var(--accent-2)">🧾 Create Purchase Order</h2>
@@ -401,65 +401,7 @@
   </div>
 </section>
 
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-          <div style="flex:1;min-width:220px">
-            <h3 style="margin:0;color:var(--accent-2)">Purchase Orders</h3>
-            <div class="muted small">Create a PO and deduct stock automatically.</div>
-          </div>
-          <div style="display:flex;gap:8px;align-items:center">
-            <button class="btn btn-ghost" onclick="renderPOList()">⟳ Refresh</button>
-            <button class="btn btn-primary" onclick="addPOLine()">+ Add Line</button>
-          </div>
-        </div>
-
-        <div style="margin-top:12px" class="card">
-          <div class="row" style="margin-bottom:8px">
-            <div style="flex:1">
-              <label class="small muted form-label">PO Number</label>
-              <input id="po-number" readonly>
-            </div>
-            <div style="flex:1">
-              <label class="small muted form-label">Date</label>
-              <input id="po-date" type="date">
-            </div>
-            <div style="flex:2">
-              <label class="small muted form-label">School / Customer</label>
-              <input id="po-customer" placeholder="School or customer name">
-            </div>
-          </div>
-
-          <!-- PO Lines -->
-          <div style="overflow:auto">
-            <table class="po-table" id="poTable">
-              <thead>
-                <tr>
-                  <th style="width:40px">#</th>
-                  <th>Item</th>
-                  <th style="width:92px">Qty</th>
-                  <th style="width:110px">Unit</th>
-                  <th style="width:140px">Price</th>
-                  <th style="width:160px">Subtotal</th>
-                  <th style="width:76px"> </th>
-                </tr>
-              </thead>
-              <tbody id="poTableBody"></tbody>
-            </table>
-          </div>
-
-          <div class="summary-row">
-            <div class="small muted">Tip: choose items from stock — price and unit auto-fill.</div>
-            <div style="display:flex;gap:12px;align-items:center">
-              <div class="total-chip">Total: <span id="po-total">₱0.00</span></div>
-              <button class="btn btn-primary" onclick="submitPO()">Submit & Print</button>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top:14px">
-          <h4 style="margin:6px 0;color:var(--accent-2)">Existing Purchase Orders</h4>
-          <div id="poListContainer" class="muted-2">Loading POs...</div>
-        </div>
-      </section>
+       
 
       <!-- PENDING / TO PURCHASE -->
       <section id="pending" class="card page" style="display:none">
@@ -1589,6 +1531,146 @@ function openMenu(menuId) {
 
 
 /* ---------- End ---------- */
+  /* ---------- PURCHASE ORDER LOGIC (for new layout) ---------- */
+
+// Initialize blank order lines
+function addPOLine() {
+  const tbody = document.getElementById("poLineTableBody");
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td style="padding:6px"><input class="input itemName" placeholder="Item name" style="width:100%"></td>
+    <td style="padding:6px;text-align:center"><input type="number" class="input qty" min="1" value="1" style="width:60px"></td>
+    <td style="padding:6px;text-align:center"><input class="input unit" placeholder="pcs" style="width:80px"></td>
+    <td style="padding:6px;text-align:center"><input type="number" class="input price" step="0.01" placeholder="0.00" style="width:100px"></td>
+    <td style="padding:6px;text-align:center" class="subtotal">₱0.00</td>
+    <td style="padding:6px;text-align:center"><button class="btn btn-ghost" onclick="this.closest('tr').remove(); updatePOTotal();">🗑️</button></td>
+  `;
+  tbody.appendChild(tr);
+
+  // update total when qty or price changes
+  const qtyInput = tr.querySelector(".qty");
+  const priceInput = tr.querySelector(".price");
+  qtyInput.addEventListener("input", () => updateSubtotal(tr));
+  priceInput.addEventListener("input", () => updateSubtotal(tr));
+}
+
+function updateSubtotal(row) {
+  const qty = parseFloat(row.querySelector(".qty").value) || 0;
+  const price = parseFloat(row.querySelector(".price").value) || 0;
+  const subtotal = qty * price;
+  row.querySelector(".subtotal").textContent = `₱${subtotal.toFixed(2)}`;
+  updatePOTotal();
+}
+
+function updatePOTotal() {
+  const rows = document.querySelectorAll("#poLineTableBody tr");
+  let total = 0;
+  rows.forEach(r => {
+    const txt = r.querySelector(".subtotal").textContent.replace(/[₱,]/g,"");
+    total += parseFloat(txt) || 0;
+  });
+  document.getElementById("poTotal").textContent = `₱${total.toLocaleString(undefined,{minimumFractionDigits:2})}`;
+}
+
+/* ---------- SAVE PO TO FIREBASE ---------- */
+function savePO() {
+  const customer = document.getElementById("poCustomer").value.trim();
+  const date = document.getElementById("poDate").value;
+  const remarks = document.getElementById("poRemarks").value.trim();
+  const poNumber = "PO-" + Date.now().toString().slice(-6);
+
+  const lines = [];
+  document.querySelectorAll("#poLineTableBody tr").forEach(r => {
+    const itemName = r.querySelector(".itemName").value.trim();
+    const qty = parseFloat(r.querySelector(".qty").value) || 0;
+    const unit = r.querySelector(".unit").value.trim();
+    const price = parseFloat(r.querySelector(".price").value) || 0;
+    if (itemName && qty > 0) {
+      lines.push({ itemName, qty, unit, price });
+    }
+  });
+
+  if (!customer || lines.length === 0) {
+    alert("Please fill in customer name and add at least one item.");
+    return;
+  }
+
+  const total = lines.reduce((sum, i) => sum + i.qty * i.price, 0);
+
+  const poData = {
+    poNumber,
+    date: date || new Date().toISOString().split("T")[0],
+    customer,
+    remarks,
+    total,
+    lines,
+    createdAt: Date.now()
+  };
+
+  // Save to Firebase (assuming posRef is your purchase order reference)
+  posRef.child(poNumber).set(poData)
+    .then(() => {
+      // Deduct from stock
+      lines.forEach(line => {
+        stockRef.orderByChild("name").equalTo(line.itemName).once("value", snap => {
+          snap.forEach(child => {
+            const currentQty = child.val().qty || 0;
+            child.ref.update({ qty: Math.max(0, currentQty - line.qty) });
+          });
+        });
+      });
+      alert("✅ Purchase Order Saved!");
+      resetPOForm();
+      renderPOList(); // refresh list
+    })
+    .catch(err => {
+      console.error(err);
+      alert("Error saving PO: " + err.message);
+    });
+}
+
+/* ---------- RESET FORM ---------- */
+function resetPOForm() {
+  document.getElementById("poCustomer").value = "";
+  document.getElementById("poDate").value = "";
+  document.getElementById("poRemarks").value = "";
+  document.getElementById("poLineTableBody").innerHTML = "";
+  document.getElementById("poTotal").textContent = "₱0.00";
+}
+
+/* ---------- PRINT PO ---------- */
+function printPO() {
+  const customer = document.getElementById("poCustomer").value || "N/A";
+  const date = document.getElementById("poDate").value || "N/A";
+  const total = document.getElementById("poTotal").textContent;
+
+  let html = `
+    <h2>Purchase Order</h2>
+    <p><strong>Customer:</strong> ${customer}<br>
+    <strong>Date:</strong> ${date}</p>
+    <table border="1" cellspacing="0" cellpadding="6" width="100%">
+      <thead><tr><th>Item</th><th>Qty</th><th>Unit</th><th>Price</th><th>Subtotal</th></tr></thead>
+      <tbody>
+  `;
+  document.querySelectorAll("#poLineTableBody tr").forEach(r => {
+    const item = r.querySelector(".itemName").value;
+    const qty = r.querySelector(".qty").value;
+    const unit = r.querySelector(".unit").value;
+    const price = r.querySelector(".price").value;
+    const subtotal = r.querySelector(".subtotal").textContent;
+    html += `<tr><td>${item}</td><td>${qty}</td><td>${unit}</td><td>${price}</td><td>${subtotal}</td></tr>`;
+  });
+  html += `
+      </tbody></table>
+      <h3 style="text-align:right">Total: ${total}</h3>
+  `;
+
+  const newWin = window.open("", "_blank");
+  newWin.document.write(html);
+  newWin.document.close();
+  newWin.print();
+}
+
   
 </script>
 </body>
