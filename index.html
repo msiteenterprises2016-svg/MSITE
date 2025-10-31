@@ -765,7 +765,7 @@ function saveStocksToFirebase(){
   }).catch(e => console.error(e));
 }
 
-x/* Firebase listener for stocks */
+/* Firebase listener for stocks */
 stocksRef.on('value', snap => {
   const val = snap.val();
   if (val) {
