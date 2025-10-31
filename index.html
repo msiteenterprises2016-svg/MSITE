@@ -108,7 +108,7 @@
   .accordion .acc-head{display:flex;justify-content:space-between;align-items:center;padding:12px;background:#fff}
   .accordion .acc-body{padding:12px;border-top:1px solid var(--border);background:#fbfdff}
 
-  /* responsive improvements */
+/* responsive improvements */
 @media (max-width:980px) {
   .app {
     flex-direction: column;
@@ -122,20 +122,24 @@
     padding: 0;
   }
 
+  /* ✅ Mobile sidebar: slides in/out and stays above everything */
   .sidebar {
-    display: none;
     position: fixed;
     top: 0;
     left: 0;
     width: 240px;
     height: 100vh;
-    z-index: 2000;
     background: var(--glass);
     box-shadow: var(--shadow-1);
+    border: 1px solid var(--border);
+    border-radius: 0 12px 12px 0;
+    z-index: 2000;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
   }
 
   .sidebar.show {
-    display: block;
+    transform: translateX(0);
   }
 
   .hamburger {
@@ -155,6 +159,7 @@
     width: 100%;
   }
 }
+
 
 @media (max-width:640px) {
   .row { flex-direction: column; align-items: stretch; }
@@ -611,29 +616,31 @@ function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 
 /* ---------- Navigation ---------- */
 function openMenu(menuId) {
+  // Hide all pages first
   document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
-  document.getElementById(menuId).style.display = 'block';
-  document.getElementById('pageTitle').textContent = {
+  const page = document.getElementById(menuId);
+  if (page) page.style.display = 'block';
+
+  // Update page title
+  const titles = {
     dashboard: 'Dashboard',
     stock: 'Stock Management',
     po: 'Purchase Orders',
     pending: 'Pending / To Purchase',
     delivery: 'Delivery Tracker'
-  }[menuId] || 'MSITE';
-  
-  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-  if (menuId === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
-  if (menuId === 'stock') document.getElementById('nav-stock').classList.add('active');
-  if (menuId === 'po') document.getElementById('nav-po').classList.add('active');
-  if (menuId === 'pending') document.getElementById('nav-pending').classList.add('active');
-  if (menuId === 'delivery') document.getElementById('nav-delivery').classList.add('active');
+  };
+  document.getElementById('pageTitle').textContent = titles[menuId] || 'MSITE';
 
-  // ✅ Auto-close sidebar on mobile
+  // Highlight the active button
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  const activeBtn = document.getElementById('nav-' + menuId);
+  if (activeBtn) activeBtn.classList.add('active');
+
+  // ✅ Close the sidebar automatically (mobile)
   const sidebar = document.getElementById('sidebar');
-  if (window.innerWidth <= 980 && sidebar.classList.contains('show')) {
-    sidebar.classList.remove('show');
-  }
+  sidebar.classList.remove('show');
 }
+
 
 
 /* ---------- Stock logic ---------- */
