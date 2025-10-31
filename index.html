@@ -212,6 +212,25 @@
   border-radius: 10px;
   font-weight: 600;
 }
+  /* --- FIX: Make sure the hamburger menu and sidebar always stay on top --- */
+.hamburger {
+  position: fixed;          /* stays in place even when scrolling */
+  top: 16px;                /* adjust as needed */
+  left: 16px;               /* adjust as needed */
+  z-index: 9999;            /* 🔥 ensures it's always above everything */
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sidebar {
+  z-index: 9998;            /* sidebar just under the button but above all pages */
+}
+
 
 </style>
 </head>
