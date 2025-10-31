@@ -807,49 +807,86 @@ function addPOLine(prefill){
 function clearPOLines(){ window.poLines = []; renderPOLines(); }
 function removePOLine(i){ window.poLines.splice(i,1); renderPOLines(); }
 
-function updatePOLine(i, field, value){
-  if(!window.poLines[i]) return;
-  if(field === 'qty') value = parseFloat(value) || 0;
-  if(field === 'price') value = parseFloat(value) || 0;
-  window.poLines[i][field] = value;
-  if(field === 'itemName'){
-    const st = window.stockData.find(s => s.name === value);
-    if(st){ window.poLines[i].unit = st.unit || ''; window.poLines[i].price = st.price || 0; }
-    else { window.poLines[i].unit = ''; }
-  }
-  renderPOLines();
-}
-function calcLineSubtotal(line){ return ((parseFloat(line.qty)||0) * (parseFloat(line.price)||0)) || 0; }
+  function calcLineSubtotal(line){ return ((parseFloat(line.qty)||0) * (parseFloat(line.price)||0)) || 0; }
 function calcPOTotal(){ return (window.poLines||[]).reduce((s,l)=> s + calcLineSubtotal(l), 0); }
 
-function renderPOLines(){
-  const tbody = document.getElementById('poTableBody'); tbody.innerHTML = '';
-  if(!window.poLines.length){
-    tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--muted)">No items. Click "Add Line" to start.</td></tr>`;
-    document.getElementById('po-total').textContent = `₱${calcPOTotal().toFixed(2)}`;
+/* ---------- Purchase Order Lines (Enhanced with Stock Integration) ---------- */
+
+function updatePOLine(i, field, value) {
+  if (!window.poLines[i]) return;
+
+  if (field === 'qty' || field === 'price') value = parseFloat(value) || 0;
+  window.poLines[i][field] = value;
+
+  // 🧩 Auto-fill unit and price when item selected
+  if (field === 'itemName') {
+    const stock = window.stockData.find(s => s.name === value);
+    if (stock) {
+      window.poLines[i].unit = stock.unit || '';
+      window.poLines[i].price = parseFloat(stock.price) || 0;
+    } else {
+      // If item not found in stock, clear fields
+      window.poLines[i].unit = '';
+      window.poLines[i].price = 0;
+    }
+  }
+
+  renderPOLines();
+}
+
+function renderPOLines() {
+  const tbody = document.getElementById('poLineTableBody');
+  tbody.innerHTML = '';
+
+  if (!window.poLines.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="padding:16px;text-align:center;color:var(--muted)">
+          No items added yet. Click "<strong>+ Add Item</strong>" to start.
+        </td>
+      </tr>`;
+    document.getElementById('poTotal').textContent = '₱0.00';
     return;
   }
-  window.poLines.forEach((line,i)=>{
-    const subtotal = calcLineSubtotal(line);
+
+  // 🧩 Generate item dropdown options from stock
+  const stockOptions = (window.stockData || [])
+    .map(s => `<option value="${s.name}">${s.name} (${s.qty} ${s.unit || ''})</option>`)
+    .join('');
+
+  window.poLines.forEach((line, i) => {
+    const subtotal = (line.qty || 0) * (line.price || 0);
+
     const tr = document.createElement('tr');
     tr.innerHTML = `
-      <td class="line-number">${i+1}</td>
       <td>
-        <select class="item-select" onchange="updatePOLine(${i}, 'itemName', this.value)">
-          <option value="">-- select product --</option>
-          ${ (window.stockData||[]).map(s => `<option ${s.name===line.itemName?'selected':''} value="${escape(s.name)}">${escape(s.name)} (${s.qty} ${escape(s.unit||'')})</option>`).join('') }
+        <select onchange="updatePOLine(${i}, 'itemName', this.value)" style="width:100%;padding:6px;border-radius:8px;border:1px solid var(--border)">
+          <option value="">-- Select item --</option>
+          ${stockOptions.replace(`value="${line.itemName}"`, `value="${line.itemName}" selected`)}
         </select>
       </td>
-      <td><input type="number" min="1" value="${line.qty||1}" onchange="updatePOLine(${i}, 'qty', this.value)"></td>
-      <td><input value="${escape(line.unit||'')}" onchange="updatePOLine(${i}, 'unit', this.value)"></td>
-      <td><input type="number" step="0.01" min="0" value="${line.price||0}" onchange="updatePOLine(${i}, 'price', this.value)"></td>
-      <td class="subtotal">₱${subtotal.toFixed(2)}</td>
-      <td class="text-right"><button class="btn btn-ghost" onclick="removePOLine(${i})">Remove</button></td>
+      <td style="text-align:center">
+        <input type="number" min="1" value="${line.qty || 1}" onchange="updatePOLine(${i}, 'qty', this.value)" style="width:80px;text-align:center">
+      </td>
+      <td style="text-align:center">
+        <input value="${line.unit || ''}" onchange="updatePOLine(${i}, 'unit', this.value)" style="width:80px;text-align:center">
+      </td>
+      <td style="text-align:center">
+        <input type="number" step="0.01" min="0" value="${line.price || 0}" onchange="updatePOLine(${i}, 'price', this.value)" style="width:100px;text-align:center">
+      </td>
+      <td class="subtotal" style="text-align:right">₱${subtotal.toFixed(2)}</td>
+      <td style="text-align:center">
+        <button class="btn btn-ghost" onclick="removePOLine(${i})">🗑 Remove</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
-  document.getElementById('po-total').textContent = `₱${calcPOTotal().toFixed(2)}`;
+
+  // 🧮 Update total
+  const total = window.poLines.reduce((sum, l) => sum + ((l.qty || 0) * (l.price || 0)), 0);
+  document.getElementById('poTotal').textContent = `₱${total.toFixed(2)}`;
 }
+
 
 function submitPO(){
   const cust = (document.getElementById('po-customer').value || '').trim();
