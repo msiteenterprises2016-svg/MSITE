@@ -844,6 +844,19 @@ function updatePOLine(i, field, value) {
 
   renderPOLines();
 }
+  // ✅ Load stock data instantly from local storage (before Firebase sync)
+function preloadStockData() {
+  const local = localStorage.getItem('stockData');
+  if (local) {
+    try {
+      window.stockData = JSON.parse(local);
+    } catch (e) {
+      console.warn('Invalid local stock data', e);
+      window.stockData = [];
+    }
+  }
+}
+
 
 // ✅ Render all PO item lines
 function renderPOLines() {
@@ -900,13 +913,19 @@ function renderPOLines() {
   document.getElementById('poTotal').textContent = `₱${calcPOTotal().toFixed(2)}`;
 }
 
-// ✅ Refresh dropdowns when PO page opens
+// ✅ Refresh dropdowns when PO page opens (with instant preload)
 function openMenu(menuId) {
   document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
   const page = document.getElementById(menuId);
   if (page) page.style.display = 'block';
-  if (menuId === 'po') renderPOLines(); // refresh dropdowns
+
+  // ✅ When opening Purchase Order, load cached stock instantly
+  if (menuId === 'po') {
+    preloadStockData();  // load from localStorage first
+    renderPOLines();     // render dropdown right away
+  }
 }
+
 
 // ✅ Refresh dropdowns after stock loads
 stocksRef.on('value', snap => {
