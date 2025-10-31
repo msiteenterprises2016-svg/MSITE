@@ -765,21 +765,24 @@ function saveStocksToFirebase(){
   }).catch(e => console.error(e));
 }
 
-/* Firebase listener for stocks */
+x/* Firebase listener for stocks */
 stocksRef.on('value', snap => {
   const val = snap.val();
-  if(val){
+  if (val) {
     window.stockData = Array.isArray(val) ? val : Object.values(val || {});
     saveLocal();
     renderStock();
     refreshSummary();
-    // auto-check pending on sync
-    setTimeout(()=> checkLowStock(), 300);
+    renderPOLines(); // ✅ refresh dropdowns after stocks load
+    setTimeout(() => checkLowStock(), 300);
   } else {
     window.stockData = JSON.parse(localStorage.getItem('stockData') || '[]');
-    renderStock(); refreshSummary();
+    renderStock();
+    refreshSummary();
+    renderPOLines(); // ✅ also refresh dropdowns if offline data is used
   }
 });
+
 
 /* ---------- Purchase Order logic (unchanged) ---------- */
 function genPONumber(){
