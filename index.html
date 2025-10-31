@@ -1696,6 +1696,25 @@ function printPO() {
   newWin.print();
 }
 
+  <script>
+  // Hide hamburger when sidebar is open
+  document.addEventListener('DOMContentLoaded', () => {
+    const sidebar = document.getElementById('sidebar');
+    const hamburger = document.querySelector('.hamburger');
+
+    if (!sidebar || !hamburger) return;
+
+    hamburger.addEventListener('click', () => {
+      sidebar.classList.toggle('show');
+      if (sidebar.classList.contains('show')) {
+        hamburger.style.display = 'none';
+      } else {
+        hamburger.style.display = 'inline-flex';
+      }
+    });
+  });
+</script>
+
   
 </script>
 </body>
