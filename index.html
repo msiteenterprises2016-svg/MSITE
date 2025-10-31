@@ -185,6 +185,27 @@
 
   /* subtle transitions */
   input, select, textarea, .btn, .icon-btn { transition: all .12s ease-in-out }
+
+  #po input.input {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  outline: none;
+  transition: 0.2s;
+}
+#po input.input:focus {
+  border-color: var(--accent-2);
+  box-shadow: 0 0 0 2px rgba(0,115,230,0.2);
+}
+#po table th, #po table td {
+  border-bottom: 1px solid #eee;
+}
+#po .btn {
+  border-radius: 10px;
+  font-weight: 600;
+}
+
 </style>
 </head>
 <body>
@@ -283,6 +304,103 @@
 
       <!-- PURCHASE ORDERS -->
       <section id="po" class="card page" style="display:none">
+        <section id="po" class="page" style="display:none">
+  <div class="page-header">
+    <h2 style="color:var(--accent-2)">🧾 Create Purchase Order</h2>
+    <p class="muted-2">Record new orders and track school purchases efficiently.</p>
+  </div>
+
+  <!-- Purchase Order Info -->
+  <div style="
+      background:var(--glass);
+      backdrop-filter:blur(12px);
+      padding:20px;
+      border-radius:18px;
+      box-shadow:var(--shadow-1);
+      margin-top:16px;
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+      gap:20px;
+  ">
+    <div>
+      <label class="muted small">PO Number</label>
+      <input id="poNumber" class="input" type="text" placeholder="Auto-generated" readonly style="font-weight:600;">
+    </div>
+
+    <div>
+      <label class="muted small">Date</label>
+      <input id="poDate" class="input" type="date" style="font-weight:600;">
+    </div>
+
+    <div>
+      <label class="muted small">School / Customer</label>
+      <input id="poCustomer" class="input" type="text" placeholder="Enter school name" style="font-weight:600;">
+    </div>
+
+    <div>
+      <label class="muted small">Remarks</label>
+      <input id="poRemarks" class="input" type="text" placeholder="Optional note or reference">
+    </div>
+  </div>
+
+  <!-- Items Section -->
+  <div style="
+      background:#fff;
+      margin-top:24px;
+      padding:20px;
+      border-radius:18px;
+      box-shadow:var(--shadow-2);
+  ">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+      <h3 style="color:var(--accent-2)">🛍️ Order Items</h3>
+      <button onclick="addPOLine()" class="btn btn-primary">+ Add Item</button>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:#f6fbff;color:var(--accent-2)">
+            <th style="padding:10px;text-align:left;">Item</th>
+            <th style="padding:10px;text-align:center;">Qty</th>
+            <th style="padding:10px;text-align:center;">Unit</th>
+            <th style="padding:10px;text-align:center;">Price</th>
+            <th style="padding:10px;text-align:center;">Subtotal</th>
+            <th style="padding:10px;text-align:center;">Action</th>
+          </tr>
+        </thead>
+        <tbody id="poLineTableBody">
+          <!-- Dynamic rows added here -->
+        </tbody>
+      </table>
+    </div>
+
+    <div style="text-align:right;margin-top:12px;">
+      <span class="muted">Total:</span>
+      <span id="poTotal" style="font-size:1.5rem;font-weight:800;color:var(--accent-2)">₱0.00</span>
+    </div>
+  </div>
+
+  <!-- Bottom Action Bar -->
+  <div style="
+      position:sticky;
+      bottom:0;
+      background:rgba(255,255,255,0.95);
+      padding:12px 20px;
+      border-top:1px solid #eee;
+      display:flex;
+      justify-content:flex-end;
+      gap:12px;
+      border-radius:0 0 12px 12px;
+      box-shadow:var(--shadow-1);
+      z-index:10;
+      margin-top:24px;
+  ">
+    <button class="btn btn-ghost" onclick="resetPOForm()">Reset</button>
+    <button class="btn btn-outline" onclick="printPO()">Print Preview</button>
+    <button class="btn btn-primary" onclick="savePO()">Save PO</button>
+  </div>
+</section>
+
         <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
           <div style="flex:1;min-width:220px">
             <h3 style="margin:0;color:var(--accent-2)">Purchase Orders</h3>
