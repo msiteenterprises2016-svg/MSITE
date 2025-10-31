@@ -7,6 +7,8 @@
 <meta name="theme-color" content="#0073e6" />
 <link rel="icon" href="msite.png?v=2.0.0" type="image/png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="manifest" href="manifest.json">
+
 
 <style>
   :root{
@@ -1298,6 +1300,15 @@ document.addEventListener('DOMContentLoaded', () => {
   hamburger.onclick = () => sidebar.classList.toggle('show');
   document.querySelector('.topbar').prepend(hamburger);
 });
+  // Register the service worker
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('✅ Service Worker registered:', reg))
+      .catch(err => console.error('Service Worker failed:', err));
+  });
+}
+
 
 /* ---------- End ---------- */
   
