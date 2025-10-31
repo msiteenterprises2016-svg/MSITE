@@ -129,7 +129,7 @@
     left: 0;
     width: 240px;
     height: 100vh;
-    z-index: 1000;
+    z-index: 2000;
     background: var(--glass);
     box-shadow: var(--shadow-1);
   }
@@ -610,17 +610,31 @@ function showModal(id){ document.getElementById(id).classList.add('show'); }
 function closeModal(id){ document.getElementById(id).classList.remove('show'); }
 
 /* ---------- Navigation ---------- */
-function openMenu(menuId){
+function openMenu(menuId) {
   document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
   document.getElementById(menuId).style.display = 'block';
-  document.getElementById('pageTitle').textContent = { dashboard:'Dashboard', stock:'Stock Management', po:'Purchase Orders', pending:'Pending / To Purchase', delivery:'Delivery Tracker' }[menuId] || 'MSITE';
-  document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
-  if(menuId==='dashboard') document.getElementById('nav-dashboard').classList.add('active');
-  if(menuId==='stock') document.getElementById('nav-stock').classList.add('active');
-  if(menuId==='po') document.getElementById('nav-po').classList.add('active');
-  if(menuId==='pending') document.getElementById('nav-pending').classList.add('active');
-  if(menuId==='delivery') document.getElementById('nav-delivery').classList.add('active');
+  document.getElementById('pageTitle').textContent = {
+    dashboard: 'Dashboard',
+    stock: 'Stock Management',
+    po: 'Purchase Orders',
+    pending: 'Pending / To Purchase',
+    delivery: 'Delivery Tracker'
+  }[menuId] || 'MSITE';
+  
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  if (menuId === 'dashboard') document.getElementById('nav-dashboard').classList.add('active');
+  if (menuId === 'stock') document.getElementById('nav-stock').classList.add('active');
+  if (menuId === 'po') document.getElementById('nav-po').classList.add('active');
+  if (menuId === 'pending') document.getElementById('nav-pending').classList.add('active');
+  if (menuId === 'delivery') document.getElementById('nav-delivery').classList.add('active');
+
+  // ✅ Auto-close sidebar on mobile
+  const sidebar = document.getElementById('sidebar');
+  if (window.innerWidth <= 980 && sidebar.classList.contains('show')) {
+    sidebar.classList.remove('show');
+  }
 }
+
 
 /* ---------- Stock logic ---------- */
 function renderStock(){
