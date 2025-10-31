@@ -230,6 +230,38 @@
   border-radius: 10px;
   font-weight: 600;
 }
+  /* === Mobile menu button fix === */
+.hamburger {
+  display: none;
+  position: fixed;
+  top: 14px;
+  left: 14px;
+  z-index: 1100; /* stays above sidebar */
+  background: var(--glass);
+  border: none;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 18px;
+  color: var(--accent-2);
+  box-shadow: var(--shadow-1);
+  opacity: 0.75;
+  transition: opacity 0.25s ease, transform 0.2s ease;
+}
+
+.hamburger:hover {
+  opacity: 1;
+  transform: scale(1.05);
+}
+
+/* Show only on small screens */
+@media (max-width: 980px) {
+  .hamburger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
 
 </style>
 </head>
@@ -1412,14 +1444,17 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.error('Service Worker failed:', err));
   });
 }
-  <script>
-  // Hide hamburger when sidebar is open
+<script>
   document.addEventListener('DOMContentLoaded', () => {
     const sidebar = document.getElementById('sidebar');
-    const hamburger = document.querySelector('.hamburger');
 
-    if (!sidebar || !hamburger) return;
+    // Create hamburger button
+    const hamburger = document.createElement('button');
+    hamburger.className = 'hamburger';
+    hamburger.textContent = '☰ Menu';
+    document.querySelector('.topbar').prepend(hamburger);
 
+    // Toggle sidebar visibility and hide button while open
     hamburger.addEventListener('click', () => {
       sidebar.classList.toggle('show');
       if (sidebar.classList.contains('show')) {
@@ -1428,8 +1463,20 @@ if ('serviceWorker' in navigator) {
         hamburger.style.display = 'inline-flex';
       }
     });
+
+    // Auto-close sidebar when clicking menu items on mobile
+    document.querySelectorAll('.nav button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (window.innerWidth < 980) {
+          sidebar.classList.remove('show');
+          hamburger.style.display = 'inline-flex';
+        }
+      });
+    });
   });
 </script>
+
+  
 /* ---------- Dashboard Charts (Enhanced) ---------- */
 let schoolChart, itemChart;
 let allSchoolsData = [];
