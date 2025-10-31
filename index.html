@@ -1315,14 +1315,6 @@ document.addEventListener('DOMContentLoaded', () => {
     transform: translateX(0);
   }
 }
-document.addEventListener('click', (e) => {
-  const sidebar = document.getElementById('sidebar');
-  if (sidebar.classList.contains('show') &&
-      !sidebar.contains(e.target) &&
-      !e.target.classList.contains('hamburger')) {
-    sidebar.classList.remove('show');
-  }
-});
 
   // Register the service worker
 if ('serviceWorker' in navigator) {
