@@ -752,7 +752,8 @@ function saveStocksToFirebase(){
     renderStock();
       populateStockDatalist();
     renderPOList();
-    refreshSummary();
+  refreshSummary();
+  setTimeout(() => { if (document.getElementById('poNumber')) initPOForm(); }, 200);
     // after stock changes, check low stock to auto add pending items
     setTimeout(()=> checkLowStock(), 300);
   }).catch(e => console.error(e));
@@ -782,7 +783,12 @@ function genPONumber(){
   return `PO-${d.getFullYear()}${mm}${dd}-${Math.floor(Math.random()*9000)+1000}`;
 }
 
-function initPOForm(){
+function initPOForm() {
+  const poNumberEl = document.getElementById('poNumber');
+  const poDateEl = document.getElementById('poDate');
+  const poCustomerEl = document.getElementById('poCustomer');
+  if (!poNumberEl || !poDateEl || !poCustomerEl) return; // Prevent null errors
+
   document.getElementById('poNumber').value = genPONumber();
   document.getElementById('poDate').value = (new Date()).toISOString().slice(0,10);
   document.getElementById('poCustomer').value = '';
@@ -1418,6 +1424,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   initPOForm();
   renderPOList();
   refreshSummary();
+  setTimeout(() => { if (document.getElementById('poNumber')) initPOForm(); }, 200);
   posRef.on('value', ()=> renderPOList());
   pendingRef.on('value', snap=>{
     const val = snap.val();
@@ -1438,12 +1445,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('.topbar').prepend(hamburger);
 });
   // Register the service worker
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(reg => console.log('✅ Service Worker registered:', reg))
-      .catch(err => console.error('Service Worker failed:', err));
-  });
+// Service worker registration disabled to avoid 404 error);
 }
 /* ---------- Dashboard Charts (Enhanced) ---------- */
 let schoolChart, itemChart;
