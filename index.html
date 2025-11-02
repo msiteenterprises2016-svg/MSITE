@@ -8,16 +8,7 @@
 <link rel="icon" href="msite.png?v=2.0.0" type="image/png">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="manifest" href="manifest.json">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js">
-function populateStockDatalist(){
-  try{
-    const dl = document.getElementById('stock-list');
-    if(!dl) return;
-    dl.innerHTML = (window.stockData || []).map(s => `<option value="${escape(s.name)}">`).join('');
-  }catch(e){ console.error(e); }
-}
-
-</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 
 
@@ -382,12 +373,6 @@ function populateStockDatalist(){
         </tbody>
       </table>
     </div>
-    <!-- Autocomplete stock list for PO items -->
-<datalist id="stock-list">
-  <!-- This will be dynamically filled from stockData -->
-  ${ (window.stockData || []).map(s => `<option value="${escape(s.name)}">`).join('') }
-</datalist>
-
 
     <div style="text-align:right;margin-top:12px;">
       <span class="muted">Total:</span>
@@ -577,26 +562,8 @@ function populateStockDatalist(){
 </div>
 
 <!-- Firebase compat -->
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js">
-function populateStockDatalist(){
-  try{
-    const dl = document.getElementById('stock-list');
-    if(!dl) return;
-    dl.innerHTML = (window.stockData || []).map(s => `<option value="${escape(s.name)}">`).join('');
-  }catch(e){ console.error(e); }
-}
-
-</script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js">
-function populateStockDatalist(){
-  try{
-    const dl = document.getElementById('stock-list');
-    if(!dl) return;
-    dl.innerHTML = (window.stockData || []).map(s => `<option value="${escape(s.name)}">`).join('');
-  }catch(e){ console.error(e); }
-}
-
-</script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
 <script>
 /* ---------- Firebase config (unchanged) ---------- */
@@ -739,7 +706,6 @@ function deleteStock(i){
   window.stockData.splice(i,1);
   saveStocksToFirebase();
   renderStock();
-      populateStockDatalist();
   refreshSummary();
 }
 
@@ -750,10 +716,8 @@ function saveStocksToFirebase(){
   stocksRef.update(updates).then(()=> {
     saveLocal();
     renderStock();
-      populateStockDatalist();
     renderPOList();
-  refreshSummary();
-  setTimeout(() => { if (document.getElementById('poNumber')) initPOForm(); }, 200);
+    refreshSummary();
     // after stock changes, check low stock to auto add pending items
     setTimeout(()=> checkLowStock(), 300);
   }).catch(e => console.error(e));
@@ -766,14 +730,12 @@ stocksRef.on('value', snap => {
     window.stockData = Array.isArray(val) ? val : Object.values(val || {});
     saveLocal();
     renderStock();
-      populateStockDatalist();
     refreshSummary();
     // auto-check pending on sync
     setTimeout(()=> checkLowStock(), 300);
   } else {
     window.stockData = JSON.parse(localStorage.getItem('stockData') || '[]');
-    renderStock();
-      populateStockDatalist(); refreshSummary();
+    renderStock(); refreshSummary();
   }
 });
 
@@ -783,15 +745,10 @@ function genPONumber(){
   return `PO-${d.getFullYear()}${mm}${dd}-${Math.floor(Math.random()*9000)+1000}`;
 }
 
-function initPOForm() {
-  const poNumberEl = document.getElementById('poNumber');
-  const poDateEl = document.getElementById('poDate');
-  const poCustomerEl = document.getElementById('poCustomer');
-  if (!poNumberEl || !poDateEl || !poCustomerEl) return; // Prevent null errors
-
-  document.getElementById('poNumber').value = genPONumber();
-  document.getElementById('poDate').value = (new Date()).toISOString().slice(0,10);
-  document.getElementById('poCustomer').value = '';
+function initPOForm(){
+  document.getElementById('po-number').value = genPONumber();
+  document.getElementById('po-date').value = (new Date()).toISOString().slice(0,10);
+  document.getElementById('po-customer').value = '';
   window.poLines = [];
   renderPOLines();
   renderPOList();
@@ -827,7 +784,7 @@ function renderPOLines(){
   const tbody = document.getElementById('poTableBody'); tbody.innerHTML = '';
   if(!window.poLines.length){
     tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--muted)">No items. Click "Add Line" to start.</td></tr>`;
-    document.getElementById('poTotal').textContent = `₱${calcPOTotal().toFixed(2)}`;
+    document.getElementById('po-total').textContent = `₱${calcPOTotal().toFixed(2)}`;
     return;
   }
   window.poLines.forEach((line,i)=>{
@@ -835,23 +792,13 @@ function renderPOLines(){
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td class="line-number">${i+1}</td>
-     <td>
-  <input 
-    type="text" 
-    class="input item-name-input" 
-    list="stock-list"
-    value="${escape(line.itemName || '')}" 
-    oninput="handleItemInput(${i}, this.value)" 
-    placeholder="Type item name">
-</td>
-
-<td>
-  <input type="number" min="1" value="${line.qty||1}" onchange="updatePOLine(${i}, 'qty', this.value)">
-  ${(() => {
-    const st = window.stockData.find(s => s.name === line.itemName);
-    return st ? `<div class='small muted'>In stock: ${st.qty}</div>` : '';
-  })()}
-</td>
+      <td>
+        <select class="item-select" onchange="updatePOLine(${i}, 'itemName', this.value)">
+          <option value="">-- select product --</option>
+          ${ (window.stockData||[]).map(s => `<option ${s.name===line.itemName?'selected':''} value="${escape(s.name)}">${escape(s.name)} (${s.qty} ${escape(s.unit||'')})</option>`).join('') }
+        </select>
+      </td>
+      <td><input type="number" min="1" value="${line.qty||1}" onchange="updatePOLine(${i}, 'qty', this.value)"></td>
       <td><input value="${escape(line.unit||'')}" onchange="updatePOLine(${i}, 'unit', this.value)"></td>
       <td><input type="number" step="0.01" min="0" value="${line.price||0}" onchange="updatePOLine(${i}, 'price', this.value)"></td>
       <td class="subtotal">₱${subtotal.toFixed(2)}</td>
@@ -859,23 +806,13 @@ function renderPOLines(){
     `;
     tbody.appendChild(tr);
   });
-  document.getElementById('poTotal').textContent = `₱${calcPOTotal().toFixed(2)}`;
-}
-
-  function handleItemInput(index, value) {
-  updatePOLine(index, 'itemName', value);
-  const st = window.stockData.find(s => s.name.toLowerCase() === value.toLowerCase());
-  if (st) {
-    window.poLines[index].unit = st.unit || '';
-    window.poLines[index].price = st.price || 0;
-    renderPOLines();
-  }
+  document.getElementById('po-total').textContent = `₱${calcPOTotal().toFixed(2)}`;
 }
 
 function submitPO(){
-  const cust = (document.getElementById('poCustomer').value || '').trim();
-  const date = (document.getElementById('poDate').value || '').trim();
-  const poNum = document.getElementById('poNumber').value;
+  const cust = (document.getElementById('po-customer').value || '').trim();
+  const date = (document.getElementById('po-date').value || '').trim();
+  const poNum = document.getElementById('po-number').value;
   if(!cust){ showToast('Enter customer/school name'); return; }
   if(!date){ showToast('Choose a date'); return; }
   if(!window.poLines.length){ showToast('Add at least one line'); return; }
@@ -1420,11 +1357,9 @@ function escape(s){ if(s===undefined || s===null) return ''; return String(s).re
 document.addEventListener('DOMContentLoaded',()=>{
   openMenu('dashboard');
   renderStock();
-      populateStockDatalist();
   initPOForm();
   renderPOList();
   refreshSummary();
-  setTimeout(() => { if (document.getElementById('poNumber')) initPOForm(); }, 200);
   posRef.on('value', ()=> renderPOList());
   pendingRef.on('value', snap=>{
     const val = snap.val();
@@ -1445,7 +1380,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelector('.topbar').prepend(hamburger);
 });
   // Register the service worker
-// Service worker registration disabled to avoid 404 error);
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => console.log('✅ Service Worker registered:', reg))
+      .catch(err => console.error('Service Worker failed:', err));
+  });
 }
 /* ---------- Dashboard Charts (Enhanced) ---------- */
 let schoolChart, itemChart;
@@ -1732,15 +1672,6 @@ function printPO() {
 }
 
   
-
-function populateStockDatalist(){
-  try{
-    const dl = document.getElementById('stock-list');
-    if(!dl) return;
-    dl.innerHTML = (window.stockData || []).map(s => `<option value="${escape(s.name)}">`).join('');
-  }catch(e){ console.error(e); }
-}
-
 </script>
 </body>
 </html>
