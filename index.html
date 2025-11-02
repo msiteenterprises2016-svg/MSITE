@@ -825,6 +825,16 @@ function renderPOLines(){
   document.getElementById('po-total').textContent = `₱${calcPOTotal().toFixed(2)}`;
 }
 
+  function handleItemInput(index, value) {
+  updatePOLine(index, 'itemName', value);
+  const st = window.stockData.find(s => s.name.toLowerCase() === value.toLowerCase());
+  if (st) {
+    window.poLines[index].unit = st.unit || '';
+    window.poLines[index].price = st.price || 0;
+    renderPOLines();
+  }
+}
+
 function submitPO(){
   const cust = (document.getElementById('po-customer').value || '').trim();
   const date = (document.getElementById('po-date').value || '').trim();
