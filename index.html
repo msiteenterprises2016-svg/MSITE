@@ -261,20 +261,8 @@
         <div id="recentPOsContainer" class="muted-2">Loading...</div>
         <hr style="margin:20px 0;border:none;border-top:1px solid var(--border)">
 <h3 style="color:var(--accent-2);display:flex;justify-content:space-between;align-items:center">
-  <span>📊 Sales Insights</span>
-  <button class="btn btn-ghost" onclick="resetSalesInsights()">⟳ Reset</button>
-</h3>
+<h3 style="color:var(--accent-2)">📊 Sales Insights</h3>
 
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:20px;margin-top:14px">
-  <div class="card" style="background:#fff">
-    <h4 style="margin-bottom:8px;color:var(--accent-2)">Top 5 Schools (by total purchase)</h4>
-    <canvas id="topSchoolsChart" height="200"></canvas>
-  </div>
-  <div class="card" style="background:#fff">
-    <h4 style="margin-bottom:8px;color:var(--accent-2)">Best-Selling Items</h4>
-    <canvas id="bestItemsChart" height="200"></canvas>
-  </div>
-</div>
 
 <!-- tables will be injected here -->
 <div id="dashboard-summary-tables"></div>
@@ -1402,26 +1390,7 @@ function renderDashboardCharts() {
 
     const poArr = Object.values(data);
 
-    function resetSalesInsights() {
-  try {
-    if (schoolChart) {
-      schoolChart.destroy();
-      schoolChart = null;
-    }
-    if (itemChart) {
-      itemChart.destroy();
-      itemChart = null;
-    }
-    document.getElementById('topSchoolsChart').getContext('2d').clearRect(0, 0, 400, 200);
-    document.getElementById('bestItemsChart').getContext('2d').clearRect(0, 0, 400, 200);
-
-    renderDashboardCharts();
-    showToast('Sales Insights reset successfully ✔');
-  } catch (e) {
-    console.error(e);
-    showToast('Error resetting charts');
-  }
-}
+  
 
 
     // --- Aggregate by School ---
