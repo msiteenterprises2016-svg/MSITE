@@ -107,14 +107,6 @@
     /* animated buttons & tiny hover */
     .icon-btn{padding:8px;border-radius:10px;border:0;background:transparent;cursor:pointer;transition:transform .12s}
     .icon-btn:hover{transform:scale(1.06)}
-  
-    .page {
-  display: none;
-}
-.page.active {
-  display: block !important;
-}
-
   </style>
 </head>
 
@@ -410,27 +402,13 @@
     function escapeHTML(s){ if(s===undefined||s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     /* ---------- Navigation ---------- */
-    function openMenu(menuId) {
-  // hide all pages
-  document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
-  
-  // show the selected one
-  const page = document.getElementById(menuId);
-  if (page) page.classList.add('active');
-
-  // update title and active button
-  document.getElementById('pageTitle').textContent = {
-    dashboard: 'Dashboard',
-    stock: 'Stock Management',
-    po: 'Purchase Orders',
-    pohistory: 'PO History'
-  }[menuId] || 'MSITE';
-
-  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('nav-' + menuId);
-  if (btn) btn.classList.add('active');
-}
-
+    function openMenu(menuId){
+      document.querySelectorAll('.page').forEach(el=>el.style.display='none');
+      document.getElementById(menuId).style.display='block';
+      document.getElementById('pageTitle').textContent = { dashboard:'Dashboard', stock:'Stock Management', po:'Purchase Orders', pohistory:'PO History' }[menuId] || 'MSITE';
+      document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+      const btn = document.getElementById('nav-' + menuId); if(btn) btn.classList.add('active');
+    }
 
     /* ---------- STOCK: render with real index (search safe) ---------- */
     function renderStock() {
@@ -852,14 +830,6 @@
     }
 
     function resetPOForm(){ if(!confirm('Reset PO form?')) return; initPOForm(); }
-
-    // 🧭 Close sidebar after clicking any nav button (mobile friendly)
-document.querySelectorAll('.nav button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.getElementById('sidebar').classList.remove('show');
-  });
-});
-
   </script>
 </body>
 </html>
