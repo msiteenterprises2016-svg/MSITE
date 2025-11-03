@@ -357,16 +357,27 @@
     }
 
     /* ---------- Stock management ---------- */
-    function renderStock(){
-      const tbody = document.getElementById('stockTableBody');
-      const q = (document.getElementById('search')?.value || '').toLowerCase();
-      tbody.innerHTML = '';
-      (window.stockData||[]).filter(s=>s && s.name && s.name.toLowerCase().includes(q)).forEach((s,i)=>{
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${escapeHTML(s.name)}</td><td style="width:120px">${s.qty}</td><td style="width:120px">${escapeHTML(s.unit||'')}</td><td style="width:140px">₱${(parseFloat(s.price)||0).toFixed(2)}</td><td style="width:160px"><button class="btn btn-ghost" onclick="openEditStock(${i})">✏️ Edit</button> <button class="btn btn-ghost" onclick="deleteStock(${i})">🗑 Delete</button></td>`;
-        tbody.appendChild(tr);
-      });
-    }
+   function renderStock() {
+  const tbody = document.getElementById('stockTableBody');
+  const q = (document.getElementById('search')?.value || '').toLowerCase();
+  tbody.innerHTML = '';
+
+  (window.stockData || []).forEach((s, realIndex) => {
+    if (!s || !s.name || (q && !s.name.toLowerCase().includes(q))) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHTML(s.name)}</td>
+      <td style="width:120px">${s.qty}</td>
+      <td style="width:120px">${escapeHTML(s.unit || '')}</td>
+      <td style="width:140px">₱${(parseFloat(s.price) || 0).toFixed(2)}</td>
+      <td style="width:160px">
+        <button class="btn btn-ghost" onclick="openEditStock(${realIndex})">✏️ Edit</button>
+        <button class="btn btn-ghost" onclick="deleteStock(${realIndex})">🗑 Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+
 
     function openEditStock(i){ editingStockIndex=i; const s = window.stockData[i]||{}; document.getElementById('modal-stock-name').value=s.name||''; document.getElementById('modal-stock-qty').value=s.qty||0; document.getElementById('modal-stock-unit').value=s.unit||''; document.getElementById('modal-stock-price').value=s.price||0; showModalById('modalAddStock'); }
 
@@ -378,9 +389,13 @@
       if(!name){ showToast('Enter item name'); return; } if(qty<0){ showToast('Quantity invalid'); return; } if(price<0){ showToast('Price invalid'); return; }
       if(editingStockIndex === null){ const existing = (window.stockData||[]).find(x=>x.name && x.name.toLowerCase()===name.toLowerCase()); if(existing){ existing.qty = (parseFloat(existing.qty)||0) + qty; existing.unit = unit || existing.unit; existing.price = price || existing.price; } else { window.stockData.push({ name, qty, unit, price }); } showToast('Stock added'); } else { window.stockData[editingStockIndex] = { name, qty, unit, price }; showToast('Stock updated'); }
       closeAddStockModal(); saveStocksToFirebase();
+      renderStock();
+  document.getElementById('search').dispatchEvent(new Event('input'));
     }
 
-    function deleteStock(i){ if(!confirm('Delete this item?')) return; window.stockData.splice(i,1); saveStocksToFirebase(); renderStock(); refreshSummary(); }
+    function deleteStock(i){ if(!confirm('Delete this item?')) return; window.stockData.splice(i,1); saveStocksToFirebase(); renderStock(); refreshSummary();document.getElementById('search').dispatchEvent(new Event('input'));
+
+  showToast('Item deleted');}
 
     function saveStocksToFirebase(){ const updates = {}; (window.stockData||[]).forEach((it,idx)=>updates[idx]=it); stocksRef.update(updates).then(()=>{ localStorage.setItem('stockData', JSON.stringify(window.stockData||[])); renderStock(); renderPOList(); renderPOHistory(); refreshSummary(); }).catch(e=>console.error(e)); }
 
