@@ -3,110 +3,78 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>MSITE Inventory — Vibrant Dashboard</title>
-  <meta name="theme-color" content="#6C5CE7" />
+  <title>MSITE Inventory — Modern Dashboard</title>
+  <meta name="theme-color" content="#0b6ff2" />
   <link rel="icon" href="msite.png?v=2.0.0" type="image/png" />
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- =========================
-       STYLES — Vibrant & Modern
-       ========================= -->
   <style>
     :root{
-      --bg-1: linear-gradient(180deg,#f3f7ff 0%, #eef6ff 40%, #fff7fb 100%);
+      --bg: linear-gradient(135deg,#f6fbff 0%,#eef7ff 45%,#eef9ff 100%);
       --glass: rgba(255,255,255,0.75);
-      --card: rgba(255,255,255,0.95);
-      --accent-1: #6C5CE7; /* purple */
-      --accent-2: #00B894; /* green */
-      --accent-3: #0984E3; /* blue */
-      --muted: #6b7280;
-      --border: rgba(10,20,40,0.06);
-      --shadow-lg: 0 20px 50px rgba(12,18,40,0.08);
-      --shadow-sm: 0 8px 20px rgba(12,18,40,0.06);
+      --card: rgba(255,255,255,0.9);
+      --accent: #0b6ff2;
+      --accent-2: #004bb5;
+      --muted: #6b7586;
+      --border: rgba(13,36,77,0.06);
+      --shadow-1: 0 10px 30px rgba(12,19,34,0.06);
+      --shadow-2: 0 6px 18px rgba(12,19,34,0.04);
       --radius: 14px;
-      --max-w: 1280px;
-      --sidebar-w: 280px;
+      --max-w: 1200px;
+      --sidebar-w: 260px;
     }
 
     *{box-sizing:border-box}
-    html,body{height:100%;margin:0;font-family:'Poppins',system-ui,-apple-system,"Segoe UI",Roboto,Arial;color:#092033;background:var(--bg-1);-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+    html,body{height:100%;margin:0;font-family:'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, Arial; background:var(--bg); color:#122432; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
 
-    /* App layout */
-    .app{min-height:100vh;display:flex;justify-content:center;padding:28px 20px}
-    .container{width:100%;max-width:var(--max-w);display:flex;gap:22px;align-items:flex-start}
+    .app{min-height:100vh;display:flex;justify-content:center;padding:28px 20px;}
+    .container{width:100%;max-width:var(--max-w);display:flex;gap:20px;align-items:flex-start;}
 
-    /* Sidebar */
     aside.sidebar{
       width:var(--sidebar-w);
-      background:linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.72));
-      border-radius:18px;padding:18px;border:1px solid var(--border);box-shadow:var(--shadow-lg);backdrop-filter: blur(10px);
-      position:sticky;top:28px;height:calc(100vh - 56px);overflow:auto;
+      background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.45));
+      border-radius:18px;
+      padding:18px;
+      border:1px solid var(--border);
+      box-shadow:var(--shadow-1);
+      position:sticky; top:28px; height:calc(100vh - 56px); overflow:auto;
+      backdrop-filter: blur(8px);
     }
-    .brand{font-weight:800;text-align:center;padding:12px 6px;font-size:18px;background:linear-gradient(90deg,var(--accent-1),var(--accent-3));-webkit-background-clip:text;color:transparent}
-    .nav{list-style:none;padding:0;margin:12px 0;display:flex;flex-direction:column;gap:8px}
+    .brand{font-weight:800;text-align:center;padding:12px 6px;font-size:18px; background:linear-gradient(90deg,var(--accent),var(--accent-2)); -webkit-background-clip:text; color:transparent;}
+    .nav{list-style:none;padding:0;margin:10px 0;display:flex;flex-direction:column;gap:6px}
     .nav button{
-      display:flex;align-items:center;gap:12px;padding:12px;border-radius:12px;border:0;background:transparent;font-weight:600;color:#092033;cursor:pointer;transition:all .16s;
+      display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;border:0;background:transparent;font-weight:600;color:var(--accent-2);cursor:pointer;
     }
-    .nav button:hover{transform:translateY(-3px);box-shadow:var(--shadow-sm)}
-    .nav button.active{background:linear-gradient(90deg, rgba(108,92,231,0.12), rgba(9,132,227,0.04));color:var(--accent-1)}
+    .nav button.active{ background: linear-gradient(90deg, rgba(11,111,242,0.10), rgba(11,111,242,0.04)); box-shadow: var(--shadow-2); color:var(--accent-2) }
 
-    .profile {
-      margin-top:16px;
-      display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;border:1px solid var(--border);background:linear-gradient(180deg,rgba(255,255,255,0.6),rgba(255,255,255,0.4));
-    }
-    .avatar {width:44px;height:44px;border-radius:10px;background:linear-gradient(135deg,var(--accent-3),var(--accent-1));display:flex;align-items:center;justify-content:center;color:white;font-weight:700}
-
-    /* Main */
     main.main{flex:1;display:flex;flex-direction:column;gap:18px;min-width:0}
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
-    .page-title{font-size:1.5rem;font-weight:700;color:var(--accent-3);letter-spacing:-0.02em}
-    .search-global{min-width:300px;padding:10px 14px;border-radius:12px;border:1px solid var(--border);background:white;box-shadow:var(--shadow-sm)}
+    .page-title{font-size:1.4rem;font-weight:700;color:var(--accent-2)}
+    .hamburger{display:none}
 
-    /* Cards */
-    .card{background:var(--card);border-radius:14px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow-sm);transition:all .18s}
-    .card:hover{transform:translateY(-6px);box-shadow:0 28px 60px rgba(10,20,40,0.08)}
+    .card{
+      background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.90));
+      border-radius:14px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow-2)
+    }
     .card-lg{padding:22px;border-radius:16px}
-
-    /* Tiny helpers */
-    .muted{color:var(--muted)}
+    .muted{color:var(--muted);font-size:0.95rem}
     .small{font-size:0.9rem;color:var(--muted)}
     .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-    .btn{padding:10px 14px;border-radius:12px;border:0;font-weight:700;cursor:pointer;transition:all .14s}
-    .btn-primary{background:linear-gradient(90deg,var(--accent-1),var(--accent-3));color:white;box-shadow:0 10px 30px rgba(108,92,231,0.14)}
-    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--accent-3);font-weight:700}
-    .outline {border:1px solid rgba(9,32,51,0.06);background:transparent;padding:8px;border-radius:10px}
-
-    input, select, textarea{padding:10px;border-radius:10px;border:1px solid var(--border);outline:none;background:white;color:#0b2433;min-height:42px}
-    input:focus,select:focus,textarea:focus{box-shadow:0 10px 30px rgba(9,132,227,0.08);border-color:rgba(9,132,227,0.18)}
-
-    /* tables */
+    .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer;transition:all .14s}
+    .btn-primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;box-shadow:0 8px 24px rgba(11,111,242,0.08)}
+    .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--accent-2)}
+    input,select,textarea{padding:10px;border-radius:10px;border:1px solid var(--border);outline:none;background:white;color: #10202b;min-height:40px}
     table{width:100%;border-collapse:collapse;font-size:0.95rem}
-    thead th{background:linear-gradient(180deg,#fbfdff,#f0f8ff);color:var(--accent-3);text-align:left;padding:12px;border-bottom:1px solid var(--border);font-weight:700}
+    thead th{background:linear-gradient(180deg,#f6fbff,#eef8ff);color:var(--accent-2);text-align:left;padding:12px;border-bottom:1px solid var(--border);font-weight:700}
     tbody td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle}
-    tbody tr:hover td{background:#fff}
+    @media (max-width:980px){ .container{flex-direction:column;padding:12px} aside.sidebar{display:none;position:fixed;left:0;top:0;height:100vh;z-index:1200} .hamburger{display:inline-flex} }
 
-    /* PO & Stock small */
     .line-number{width:36px;text-align:center;color:var(--muted);font-weight:700}
-    .subtotal{font-weight:800;text-align:right;color:var(--accent-3)}
+    .subtotal{font-weight:800;text-align:right;color:var(--accent-2)}
     .muted-2{color:#9aa6b3}
-
-    /* responsive */
-    @media (max-width:980px){
-      .container{flex-direction:column;padding:12px}
-      aside.sidebar{display:none;position:fixed;left:0;top:0;height:100vh;z-index:1200}
-    }
-
-    /* toast */
-    #toast{position:fixed;right:20px;bottom:20px;padding:12px 16px;border-radius:12px;background:linear-gradient(90deg,var(--accent-1),var(--accent-3));color:white;box-shadow:var(--shadow-lg);opacity:0;transform:translateY(10px);transition:all .28s;z-index:10000}
-
-    /* modal base */
-    .modal{display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(6,12,24,0.42);z-index:9999}
-    .modal-box{background:white;border-radius:12px;padding:18px;min-width:360px;max-width:920px;border:1px solid var(--border);box-shadow:var(--shadow-lg)}
-    
-    /* animated buttons & tiny hover */
-    .icon-btn{padding:8px;border-radius:10px;border:0;background:transparent;cursor:pointer;transition:transform .12s}
-    .icon-btn:hover{transform:scale(1.06)}
+    #toast{position:fixed;right:20px;bottom:20px;padding:12px 16px;border-radius:10px;background:var(--accent);color:white;box-shadow:var(--shadow-1);opacity:0;transform:translateY(10px);transition:all .28s}
+    .history-controls{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap}
   </style>
 </head>
 
@@ -117,7 +85,6 @@
       <!-- SIDEBAR -->
       <aside class="sidebar" id="sidebar">
         <div class="brand">MSITE Inventory</div>
-
         <nav>
           <ul class="nav">
             <li><button id="nav-dashboard" class="active" onclick="openMenu('dashboard')">🏠 Dashboard</button></li>
@@ -126,67 +93,51 @@
             <li><button id="nav-pohistory" onclick="openMenu('pohistory')">📜 PO History</button></li>
           </ul>
         </nav>
-
-        <div class="profile">
-          <div class="avatar">ME</div>
-          <div>
-            <div style="font-weight:700">MSITE</div>
-            <div class="small muted">Inventory Manager</div>
-          </div>
-        </div>
-
+        <hr style="border:none;border-top:1px solid var(--border);margin:12px 0" />
+        <div class="small muted">Signed in: <strong>MSITE</strong></div>
       </aside>
 
       <!-- MAIN -->
       <main class="main">
         <div class="topbar">
-          <div>
-            <div class="page-title" id="pageTitle">Dashboard</div>
-            <div class="small muted">Beautiful. Fast. Reliable.</div>
-          </div>
-
+          <div class="page-title" id="pageTitle">Dashboard</div>
           <div class="row">
-            <input id="globalSearch" class="search-global" placeholder="Quick search (POs, Items...)" />
-            <button class="btn btn-primary" id="hamburger">☰</button>
+            <button class="btn btn-ghost" onclick="renderStock()">⟳ Refresh</button>
+            <button class="hamburger btn btn-primary" id="hamburger">☰ Menu</button>
           </div>
         </div>
 
         <!-- DASHBOARD -->
         <section id="dashboard" class="card card-lg page">
           <div style="display:flex;gap:16px;flex-wrap:wrap;">
-            <div style="flex:1;min-width:220px;background:linear-gradient(180deg,#fff,#fcfdff);padding:16px;border-radius:12px;border:1px solid var(--border)">
+            <div style="flex:1;min-width:200px;background:var(--card);padding:14px;border-radius:12px;border:1px solid var(--border)">
               <div class="small muted">Total unique items</div>
-              <div id="summary-count" style="font-size:1.2rem;font-weight:800;color:var(--accent-1)">0</div>
+              <div id="summary-count" style="font-size:1.2rem;font-weight:800;color:var(--accent-2)">0</div>
             </div>
-
-            <div style="flex:1;min-width:220px;background:linear-gradient(180deg,#fff,#fcfff8);padding:16px;border-radius:12px;border:1px solid var(--border)">
+            <div style="flex:1;min-width:200px;background:var(--card);padding:14px;border-radius:12px;border:1px solid var(--border)">
               <div class="small muted">Total stock (sum qty)</div>
               <div id="summary-total" style="font-size:1.2rem;font-weight:800;color:var(--accent-2)">0</div>
             </div>
-
-            <div style="flex:1;min-width:220px;background:linear-gradient(180deg,#fff,#fff8ff);padding:16px;border-radius:12px;border:1px solid var(--border)">
+            <div style="flex:1;min-width:200px;background:var(--card);padding:14px;border-radius:12px;border:1px solid var(--border)">
               <div class="small muted">Purchase orders filed</div>
-              <div id="summary-pos" style="font-size:1.2rem;font-weight:800;color:var(--accent-3)">0</div>
+              <div id="summary-pos" style="font-size:1.2rem;font-weight:800;color:var(--accent-2)">0</div>
             </div>
           </div>
 
-          <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)">
-
-          <h3 style="margin:6px 0;color:var(--accent-3)">Recent Purchase Orders</h3>
+          <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)" />
+          <h3 style="margin:6px 0;color:var(--accent-2)">Recent Purchase Orders</h3>
           <div id="recentPOsContainer" class="muted-2">Loading...</div>
 
-          <hr style="margin:18px 0;border:none;border-top:1px solid var(--border)">
-
-          <h3 style="color:var(--accent-1)">📊 Sales Insights</h3>
+          <hr style="margin:18px 0;border:none;border-top:1px solid var(--border)" />
+          <h3 style="color:var(--accent-2)">📊 Sales Insights</h3>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-top:12px">
             <div class="card" style="padding:14px;">
-              <h4 style="margin:0 0 8px 0;color:var(--accent-3)">Top Schools</h4>
-              <div style="height:240px"><canvas id="topSchoolsChart"></canvas></div>
+              <h4 style="margin:0 0 8px 0;color:var(--accent-2)">Top Schools (by total)</h4>
+              <div style="height:220px"><canvas id="topSchoolsChart"></canvas></div>
             </div>
-
             <div class="card" style="padding:14px;">
-              <h4 style="margin:0 0 8px 0;color:var(--accent-3)">Best-Selling Items</h4>
-              <div style="height:240px"><canvas id="bestItemsChart"></canvas></div>
+              <h4 style="margin:0 0 8px 0;color:var(--accent-2)">Best-Selling Items</h4>
+              <div style="height:220px"><canvas id="bestItemsChart"></canvas></div>
             </div>
           </div>
 
@@ -197,10 +148,9 @@
         <section id="stock" class="card page" style="display:none">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
             <div>
-              <h3 style="margin:0;color:var(--accent-3)">Stock Management</h3>
-              <div class="small muted">Add, edit, and manage inventory items.</div>
+              <h3 style="margin:0;color:var(--accent-2)">Stock Management</h3>
+              <div class="small muted">Add and manage products — changes save to Firebase.</div>
             </div>
-
             <div class="row">
               <input id="search" placeholder="Search items..." oninput="renderStock()" />
               <button class="btn btn-primary" onclick="showAddStockModal()">+ Add Item</button>
@@ -221,11 +171,11 @@
         <!-- PURCHASE ORDERS -->
         <section id="po" class="card page" style="display:none">
           <div>
-            <h2 style="color:var(--accent-3);margin:0 0 8px 0">🧾 Create Purchase Order</h2>
+            <h2 style="color:var(--accent-2);margin:0 0 8px 0">🧾 Create Purchase Order</h2>
             <p class="muted small" style="margin:0 0 12px 0">Record new orders and deduct stock automatically.</p>
           </div>
 
-          <div style="background:linear-gradient(180deg,#fff,#fcfdff);padding:18px;border-radius:12px;border:1px solid var(--border);display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+          <div style="background:var(--card);padding:18px;border-radius:12px;border:1px solid var(--border);display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
             <div>
               <label class="small muted">PO Number</label>
               <input id="poNumber" readonly />
@@ -246,7 +196,7 @@
 
           <div style="background:white;margin-top:14px;padding:16px;border-radius:12px;border:1px solid var(--border)">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-              <h3 style="margin:0;color:var(--accent-3)">Order Items</h3>
+              <h3 style="margin:0;color:var(--accent-2)">Order Items</h3>
               <div>
                 <button class="btn btn-primary" onclick="addPOLine()">+ Add Item</button>
                 <button class="btn btn-ghost" onclick="clearPOLines()">Clear</button>
@@ -254,9 +204,9 @@
             </div>
 
             <div style="overflow:auto;">
-              <table style="min-width:720px">
+              <table style="min-width:700px">
                 <thead>
-                  <tr style="background:#fbfdff;color:var(--accent-3)">
+                  <tr style="background:#fbfdff;color:var(--accent-2)">
                     <th style="padding:10px">#</th>
                     <th style="padding:10px">Item</th>
                     <th style="padding:10px;text-align:center">Qty</th>
@@ -272,7 +222,7 @@
 
             <div style="text-align:right;margin-top:14px">
               <span class="muted">Total:</span>
-              <div id="poTotal" style="font-size:1.4rem;font-weight:800;color:var(--accent-3);display:inline-block;margin-left:8px">₱0.00</div>
+              <div id="poTotal" style="font-size:1.4rem;font-weight:800;color:var(--accent-2);display:inline-block;margin-left:8px">₱0.00</div>
             </div>
           </div>
 
@@ -287,11 +237,11 @@
         <section id="pohistory" class="card page" style="display:none">
           <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
             <div>
-              <h2 style="margin:0;color:var(--accent-3)">📜 Purchase Order History</h2>
-              <div class="small muted">Browse, view, or delete past orders.</div>
+              <h2 style="margin:0;color:var(--accent-2)">📜 Purchase Order History</h2>
+              <div class="small muted">All saved POs — view or delete records.</div>
             </div>
             <div style="display:flex;gap:8px;align-items:center">
-              <input id="historySearch" placeholder="Search PO# or customer..." oninput="renderPOHistory()" style="min-width:220px;padding:10px;border-radius:12px" />
+              <input id="historySearch" placeholder="Search PO# or customer..." oninput="renderPOHistory()" style="min-width:220px" />
               <button class="btn btn-ghost" onclick="renderPOHistory()">Refresh</button>
             </div>
           </div>
@@ -300,7 +250,6 @@
             <div id="poHistoryContainer">Loading PO history...</div>
           </div>
         </section>
-
       </main>
     </div>
   </div>
@@ -309,10 +258,9 @@
   <div id="toast"></div>
 
   <!-- MODALS -->
-  <div id="modalAddStock" class="modal">
-    <div class="modal-box">
-      <h3 style="margin:0 0 8px 0;color:var(--accent-1)">Add / Edit Stock</h3>
-
+  <div id="modalAddStock" class="modal" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(8,12,20,0.45);z-index:999">
+    <div style="background:white;border-radius:12px;padding:16px;min-width:360px;border:1px solid var(--border);box-shadow:var(--shadow-1)">
+      <h3 style="margin:0 0 8px 0;color:var(--accent)">Add / Edit Stock</h3>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
         <div style="flex:1;min-width:160px">
           <label class="small muted">Item name</label>
@@ -342,11 +290,11 @@
     </div>
   </div>
 
-  <!-- PO Viewer -->
-  <div id="poViewerModal" class="modal">
-    <div class="modal-box">
+  <!-- PO Viewer modal -->
+  <div id="poViewerModal" class="modal" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(8,12,20,0.45);z-index:999">
+    <div style="background:white;border-radius:12px;padding:16px;min-width:520px;border:1px solid var(--border);box-shadow:var(--shadow-1)">
       <div style="display:flex;justify-content:space-between;align-items:center">
-        <h3 style="margin:0;color:var(--accent-3)">Purchase Order</h3>
+        <h3 style="margin:0;color:var(--accent)">Purchase Order</h3>
         <div><button class="btn btn-ghost" onclick="closePOViewer()">Close</button></div>
       </div>
 
@@ -363,7 +311,7 @@
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
   <script>
-    /* ---------- Firebase config (kept) ---------- */
+    /* ---------- Firebase config ---------- */
     const firebaseConfig = {
       apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
       authDomain: "msite-45cd2.firebaseapp.com",
@@ -386,19 +334,17 @@
     let schoolChart = null, itemChart = null, chartUpdateTimer = null;
 
     /* ---------- helpers ---------- */
-    function showToast(msg, time = 2400) {
+    function showToast(msg, time = 2200) {
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.style.opacity = '1';
       t.style.transform = 'translateY(0)';
-      setTimeout(()=>{ t.style.opacity = '0'; t.style.transform = 'translateY(10px)'; }, time);
+      setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(10px)'; }, time);
     }
-
     function showModalById(id){ document.getElementById(id).style.display = 'flex'; }
     function hideModalById(id){ document.getElementById(id).style.display = 'none'; }
     function showAddStockModal(){ editingStockIndex = null; document.getElementById('modal-stock-name').value=''; document.getElementById('modal-stock-qty').value=''; document.getElementById('modal-stock-unit').value=''; document.getElementById('modal-stock-price').value=''; showModalById('modalAddStock'); }
     function closeAddStockModal(){ hideModalById('modalAddStock'); }
-
     function escapeHTML(s){ if(s===undefined||s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     /* ---------- Navigation ---------- */
@@ -410,149 +356,69 @@
       const btn = document.getElementById('nav-' + menuId); if(btn) btn.classList.add('active');
     }
 
-    /* ---------- STOCK: render with real index (search safe) ---------- */
-    function renderStock() {
-      const tbody = document.getElementById('stockTableBody');
-      const q = (document.getElementById('search')?.value || '').toLowerCase();
-      tbody.innerHTML = '';
+    /* ---------- Stock management ---------- */
+   function renderStock() {
+  const tbody = document.getElementById('stockTableBody');
+  const q = (document.getElementById('search')?.value || '').toLowerCase();
+  tbody.innerHTML = '';
 
-      (window.stockData || []).forEach((s, realIndex) => {
-        if (!s || !s.name) return;
-        if (q && !s.name.toLowerCase().includes(q)) return;
+  (window.stockData || []).forEach((s, realIndex) => {
+    if (!s || !s.name || (q && !s.name.toLowerCase().includes(q))) return;
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHTML(s.name)}</td>
+      <td style="width:120px">${s.qty}</td>
+      <td style="width:120px">${escapeHTML(s.unit || '')}</td>
+      <td style="width:140px">₱${(parseFloat(s.price) || 0).toFixed(2)}</td>
+      <td style="width:160px">
+        <button class="btn btn-ghost" onclick="openEditStock(${realIndex})">✏️ Edit</button>
+        <button class="btn btn-ghost" onclick="deleteStock(${realIndex})">🗑 Delete</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
 
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${escapeHTML(s.name)}</td>
-          <td style="width:120px">${s.qty}</td>
-          <td style="width:120px">${escapeHTML(s.unit || '')}</td>
-          <td style="width:140px">₱${(parseFloat(s.price) || 0).toFixed(2)}</td>
-          <td style="width:160px">
-            <button class="btn btn-ghost" onclick="openEditStock(${realIndex})">✏️ Edit</button>
-            <button class="btn btn-ghost" onclick="deleteStock(${realIndex})">🗑 Delete</button>
-          </td>`;
-        tbody.appendChild(tr);
-      });
-    }
 
-    function openEditStock(i) {
-      editingStockIndex = i;
-      const s = window.stockData[i] || {};
-      document.getElementById('modal-stock-name').value = s.name || '';
-      document.getElementById('modal-stock-qty').value = s.qty || 0;
-      document.getElementById('modal-stock-unit').value = s.unit || '';
-      document.getElementById('modal-stock-price').value = s.price || 0;
-      showModalById('modalAddStock');
-    }
+    function openEditStock(i){ editingStockIndex=i; const s = window.stockData[i]||{}; document.getElementById('modal-stock-name').value=s.name||''; document.getElementById('modal-stock-qty').value=s.qty||0; document.getElementById('modal-stock-unit').value=s.unit||''; document.getElementById('modal-stock-price').value=s.price||0; showModalById('modalAddStock'); }
 
-    /* ---------- saveStockFromModal — now refreshes search view ---------- */
-    function saveStockFromModal(){
+    function saveStockFromModal(){ 
       const name = (document.getElementById('modal-stock-name').value||'').trim();
       const qty = parseFloat(document.getElementById('modal-stock-qty').value)||0;
       const unit = (document.getElementById('modal-stock-unit').value||'').trim();
       const price = parseFloat(document.getElementById('modal-stock-price').value)||0;
-
-      if(!name){ showToast('Enter item name'); return; }
-      if(qty < 0){ showToast('Quantity invalid'); return; }
-      if(price < 0){ showToast('Price invalid'); return; }
-
-      if(editingStockIndex === null){
-        const existing = (window.stockData||[]).find(x => x.name && x.name.toLowerCase() === name.toLowerCase());
-        if(existing){
-          existing.qty = (parseFloat(existing.qty)||0) + qty;
-          existing.unit = unit || existing.unit;
-          existing.price = price || existing.price;
-        } else {
-          window.stockData.push({ name, qty, unit, price });
-        }
-        showToast('Stock added');
-      } else {
-        window.stockData[editingStockIndex] = { name, qty, unit, price };
-        showToast('Stock updated');
-      }
-
-      closeAddStockModal();
-      saveStocksToFirebase();
-
-      // Auto-refresh search & table so edits reflect while filtered
+      if(!name){ showToast('Enter item name'); return; } if(qty<0){ showToast('Quantity invalid'); return; } if(price<0){ showToast('Price invalid'); return; }
+      if(editingStockIndex === null){ const existing = (window.stockData||[]).find(x=>x.name && x.name.toLowerCase()===name.toLowerCase()); if(existing){ existing.qty = (parseFloat(existing.qty)||0) + qty; existing.unit = unit || existing.unit; existing.price = price || existing.price; } else { window.stockData.push({ name, qty, unit, price }); } showToast('Stock added'); } else { window.stockData[editingStockIndex] = { name, qty, unit, price }; showToast('Stock updated'); }
+      closeAddStockModal(); saveStocksToFirebase();
       renderStock();
-      const searchEl = document.getElementById('search');
-      if(searchEl) searchEl.dispatchEvent(new Event('input'));
+  document.getElementById('search').dispatchEvent(new Event('input'));
     }
 
-    /* ---------- deleteStock with search refresh ---------- */
-    function deleteStock(i){
-      if(!confirm('Delete this item?')) return;
-      window.stockData.splice(i, 1);
-      saveStocksToFirebase();
-      renderStock();
-      refreshSummary();
+    function deleteStock(i){ if(!confirm('Delete this item?')) return; window.stockData.splice(i,1); saveStocksToFirebase(); renderStock(); refreshSummary();document.getElementById('search').dispatchEvent(new Event('input'));
 
-      // Auto-refresh search view so deleted items disappear immediately
-      const searchEl = document.getElementById('search');
-      if(searchEl) searchEl.dispatchEvent(new Event('input'));
+  showToast('Item deleted');}
 
-      showToast('Item deleted');
-    }
+    function saveStocksToFirebase(){ const updates = {}; (window.stockData||[]).forEach((it,idx)=>updates[idx]=it); stocksRef.update(updates).then(()=>{ localStorage.setItem('stockData', JSON.stringify(window.stockData||[])); renderStock(); renderPOList(); renderPOHistory(); refreshSummary(); }).catch(e=>console.error(e)); }
 
-    function saveStocksToFirebase(){
-      const updates = {};
-      (window.stockData || []).forEach((it, idx) => updates[idx] = it);
-      stocksRef.update(updates).then(()=> {
-        localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
-        renderStock();
-        renderPOList();
-        renderPOHistory();
-        refreshSummary();
-      }).catch(e => console.error(e));
-    }
-
-    stocksRef.on('value', snap => {
+    stocksRef.on('value', snap=>{
       const val = snap.val();
-      if(val){
-        window.stockData = Array.isArray(val) ? val : Object.values(val || {});
-        localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
-      } else {
-        window.stockData = JSON.parse(localStorage.getItem('stockData') || '[]');
-      }
-      renderStock();
-      refreshSummary();
+      if(val){ window.stockData = Array.isArray(val) ? val : Object.values(val||{}); localStorage.setItem('stockData', JSON.stringify(window.stockData||[])); } else { window.stockData = JSON.parse(localStorage.getItem('stockData')||'[]'); }
+      renderStock(); refreshSummary();
     });
 
     /* ---------- Purchase Orders ---------- */
-    function genPONumber(){
-      const d = new Date();
-      const mm = String(d.getMonth()+1).padStart(2,'0');
-      const dd = String(d.getDate()).padStart(2,'0');
-      return `PO-${d.getFullYear()}${mm}${dd}-${Math.floor(Math.random()*9000)+1000}`;
-    }
+    function genPONumber(){ const d=new Date(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `PO-${d.getFullYear()}${mm}${dd}-${Math.floor(Math.random()*9000)+1000}`; }
+    function initPOForm(){ document.getElementById('poNumber').value = genPONumber(); document.getElementById('poDate').value = (new Date()).toISOString().slice(0,10); document.getElementById('poCustomer').value=''; document.getElementById('poRemarks').value=''; window.poLines=[]; renderPOLines(); renderPOList(); }
 
-    function initPOForm(){
-      document.getElementById('poNumber').value = genPONumber();
-      document.getElementById('poDate').value = (new Date()).toISOString().slice(0,10);
-      document.getElementById('poCustomer').value = '';
-      document.getElementById('poRemarks').value = '';
-      window.poLines = [];
-      renderPOLines();
-      renderPOList();
-    }
-
-    function addPOLine(prefill){
-      window.poLines.push(prefill || { itemName:'', qty:1, unit:'', price:0 });
-      renderPOLines();
-    }
+    function addPOLine(prefill){ window.poLines.push(prefill || { itemName:'', qty:1, unit:'', price:0 }); renderPOLines(); }
     function clearPOLines(){ window.poLines = []; renderPOLines(); }
     function removePOLine(i){ window.poLines.splice(i,1); renderPOLines(); }
 
     function updatePOLine(i, field, value){
       if(!window.poLines[i]) return;
-      if(field === 'qty') value = parseFloat(value) || 0;
-      if(field === 'price') value = parseFloat(value) || 0;
+      if(field==='qty') value = parseFloat(value)||0;
+      if(field==='price') value = parseFloat(value)||0;
       window.poLines[i][field] = value;
-      if(field === 'itemName'){
-        const st = (window.stockData || []).find(s => s.name === value);
-        if(st){ window.poLines[i].unit = st.unit || ''; window.poLines[i].price = st.price || 0; }
-        else { window.poLines[i].unit = ''; }
-      }
+      if(field === 'itemName'){ const st = (window.stockData||[]).find(s => s.name === value); if(st){ window.poLines[i].unit = st.unit||''; window.poLines[i].price = st.price||0; } else { window.poLines[i].unit = ''; } }
       renderPOLines();
     }
 
@@ -560,39 +426,18 @@
     function calcPOTotal(){ return (window.poLines||[]).reduce((s,l)=> s + calcLineSubtotal(l), 0); }
 
     function renderPOLines(){
-      const tbody = document.getElementById('poLineTableBody');
-      tbody.innerHTML = '';
-
-      if(!window.poLines.length){
-        tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--muted)">No items. Click "Add Item" to start.</td></tr>`;
-        document.getElementById('poTotal').textContent = `₱${calcPOTotal().toFixed(2)}`;
-        return;
-      }
-
+      const tbody = document.getElementById('poLineTableBody'); tbody.innerHTML='';
+      if(!window.poLines.length){ tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--muted)">No items. Click "Add Item" to start.</td></tr>`; document.getElementById('poTotal').textContent = `₱${calcPOTotal().toFixed(2)}`; return; }
       window.poLines.forEach((line,i)=>{
         const subtotal = calcLineSubtotal(line);
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="line-number">${i+1}</td>
-          <td>
-            <select onchange="updatePOLine(${i}, 'itemName', this.value)">
-              <option value="">-- select product --</option>
-              ${ (window.stockData||[]).map(s => `<option ${s.name===line.itemName?'selected':''} value="${escapeHTML(s.name)}">${escapeHTML(s.name)} (${s.qty} ${escapeHTML(s.unit||'')})</option>`).join('') }
-            </select>
-          </td>
-          <td style="text-align:center"><input type="number" min="1" value="${line.qty||1}" onchange="updatePOLine(${i}, 'qty', this.value)"></td>
-          <td style="text-align:center"><input value="${escapeHTML(line.unit||'')}" onchange="updatePOLine(${i}, 'unit', this.value)"></td>
-          <td style="text-align:center"><input type="number" step="0.01" min="0" value="${line.price||0}" onchange="updatePOLine(${i}, 'price', this.value)"></td>
-          <td class="subtotal">₱${subtotal.toFixed(2)}</td>
-          <td style="text-align:center"><button class="btn btn-ghost" onclick="removePOLine(${i})">Remove</button></td>
-        `;
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td class="line-number">${i+1}</td><td><select onchange="updatePOLine(${i}, 'itemName', this.value)"><option value="">-- select product --</option>${ (window.stockData||[]).map(s=>`<option ${s.name===line.itemName?'selected':''} value="${escapeHTML(s.name)}">${escapeHTML(s.name)} (${s.qty} ${escapeHTML(s.unit||'')})</option>`).join('') }</select></td><td style="text-align:center"><input type="number" min="1" value="${line.qty||1}" onchange="updatePOLine(${i}, 'qty', this.value)"></td><td style="text-align:center"><input value="${escapeHTML(line.unit||'')}" onchange="updatePOLine(${i}, 'unit', this.value)"></td><td style="text-align:center"><input type="number" step="0.01" min="0" value="${line.price||0}" onchange="updatePOLine(${i}, 'price', this.value)"></td><td class="subtotal">₱${subtotal.toFixed(2)}</td><td style="text-align:center"><button class="btn btn-ghost" onclick="removePOLine(${i})">Remove</button></td>`;
         tbody.appendChild(tr);
       });
-
       document.getElementById('poTotal').textContent = `₱${calcPOTotal().toFixed(2)}`;
     }
 
-    /* ---------- Save PO (shows details on save) ---------- */
+    /* ---------- Save PO (shows details) ---------- */
     function savePO(){
       const cust = (document.getElementById('poCustomer').value || '').trim();
       const date = (document.getElementById('poDate').value || '').trim();
@@ -604,7 +449,7 @@
       for(const l of window.poLines){
         if(!l.itemName){ showToast('Select product on all lines'); return; }
         if(!(parseFloat(l.qty) > 0)){ showToast(`Invalid qty for ${l.itemName}`); return; }
-        const st = (window.stockData || []).find(s => s.name === l.itemName);
+        const st = (window.stockData||[]).find(s => s.name === l.itemName);
         if(!st){ showToast(`Item not in stock: ${l.itemName}`); return; }
         if(l.qty > st.qty){ showToast(`Not enough stock for ${l.itemName} (available ${st.qty})`); return; }
       }
@@ -621,27 +466,29 @@
         createdAt: Date.now()
       };
 
+      // push to Firebase, capture key
       const pushRef = posRef.push();
-      pushRef.set(poObj).then(()=> {
-        // attach id locally
+      pushRef.set(poObj).then(()=>{
+        // add id locally (for immediate viewing)
         poObj.id = pushRef.key;
 
-        // deduct stock locally and persist
+        // deduct local stock and persist
         window.poLines.forEach(l=>{
-          const st = (window.stockData || []).find(s => s.name === l.itemName);
-          if(st) st.qty = Math.max(0,(st.qty||0) - (l.qty||0));
+          const st = (window.stockData||[]).find(s => s.name === l.itemName);
+          if(st) st.qty = Math.max(0, (st.qty||0) - (l.qty||0));
         });
         saveStocksToFirebase();
 
         showToast('PO saved ✔');
 
-        // show details (immediate feedback)
+        // show saved PO details in modal (immediate feedback)
         viewPODetail(poObj);
 
+        // reset form + refresh lists
         initPOForm();
         renderPOList();
         renderPOHistory();
-      }).catch(err => {
+      }).catch(err=>{
         console.error(err);
         showToast('Error saving PO');
       });
@@ -661,7 +508,7 @@
         const data = snap.val();
         if(!data){ container.innerHTML = '<div class="muted">No purchase orders yet.</div>'; refreshSummary(); return; }
         const arr = Object.keys(data).map(k => ({ id:k, ...data[k] })).sort((a,b)=> b.createdAt - a.createdAt);
-        let html = `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6fbff;color:var(--accent-3)"><th style="padding:10px">PO#</th><th>Customer</th><th>Date</th><th>Total</th><th>Action</th></tr></thead><tbody>`;
+        let html = `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6fbff;color:var(--accent-2)"><th style="padding:10px">PO#</th><th>Customer</th><th>Date</th><th>Total</th><th>Action</th></tr></thead><tbody>`;
         html += arr.map(p => `<tr><td style="padding:10px">${p.poNumber}</td><td>${escapeHTML(p.customer)}</td><td>${escapeHTML(p.date)}</td><td>₱${(p.total||0).toFixed(2)}</td><td><button class="btn btn-ghost" onclick='viewPODetail(${JSON.stringify(p).replace(/'/g,"\\'")})'>View</button></td></tr>`).join('');
         html += '</tbody></table>';
         container.innerHTML = html;
@@ -684,7 +531,7 @@
         const arr = Object.keys(data).map(k => ({ id:k, ...data[k] })).sort((a,b)=> b.createdAt - a.createdAt);
         let filtered = arr;
         if(q) filtered = arr.filter(p => (p.poNumber||'').toLowerCase().includes(q) || (p.customer||'').toLowerCase().includes(q));
-        let html = `<div style="overflow:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6fbff;color:var(--accent-3)"><th style="padding:10px">PO#</th><th>Customer</th><th>Date</th><th>Total</th><th style="width:220px">Actions</th></tr></thead><tbody>`;
+        let html = `<div style="overflow:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6fbff;color:var(--accent-2)"><th style="padding:10px">PO#</th><th>Customer</th><th>Date</th><th>Total</th><th style="width:220px">Actions</th></tr></thead><tbody>`;
         html += filtered.map(p => `<tr><td style="padding:10px">${p.poNumber}</td><td>${escapeHTML(p.customer)}</td><td>${escapeHTML(p.date)}</td><td>₱${(p.total||0).toFixed(2)}</td><td><button class="btn btn-ghost" onclick='viewPODetail(${JSON.stringify(p).replace(/'/g,"\\'")})'>View</button> <button class="btn btn-ghost" onclick="confirmDeletePO('${p.id}','${escapeHTML(p.poNumber)}')">Delete</button></td></tr>`).join('');
         html += `</tbody></table></div>`;
         container.innerHTML = html;
@@ -697,6 +544,7 @@
     }
 
     function deletePO(id){
+      // NOTE: as requested, deleting a PO does NOT restore stock quantities
       posRef.child(id).remove().then(()=>{
         showToast('PO deleted');
         renderPOHistory();
@@ -738,67 +586,15 @@
       openPrintableInvoice(p);
     }
 
-    /* ---------- Print stock list ---------- */
-    function printStockList(){ const printWindow = window.open('', '_blank'); const tableHTML = `<table style="width:100%;border-collapse:collapse;margin-top:14px"><thead><tr style="background:#6C5CE7;color:white"><th style="padding:8px;border:1px solid #ccc;text-align:left">Item</th><th style="padding:8px;border:1px solid #ccc;text-align:right">Quantity</th><th style="padding:8px;border:1px solid #ccc;text-align:left">Unit</th><th style="padding:8px;border:1px solid #ccc;text-align:right">Price</th></tr></thead><tbody>${(window.stockData||[]).map(s=>`<tr><td style="padding:8px;border:1px solid #ccc">${escapeHTML(s.name)}</td><td style="padding:8px;border:1px solid #ccc;text-align:right">${s.qty}</td><td style="padding:8px;border:1px solid #ccc">${escapeHTML(s.unit||'')}</td><td style="padding:8px;border:1px solid #ccc;text-align:right">₱${(parseFloat(s.price)||0).toFixed(2)}</td></tr>`).join('')}</tbody></table>`; printWindow.document.write(`<html><head><title>Stock List</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#222;}h2{margin:0;text-align:center;color:#6C5CE7;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#6C5CE7;color:#fff;}tr:nth-child(even){background:#f8faff;}</style></head><body><h2>MSITE Stock List</h2><div style="text-align:center;font-size:0.9rem;color:#555;">Printed: ${new Date().toLocaleString()}</div>${tableHTML}</body></html>`); printWindow.document.close(); setTimeout(()=> printWindow.print(),300); }
+    /* ---------- Print stock ---------- */
+    function printStockList(){ const printWindow = window.open('', '_blank'); const tableHTML = `<table style="width:100%;border-collapse:collapse;margin-top:14px"><thead><tr style="background:#0b6ff2;color:white"><th style="padding:8px;border:1px solid #ccc;text-align:left">Item</th><th style="padding:8px;border:1px solid #ccc;text-align:right">Quantity</th><th style="padding:8px;border:1px solid #ccc;text-align:left">Unit</th><th style="padding:8px;border:1px solid #ccc;text-align:right">Price</th></tr></thead><tbody>${(window.stockData||[]).map(s=>`<tr><td style="padding:8px;border:1px solid #ccc">${escapeHTML(s.name)}</td><td style="padding:8px;border:1px solid #ccc;text-align:right">${s.qty}</td><td style="padding:8px;border:1px solid #ccc">${escapeHTML(s.unit||'')}</td><td style="padding:8px;border:1px solid #ccc;text-align:right">₱${(parseFloat(s.price)||0).toFixed(2)}</td></tr>`).join('')}</tbody></table>`; printWindow.document.write(`<html><head><title>Stock List</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#222;}h2{margin:0;text-align:center;color:#0b6ff2;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#0b6ff2;color:#fff;}tr:nth-child(even){background:#f8faff;}</style></head><body><h2>MSITE Stock List</h2><div style="text-align:center;font-size:0.9rem;color:#555;">Printed: ${new Date().toLocaleString()}</div>${tableHTML}</body></html>`); printWindow.document.close(); setTimeout(()=> printWindow.print(),300); }
 
     /* ---------- Summary ---------- */
-    function refreshSummary(){
-      document.getElementById('summary-count').textContent = (window.stockData||[]).filter(Boolean).length;
-      document.getElementById('summary-total').textContent = (window.stockData||[]).reduce((s,i)=> s + (parseFloat(i.qty)||0), 0);
-      posRef.once('value').then(snap => {
-        const val = snap.val(); document.getElementById('summary-pos').textContent = val ? Object.keys(val).length : 0;
-      }).catch(()=>{});
-    }
+    function refreshSummary(){ document.getElementById('summary-count').textContent = (window.stockData||[]).filter(Boolean).length; document.getElementById('summary-total').textContent = (window.stockData||[]).reduce((s,i)=> s + (parseFloat(i.qty)||0), 0); posRef.once('value').then(snap=>{ const val = snap.val(); document.getElementById('summary-pos').textContent = val ? Object.keys(val).length : 0; }).catch(()=>{}); }
 
-    /* ---------- Charts: single listener + debounce ---------- */
-    let schoolChart=null, itemChart=null;
-    function renderDashboardCharts(){
-      posRef.once('Value').catch(()=>{}); // noop to avoid lint — actual read below
-      posRef.once('value').then(snap=>{
-        const data = snap.val();
-        if(!data){
-          if(schoolChart){ try{schoolChart.destroy()}catch(e){}; schoolChart=null; }
-          if(itemChart){ try{itemChart.destroy()}catch(e){}; itemChart=null; }
-          return;
-        }
-        const poArr = Object.values(data||{});
-        const schoolTotals = {};
-        poArr.forEach(po=>{ if(!po.customer) return; schoolTotals[po.customer] = (schoolTotals[po.customer]||0) + (po.total || 0); });
-        const top5Schools = Object.entries(schoolTotals).sort((a,b)=>b[1]-a[1]).slice(0,5);
-
-        const itemTotals = {};
-        poArr.forEach(po=>{ (po.lines||[]).forEach(line=>{ if(!line.itemName) return; itemTotals[line.itemName] = (itemTotals[line.itemName]||0) + (parseFloat(line.qty)||0); }); });
-        const top5Items = Object.entries(itemTotals).sort((a,b)=>b[1]-a[1]).slice(0,5);
-
-        // schools chart
-        const schoolsLabels = top5Schools.map(x=>x[0]);
-        const schoolsData = top5Schools.map(x=>x[1]);
-        const ctxS = document.getElementById('topSchoolsChart').getContext('2d');
-        if(schoolChart){ try{schoolChart.destroy()}catch(e){} }
-        schoolChart = new Chart(ctxS, {
-          type:'bar',
-          data:{ labels: schoolsLabels, datasets:[{ label:'Total (₱)', data: schoolsData }]},
-          options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}}
-        });
-
-        // items chart
-        const itemsLabels = top5Items.map(x=>x[0]);
-        const itemsData = top5Items.map(x=>x[1]);
-        const ctxI = document.getElementById('bestItemsChart').getContext('2d');
-        if(itemChart){ try{itemChart.destroy()}catch(e){} }
-        itemChart = new Chart(ctxI, {
-          type:'bar',
-          data:{ labels: itemsLabels, datasets:[{ label:'Qty Sold', data: itemsData }]},
-          options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}}
-        });
-      }).catch(err=>console.error('Chart update error',err));
-    }
-
-    let chartUpdateTimer = null;
-    function scheduleChartUpdate(){
-      if(chartUpdateTimer) clearTimeout(chartUpdateTimer);
-      chartUpdateTimer = setTimeout(()=>{ renderDashboardCharts(); chartUpdateTimer = null; }, 450);
-    }
+    /* ---------- Charts (safe) ---------- */
+    function renderDashboardCharts(){ posRef.once('value').then(snap=>{ const data = snap.val(); if(!data){ if(schoolChart){ try{schoolChart.destroy()}catch(e){}; schoolChart=null;} if(itemChart){ try{itemChart.destroy()}catch(e){}; itemChart=null;} return; } const poArr = Object.values(data||{}); const schoolTotals={}; poArr.forEach(po=>{ if(!po.customer) return; schoolTotals[po.customer] = (schoolTotals[po.customer] || 0) + (po.total || 0); }); const top5Schools = Object.entries(schoolTotals).sort((a,b)=>b[1]-a[1]).slice(0,5); const itemTotals={}; poArr.forEach(po=>{ (po.lines||[]).forEach(line=>{ if(!line.itemName) return; itemTotals[line.itemName] = (itemTotals[line.itemName] || 0) + (parseFloat(line.qty) || 0); }); }); const top5Items = Object.entries(itemTotals).sort((a,b)=>b[1]-a[1]).slice(0,5); const schoolsLabels = top5Schools.map(x=>x[0]); const schoolsData = top5Schools.map(x=>x[1]); const ctxS = document.getElementById('topSchoolsChart').getContext('2d'); if(schoolChart){ try{ schoolChart.destroy(); }catch(e){} } schoolChart = new Chart(ctxS,{ type:'bar', data:{ labels: schoolsLabels, datasets:[{ label:'Total (₱)', data: schoolsData }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } }); const itemsLabels = top5Items.map(x=>x[0]); const itemsData = top5Items.map(x=>x[1]); const ctxI = document.getElementById('bestItemsChart').getContext('2d'); if(itemChart){ try{ itemChart.destroy(); }catch(e){} } itemChart = new Chart(ctxI,{ type:'bar', data:{ labels: itemsLabels, datasets:[{ label:'Qty Sold', data: itemsData }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } }); }).catch(err=>console.error('Chart update error',err)); }
+    function scheduleChartUpdate(){ if(chartUpdateTimer) clearTimeout(chartUpdateTimer); chartUpdateTimer = setTimeout(()=>{ renderDashboardCharts(); chartUpdateTimer = null; }, 500); }
 
     /* ---------- Init ---------- */
     document.addEventListener('DOMContentLoaded', ()=>{
@@ -809,7 +605,7 @@
       renderPOHistory();
       refreshSummary();
 
-      // register single posRef listener — update lists & schedule charts
+      // register one posRef listener to update lists & schedule charts
       posRef.on('value', ()=>{
         renderPOList();
         renderPOHistory();
@@ -819,15 +615,10 @@
 
       renderDashboardCharts();
 
-      // mobile toggle
       document.getElementById('hamburger').addEventListener('click', ()=> document.getElementById('sidebar').classList.toggle('show'));
     });
 
-    if('serviceWorker' in navigator){
-      window.addEventListener('load', ()=> {
-        navigator.serviceWorker.register('sw.js').then(reg=>console.log('SW registered',reg)).catch(e=>console.warn('SW failed', e));
-      });
-    }
+    if('serviceWorker' in navigator){ window.addEventListener('load', ()=> { navigator.serviceWorker.register('sw.js').then(reg=>console.log('SW registered',reg)).catch(e=>console.warn('SW failed', e)); }); }
 
     function resetPOForm(){ if(!confirm('Reset PO form?')) return; initPOForm(); }
   </script>
