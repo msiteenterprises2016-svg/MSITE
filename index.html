@@ -561,8 +561,8 @@ if (window.schoolChart) {
       const btn = document.getElementById('nav-' + menuId); if(btn) btn.classList.add('active');
     }
 
-    /* ---------- Stock management ---------- */
-   function renderStock() {
+   /* ---------- Stock management (fixed version) ---------- */
+function renderStock() {
   const tbody = document.getElementById('stockTableBody');
   const q = (document.getElementById('search')?.value || '').toLowerCase();
   tbody.innerHTML = '';
@@ -583,32 +583,91 @@ if (window.schoolChart) {
   });
 }
 
+function openEditStock(i) {
+  editingStockIndex = i;
+  const s = window.stockData[i] || {};
+  document.getElementById('modal-stock-name').value = s.name || '';
+  document.getElementById('modal-stock-qty').value = s.qty || 0;
+  document.getElementById('modal-stock-unit').value = s.unit || '';
+  document.getElementById('modal-stock-price').value = s.price || 0;
+  showModalById('modalAddStock');
+}
 
-    function openEditStock(i){ editingStockIndex=i; const s = window.stockData[i]||{}; document.getElementById('modal-stock-name').value=s.name||''; document.getElementById('modal-stock-qty').value=s.qty||0; document.getElementById('modal-stock-unit').value=s.unit||''; document.getElementById('modal-stock-price').value=s.price||0; showModalById('modalAddStock'); }
+function saveStockFromModal() {
+  const name = (document.getElementById('modal-stock-name').value || '').trim();
+  const qty = parseFloat(document.getElementById('modal-stock-qty').value) || 0;
+  const unit = (document.getElementById('modal-stock-unit').value || '').trim();
+  const price = parseFloat(document.getElementById('modal-stock-price').value) || 0;
 
-    function saveStockFromModal(){ 
-      const name = (document.getElementById('modal-stock-name').value||'').trim();
-      const qty = parseFloat(document.getElementById('modal-stock-qty').value)||0;
-      const unit = (document.getElementById('modal-stock-unit').value||'').trim();
-      const price = parseFloat(document.getElementById('modal-stock-price').value)||0;
-      if(!name){ showToast('Enter item name'); return; } if(qty<0){ showToast('Quantity invalid'); return; } if(price<0){ showToast('Price invalid'); return; }
-      if(editingStockIndex === null){ const existing = (window.stockData||[]).find(x=>x.name && x.name.toLowerCase()===name.toLowerCase()); if(existing){ existing.qty = (parseFloat(existing.qty)||0) + qty; existing.unit = unit || existing.unit; existing.price = price || existing.price; } else { window.stockData.push({ name, qty, unit, price }); } showToast('Stock added'); } else { window.stockData[editingStockIndex] = { name, qty, unit, price }; showToast('Stock updated'); }
-      closeAddStockModal(); saveStocksToFirebase();
-      renderStock();
-  document.getElementById('search').dispatchEvent(new Event('input'));
+  if (!name) return showToast('Enter item name');
+  if (qty < 0) return showToast('Quantity invalid');
+  if (price < 0) return showToast('Price invalid');
+
+  if (editingStockIndex === null) {
+    const existing = (window.stockData || []).find(x => x.name && x.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.qty = (parseFloat(existing.qty) || 0) + qty;
+      existing.unit = unit || existing.unit;
+      existing.price = price || existing.price;
+    } else {
+      window.stockData.push({ name, qty, unit, price });
     }
+    showToast('Stock added');
+  } else {
+    window.stockData[editingStockIndex] = { name, qty, unit, price };
+    showToast('Stock updated');
+  }
 
-    function deleteStock(i){ if(!confirm('Delete this item?')) return; window.stockData.splice(i,1); saveStocksToFirebase(); renderStock(); refreshSummary();document.getElementById('search').dispatchEvent(new Event('input'));
+  closeAddStockModal();
+  saveStocksToFirebase(); // full sync save
+  renderStock();
+  refreshSummary();
+}
 
-  showToast('Item deleted');}
+function deleteStock(i) {
+  if (!confirm('Delete this item?')) return;
+  window.stockData.splice(i, 1);
+  saveStocksToFirebase(); // full sync save
+  renderStock();
+  refreshSummary();
+  showToast('Item deleted');
+}
 
-    function saveStocksToFirebase(){ const updates = {}; (window.stockData||[]).forEach((it,idx)=>updates[idx]=it); stocksRef.update(updates).then(()=>{ localStorage.setItem('stockData', JSON.stringify(window.stockData||[])); renderStock(); renderPOList(); renderPOHistory(); refreshSummary(); }).catch(e=>console.error(e)); }
+/* ---------- Fixed: Firebase sync ---------- */
+function saveStocksToFirebase() {
+  // fully overwrite instead of partial update to avoid ghost data
+  stocksRef
+    .set(window.stockData || [])
+    .then(() => {
+      localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+      renderStock();
+      renderPOList();
+      renderPOHistory();
+      refreshSummary();
+    })
+    .catch(e => console.error('Save to Firebase error:', e));
+}
 
-    stocksRef.on('value', snap=>{
-      const val = snap.val();
-      if(val){ window.stockData = Array.isArray(val) ? val : Object.values(val||{}); localStorage.setItem('stockData', JSON.stringify(window.stockData||[])); } else { window.stockData = JSON.parse(localStorage.getItem('stockData')||'[]'); }
-      renderStock(); refreshSummary();
-    });
+/* ---------- Firebase listener ---------- */
+stocksRef.on('value', snap => {
+  try {
+    const val = snap.val();
+    if (val) {
+      window.stockData = Array.isArray(val)
+        ? val
+        : Object.values(val || {});
+      localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
+    } else {
+      window.stockData = JSON.parse(localStorage.getItem('stockData') || '[]');
+    }
+  } catch (err) {
+    console.error('Firebase sync error:', err);
+    window.stockData = [];
+  }
+  renderStock();
+  refreshSummary();
+});
+
 
     /* ---------- Purchase Orders ---------- */
     function genPONumber(){ const d=new Date(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `PO-${d.getFullYear()}${mm}${dd}-${Math.floor(Math.random()*9000)+1000}`; }
