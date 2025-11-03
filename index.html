@@ -207,6 +207,12 @@ input:focus,select:focus,textarea:focus{
     display: block;
     transform: translateX(0);
   }
+
+  #poLineTableBody tr:hover td {
+  background: rgba(59,130,246,0.08);
+  transition: background 0.25s ease;
+}
+
 }
 
 
@@ -331,7 +337,8 @@ input:focus,select:focus,textarea:focus{
             </div>
           </div>
 
-          <div style="background:white;margin-top:14px;padding:16px;border-radius:12px;border:1px solid var(--border)">
+         <div style="background:rgba(30,41,59,0.65);margin-top:14px;padding:16px;border-radius:12px;border:1px solid rgba(255,255,255,0.05);box-shadow:var(--shadow-2);backdrop-filter:blur(18px);">
+
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
               <h3 style="margin:0;color:var(--accent-2)">Order Items</h3>
               <div>
@@ -343,7 +350,7 @@ input:focus,select:focus,textarea:focus{
             <div style="overflow:auto;">
               <table style="min-width:700px">
                 <thead>
-                  <tr style="background:#fbfdff;color:var(--accent-2)">
+<tr style="background:rgba(59,130,246,0.15);color:#e2e8f0;">
                     <th style="padding:10px">#</th>
                     <th style="padding:10px">Item</th>
                     <th style="padding:10px;text-align:center">Qty</th>
@@ -369,6 +376,7 @@ input:focus,select:focus,textarea:focus{
             <button class="btn btn-primary" onclick="savePO()">Save PO</button>
           </div>
         </section>
+        
 
         <!-- PO HISTORY -->
         <section id="pohistory" class="card page" style="display:none">
