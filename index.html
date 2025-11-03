@@ -214,6 +214,39 @@ input:focus,select:focus,textarea:focus{
 }
 
 }
+    /* ---------- DARK MODE SELECT DROPDOWN FIX ---------- */
+select {
+  background: rgba(30,41,59,0.85);
+  color: #E2E8F0;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 10px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--accent) 50%), 
+                    linear-gradient(135deg, var(--accent) 50%, transparent 50%);
+  background-position: calc(100% - 20px) calc(1em + 2px), calc(100% - 15px) calc(1em + 2px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+select:hover {
+  border-color: var(--accent);
+  background-color: rgba(51,65,85,0.9);
+}
+select:focus {
+  border-color: var(--accent-3);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.3);
+}
+
+/* Style the dropdown options (works in most browsers) */
+option {
+  background-color: #1E293B;
+  color: #E2E8F0;
+}
+
 
 
 
