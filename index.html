@@ -905,7 +905,13 @@ stocksRef.on('value', snap => {
       document.getElementById('hamburger').addEventListener('click', ()=> document.getElementById('sidebar').classList.toggle('show'));
     });
 
-    if('serviceWorker' in navigator){ window.addEventListener('load', ()=> { navigator.serviceWorker.register('sw.js').then(reg=>console.log('SW registered',reg)).catch(e=>console.warn('SW failed', e)); }); }
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js')
+      .then(reg => console.log('SW registered', reg))
+      .catch(e => console.warn('SW failed', e));
+  });
+}
 
     function resetPOForm(){ if(!confirm('Reset PO form?')) return; initPOForm(); }
 
