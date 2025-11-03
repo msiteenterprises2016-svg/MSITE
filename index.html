@@ -9,9 +9,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-  <!-- ======================
-       STYLES (Glassmorphism)
-       ====================== -->
   <style>
     :root{
       --bg: linear-gradient(135deg,#f6fbff 0%,#eef7ff 45%,#eef9ff 100%);
@@ -31,11 +28,9 @@
     *{box-sizing:border-box}
     html,body{height:100%;margin:0;font-family:'Poppins', system-ui, -apple-system, "Segoe UI", Roboto, Arial; background:var(--bg); color:#122432; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;}
 
-    /* layout */
     .app{min-height:100vh;display:flex;justify-content:center;padding:28px 20px;}
     .container{width:100%;max-width:var(--max-w);display:flex;gap:20px;align-items:flex-start;}
 
-    /* sidebar */
     aside.sidebar{
       width:var(--sidebar-w);
       background: linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.45));
@@ -53,49 +48,33 @@
     }
     .nav button.active{ background: linear-gradient(90deg, rgba(11,111,242,0.10), rgba(11,111,242,0.04)); box-shadow: var(--shadow-2); color:var(--accent-2) }
 
-    /* main */
     main.main{flex:1;display:flex;flex-direction:column;gap:18px;min-width:0}
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
     .page-title{font-size:1.4rem;font-weight:700;color:var(--accent-2)}
     .hamburger{display:none}
 
-    /* cards */
     .card{
       background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(255,255,255,0.90));
       border-radius:14px;padding:16px;border:1px solid var(--border);box-shadow:var(--shadow-2)
     }
     .card-lg{padding:22px;border-radius:16px}
-
-    /* small helpers */
     .muted{color:var(--muted);font-size:0.95rem}
     .small{font-size:0.9rem;color:var(--muted)}
     .row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-
-    /* buttons/inputs */
     .btn{padding:10px 14px;border-radius:10px;border:0;font-weight:700;cursor:pointer;transition:all .14s}
     .btn-primary{background:linear-gradient(90deg,var(--accent),var(--accent-2));color:white;box-shadow:0 8px 24px rgba(11,111,242,0.08)}
     .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--accent-2)}
     input,select,textarea{padding:10px;border-radius:10px;border:1px solid var(--border);outline:none;background:white;color: #10202b;min-height:40px}
-
-    /* tables */
     table{width:100%;border-collapse:collapse;font-size:0.95rem}
     thead th{background:linear-gradient(180deg,#f6fbff,#eef8ff);color:var(--accent-2);text-align:left;padding:12px;border-bottom:1px solid var(--border);font-weight:700}
     tbody td{padding:12px;border-bottom:1px solid var(--border);vertical-align:middle}
+    @media (max-width:980px){ .container{flex-direction:column;padding:12px} aside.sidebar{display:none;position:fixed;left:0;top:0;height:100vh;z-index:1200} .hamburger{display:inline-flex} }
 
-    /* responsive */
-    @media (max-width:980px){
-      .container{flex-direction:column;padding:12px}
-      aside.sidebar{display:none;position:fixed;left:0;top:0;height:100vh;z-index:1200}
-      .hamburger{display:inline-flex}
-    }
-
-    /* PO list small tweaks */
     .line-number{width:36px;text-align:center;color:var(--muted);font-weight:700}
     .subtotal{font-weight:800;text-align:right;color:var(--accent-2)}
     .muted-2{color:#9aa6b3}
-
-    /* toast */
     #toast{position:fixed;right:20px;bottom:20px;padding:12px 16px;border-radius:10px;background:var(--accent);color:white;box-shadow:var(--shadow-1);opacity:0;transform:translateY(10px);transition:all .28s}
+    .history-controls{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap}
   </style>
 </head>
 
@@ -111,6 +90,7 @@
             <li><button id="nav-dashboard" class="active" onclick="openMenu('dashboard')">🏠 Dashboard</button></li>
             <li><button id="nav-stock" onclick="openMenu('stock')">📦 Stock</button></li>
             <li><button id="nav-po" onclick="openMenu('po')">🧾 Purchase Orders</button></li>
+            <li><button id="nav-pohistory" onclick="openMenu('pohistory')">📜 PO History</button></li>
           </ul>
         </nav>
         <hr style="border:none;border-top:1px solid var(--border);margin:12px 0" />
@@ -134,12 +114,10 @@
               <div class="small muted">Total unique items</div>
               <div id="summary-count" style="font-size:1.2rem;font-weight:800;color:var(--accent-2)">0</div>
             </div>
-
             <div style="flex:1;min-width:200px;background:var(--card);padding:14px;border-radius:12px;border:1px solid var(--border)">
               <div class="small muted">Total stock (sum qty)</div>
               <div id="summary-total" style="font-size:1.2rem;font-weight:800;color:var(--accent-2)">0</div>
             </div>
-
             <div style="flex:1;min-width:200px;background:var(--card);padding:14px;border-radius:12px;border:1px solid var(--border)">
               <div class="small muted">Purchase orders filed</div>
               <div id="summary-pos" style="font-size:1.2rem;font-weight:800;color:var(--accent-2)">0</div>
@@ -147,19 +125,16 @@
           </div>
 
           <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)" />
-
           <h3 style="margin:6px 0;color:var(--accent-2)">Recent Purchase Orders</h3>
           <div id="recentPOsContainer" class="muted-2">Loading...</div>
 
           <hr style="margin:18px 0;border:none;border-top:1px solid var(--border)" />
-
           <h3 style="color:var(--accent-2)">📊 Sales Insights</h3>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-top:12px">
             <div class="card" style="padding:14px;">
               <h4 style="margin:0 0 8px 0;color:var(--accent-2)">Top Schools (by total)</h4>
               <div style="height:220px"><canvas id="topSchoolsChart"></canvas></div>
             </div>
-
             <div class="card" style="padding:14px;">
               <h4 style="margin:0 0 8px 0;color:var(--accent-2)">Best-Selling Items</h4>
               <div style="height:220px"><canvas id="bestItemsChart"></canvas></div>
@@ -176,7 +151,6 @@
               <h3 style="margin:0;color:var(--accent-2)">Stock Management</h3>
               <div class="small muted">Add and manage products — changes save to Firebase.</div>
             </div>
-
             <div class="row">
               <input id="search" placeholder="Search items..." oninput="renderStock()" />
               <button class="btn btn-primary" onclick="showAddStockModal()">+ Add Item</button>
@@ -258,6 +232,24 @@
             <button class="btn btn-primary" onclick="savePO()">Save PO</button>
           </div>
         </section>
+
+        <!-- PO HISTORY -->
+        <section id="pohistory" class="card page" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+            <div>
+              <h2 style="margin:0;color:var(--accent-2)">📜 Purchase Order History</h2>
+              <div class="small muted">All saved POs — view or delete records.</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="historySearch" placeholder="Search PO# or customer..." oninput="renderPOHistory()" style="min-width:220px" />
+              <button class="btn btn-ghost" onclick="renderPOHistory()">Refresh</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;overflow:auto">
+            <div id="poHistoryContainer">Loading PO history...</div>
+          </div>
+        </section>
       </main>
     </div>
   </div>
@@ -265,7 +257,7 @@
   <!-- TOAST -->
   <div id="toast"></div>
 
-  <!-- MODAL: Add / Edit Stock -->
+  <!-- MODALS -->
   <div id="modalAddStock" class="modal" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(8,12,20,0.45);z-index:999">
     <div style="background:white;border-radius:12px;padding:16px;min-width:360px;border:1px solid var(--border);box-shadow:var(--shadow-1)">
       <h3 style="margin:0 0 8px 0;color:var(--accent)">Add / Edit Stock</h3>
@@ -314,15 +306,12 @@
     </div>
   </div>
 
-  <!-- Firebase compat (kept) -->
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
-  <!-- ======================
-       JAVASCRIPT (Logic)
-       ====================== -->
   <script>
-    /* ---------- Firebase config (kept) ---------- */
+    /* ---------- Firebase config ---------- */
     const firebaseConfig = {
       apiKey: "AIzaSyCRaNvNt2aVsJeI51gagE3XMRG_hnDA8aY",
       authDomain: "msite-45cd2.firebaseapp.com",
@@ -337,171 +326,84 @@
     const stocksRef = db.ref("stocks");
     const posRef = db.ref("purchaseOrders");
 
-    /* ---------- local state ---------- */
+    /* ---------- state ---------- */
     window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
     window.poLines = [];
     let editingStockIndex = null;
     let lastViewedPO = null;
+    let schoolChart = null, itemChart = null, chartUpdateTimer = null;
 
-    /* charts */
-    let schoolChart = null;
-    let itemChart = null;
-    let chartUpdateTimer = null;
-
-    /* ---------- UI helpers ---------- */
+    /* ---------- helpers ---------- */
     function showToast(msg, time = 2200) {
       const t = document.getElementById('toast');
       t.textContent = msg;
       t.style.opacity = '1';
       t.style.transform = 'translateY(0)';
-      setTimeout(() => { t.style.opacity = '0'; t.style.transform = 'translateY(10px)'; }, time);
+      setTimeout(()=>{ t.style.opacity='0'; t.style.transform='translateY(10px)'; }, time);
     }
-
     function showModalById(id){ document.getElementById(id).style.display = 'flex'; }
     function hideModalById(id){ document.getElementById(id).style.display = 'none'; }
     function showAddStockModal(){ editingStockIndex = null; document.getElementById('modal-stock-name').value=''; document.getElementById('modal-stock-qty').value=''; document.getElementById('modal-stock-unit').value=''; document.getElementById('modal-stock-price').value=''; showModalById('modalAddStock'); }
     function closeAddStockModal(){ hideModalById('modalAddStock'); }
+    function escapeHTML(s){ if(s===undefined||s===null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
     /* ---------- Navigation ---------- */
     function openMenu(menuId){
-      document.querySelectorAll('.page').forEach(el => el.style.display = 'none');
-      document.getElementById(menuId).style.display = 'block';
-      document.getElementById('pageTitle').textContent = { dashboard:'Dashboard', stock:'Stock Management', po:'Purchase Orders' }[menuId] || 'MSITE';
-      document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
-      const btn = document.getElementById('nav-' + menuId);
-      if(btn) btn.classList.add('active');
+      document.querySelectorAll('.page').forEach(el=>el.style.display='none');
+      document.getElementById(menuId).style.display='block';
+      document.getElementById('pageTitle').textContent = { dashboard:'Dashboard', stock:'Stock Management', po:'Purchase Orders', pohistory:'PO History' }[menuId] || 'MSITE';
+      document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+      const btn = document.getElementById('nav-' + menuId); if(btn) btn.classList.add('active');
     }
 
-    /* ---------- Stock logic ---------- */
+    /* ---------- Stock management ---------- */
     function renderStock(){
       const tbody = document.getElementById('stockTableBody');
       const q = (document.getElementById('search')?.value || '').toLowerCase();
       tbody.innerHTML = '';
-
-      (window.stockData||[]).filter(s => s && s.name && s.name.toLowerCase().includes(q)).forEach((s,i) => {
+      (window.stockData||[]).filter(s=>s && s.name && s.name.toLowerCase().includes(q)).forEach((s,i)=>{
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${escapeHTML(s.name)}</td>
-          <td style="width:120px">${s.qty}</td>
-          <td style="width:120px">${escapeHTML(s.unit||'')}</td>
-          <td style="width:140px">₱${(parseFloat(s.price)||0).toFixed(2)}</td>
-          <td style="width:160px">
-            <button class="btn btn-ghost" onclick="openEditStock(${i})">✏️ Edit</button>
-            <button class="btn btn-ghost" onclick="deleteStock(${i})">🗑 Delete</button>
-          </td>`;
+        tr.innerHTML = `<td>${escapeHTML(s.name)}</td><td style="width:120px">${s.qty}</td><td style="width:120px">${escapeHTML(s.unit||'')}</td><td style="width:140px">₱${(parseFloat(s.price)||0).toFixed(2)}</td><td style="width:160px"><button class="btn btn-ghost" onclick="openEditStock(${i})">✏️ Edit</button> <button class="btn btn-ghost" onclick="deleteStock(${i})">🗑 Delete</button></td>`;
         tbody.appendChild(tr);
       });
     }
 
-    function openEditStock(i) {
-      editingStockIndex = i;
-      const s = window.stockData[i] || {};
-      document.getElementById('modal-stock-name').value = s.name || '';
-      document.getElementById('modal-stock-qty').value = s.qty || 0;
-      document.getElementById('modal-stock-unit').value = s.unit || '';
-      document.getElementById('modal-stock-price').value = s.price || 0;
-      showModalById('modalAddStock');
+    function openEditStock(i){ editingStockIndex=i; const s = window.stockData[i]||{}; document.getElementById('modal-stock-name').value=s.name||''; document.getElementById('modal-stock-qty').value=s.qty||0; document.getElementById('modal-stock-unit').value=s.unit||''; document.getElementById('modal-stock-price').value=s.price||0; showModalById('modalAddStock'); }
+
+    function saveStockFromModal(){ 
+      const name = (document.getElementById('modal-stock-name').value||'').trim();
+      const qty = parseFloat(document.getElementById('modal-stock-qty').value)||0;
+      const unit = (document.getElementById('modal-stock-unit').value||'').trim();
+      const price = parseFloat(document.getElementById('modal-stock-price').value)||0;
+      if(!name){ showToast('Enter item name'); return; } if(qty<0){ showToast('Quantity invalid'); return; } if(price<0){ showToast('Price invalid'); return; }
+      if(editingStockIndex === null){ const existing = (window.stockData||[]).find(x=>x.name && x.name.toLowerCase()===name.toLowerCase()); if(existing){ existing.qty = (parseFloat(existing.qty)||0) + qty; existing.unit = unit || existing.unit; existing.price = price || existing.price; } else { window.stockData.push({ name, qty, unit, price }); } showToast('Stock added'); } else { window.stockData[editingStockIndex] = { name, qty, unit, price }; showToast('Stock updated'); }
+      closeAddStockModal(); saveStocksToFirebase();
     }
 
-    function saveStockFromModal() {
-      const name = (document.getElementById('modal-stock-name').value || '').trim();
-      const qty = parseFloat(document.getElementById('modal-stock-qty').value) || 0;
-      const unit = (document.getElementById('modal-stock-unit').value || '').trim();
-      const price = parseFloat(document.getElementById('modal-stock-price').value) || 0;
+    function deleteStock(i){ if(!confirm('Delete this item?')) return; window.stockData.splice(i,1); saveStocksToFirebase(); renderStock(); refreshSummary(); }
 
-      if(!name){ showToast('Enter item name'); return; }
-      if(qty < 0){ showToast('Quantity invalid'); return; }
-      if(price < 0){ showToast('Price invalid'); return; }
+    function saveStocksToFirebase(){ const updates = {}; (window.stockData||[]).forEach((it,idx)=>updates[idx]=it); stocksRef.update(updates).then(()=>{ localStorage.setItem('stockData', JSON.stringify(window.stockData||[])); renderStock(); renderPOList(); renderPOHistory(); refreshSummary(); }).catch(e=>console.error(e)); }
 
-      if(editingStockIndex === null) {
-        const existing = (window.stockData || []).find(x => x.name && x.name.toLowerCase() === name.toLowerCase());
-        if(existing){
-          existing.qty = (parseFloat(existing.qty)||0) + qty;
-          existing.unit = unit || existing.unit;
-          existing.price = price || existing.price;
-        } else {
-          window.stockData.push({ name, qty, unit, price });
-        }
-        showToast('Stock added');
-      } else {
-        window.stockData[editingStockIndex] = { name, qty, unit, price };
-        showToast('Stock updated');
-      }
-
-      closeAddStockModal();
-      saveStocksToFirebase();
-    }
-
-    function deleteStock(i){
-      if(!confirm('Delete this item?')) return;
-      window.stockData.splice(i,1);
-      saveStocksToFirebase();
-      renderStock();
-      refreshSummary();
-    }
-
-    function saveStocksToFirebase(){
-      const updates = {};
-      (window.stockData || []).forEach((it, idx) => updates[idx] = it);
-      stocksRef.update(updates).then(()=> {
-        localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
-        renderStock();
-        renderPOList();
-        refreshSummary();
-      }).catch(e => console.error(e));
-    }
-
-    stocksRef.on('value', snap => {
+    stocksRef.on('value', snap=>{
       const val = snap.val();
-      if(val){
-        // prefer array if stored as array, otherwise object -> array
-        window.stockData = Array.isArray(val) ? val : Object.values(val || {});
-        localStorage.setItem('stockData', JSON.stringify(window.stockData || []));
-      } else {
-        window.stockData = JSON.parse(localStorage.getItem('stockData') || '[]');
-      }
-      renderStock();
-      refreshSummary();
+      if(val){ window.stockData = Array.isArray(val) ? val : Object.values(val||{}); localStorage.setItem('stockData', JSON.stringify(window.stockData||[])); } else { window.stockData = JSON.parse(localStorage.getItem('stockData')||'[]'); }
+      renderStock(); refreshSummary();
     });
 
-    /* ---------- Purchase Order logic ---------- */
-    function genPONumber(){
-      const d = new Date();
-      const mm = String(d.getMonth()+1).padStart(2,'0');
-      const dd = String(d.getDate()).padStart(2,'0');
-      return `PO-${d.getFullYear()}${mm}${dd}-${Math.floor(Math.random()*9000)+1000}`;
-    }
+    /* ---------- Purchase Orders ---------- */
+    function genPONumber(){ const d=new Date(); const mm=String(d.getMonth()+1).padStart(2,'0'); const dd=String(d.getDate()).padStart(2,'0'); return `PO-${d.getFullYear()}${mm}${dd}-${Math.floor(Math.random()*9000)+1000}`; }
+    function initPOForm(){ document.getElementById('poNumber').value = genPONumber(); document.getElementById('poDate').value = (new Date()).toISOString().slice(0,10); document.getElementById('poCustomer').value=''; document.getElementById('poRemarks').value=''; window.poLines=[]; renderPOLines(); renderPOList(); }
 
-    function initPOForm(){
-      document.getElementById('poNumber').value = genPONumber();
-      document.getElementById('poDate').value = (new Date()).toISOString().slice(0,10);
-      document.getElementById('poCustomer').value = '';
-      document.getElementById('poRemarks').value = '';
-      window.poLines = [];
-      renderPOLines();
-      renderPOList();
-    }
-
-    function addPOLine(prefill){
-      window.poLines.push(prefill || { itemName:'', qty:1, unit:'', price:0 });
-      renderPOLines();
-    }
-
+    function addPOLine(prefill){ window.poLines.push(prefill || { itemName:'', qty:1, unit:'', price:0 }); renderPOLines(); }
     function clearPOLines(){ window.poLines = []; renderPOLines(); }
-
     function removePOLine(i){ window.poLines.splice(i,1); renderPOLines(); }
 
     function updatePOLine(i, field, value){
       if(!window.poLines[i]) return;
-      if(field === 'qty') value = parseFloat(value) || 0;
-      if(field === 'price') value = parseFloat(value) || 0;
+      if(field==='qty') value = parseFloat(value)||0;
+      if(field==='price') value = parseFloat(value)||0;
       window.poLines[i][field] = value;
-
-      if(field === 'itemName'){
-        const st = (window.stockData || []).find(s => s.name === value);
-        if(st){ window.poLines[i].unit = st.unit || ''; window.poLines[i].price = st.price || 0; }
-        else { window.poLines[i].unit = ''; }
-      }
+      if(field === 'itemName'){ const st = (window.stockData||[]).find(s => s.name === value); if(st){ window.poLines[i].unit = st.unit||''; window.poLines[i].price = st.price||0; } else { window.poLines[i].unit = ''; } }
       renderPOLines();
     }
 
@@ -509,43 +411,22 @@
     function calcPOTotal(){ return (window.poLines||[]).reduce((s,l)=> s + calcLineSubtotal(l), 0); }
 
     function renderPOLines(){
-      const tbody = document.getElementById('poLineTableBody');
-      tbody.innerHTML = '';
-
-      if(!window.poLines.length){
-        tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--muted)">No items. Click "Add Item" to start.</td></tr>`;
-        document.getElementById('poTotal').textContent = `₱${calcPOTotal().toFixed(2)}`;
-        return;
-      }
-
-      window.poLines.forEach((line,i) => {
+      const tbody = document.getElementById('poLineTableBody'); tbody.innerHTML='';
+      if(!window.poLines.length){ tbody.innerHTML = `<tr><td colspan="7" style="padding:16px;text-align:center;color:var(--muted)">No items. Click "Add Item" to start.</td></tr>`; document.getElementById('poTotal').textContent = `₱${calcPOTotal().toFixed(2)}`; return; }
+      window.poLines.forEach((line,i)=>{
         const subtotal = calcLineSubtotal(line);
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="line-number">${i+1}</td>
-          <td>
-            <select onchange="updatePOLine(${i}, 'itemName', this.value)">
-              <option value="">-- select product --</option>
-              ${ (window.stockData||[]).map(s => `<option ${s.name===line.itemName?'selected':''} value="${escapeHTML(s.name)}">${escapeHTML(s.name)} (${s.qty} ${escapeHTML(s.unit||'')})</option>`).join('') }
-            </select>
-          </td>
-          <td style="text-align:center"><input type="number" min="1" value="${line.qty||1}" onchange="updatePOLine(${i}, 'qty', this.value)"></td>
-          <td style="text-align:center"><input value="${escapeHTML(line.unit||'')}" onchange="updatePOLine(${i}, 'unit', this.value)"></td>
-          <td style="text-align:center"><input type="number" step="0.01" min="0" value="${line.price||0}" onchange="updatePOLine(${i}, 'price', this.value)"></td>
-          <td class="subtotal">₱${subtotal.toFixed(2)}</td>
-          <td style="text-align:center"><button class="btn btn-ghost" onclick="removePOLine(${i})">Remove</button></td>
-        `;
+        const tr=document.createElement('tr');
+        tr.innerHTML = `<td class="line-number">${i+1}</td><td><select onchange="updatePOLine(${i}, 'itemName', this.value)"><option value="">-- select product --</option>${ (window.stockData||[]).map(s=>`<option ${s.name===line.itemName?'selected':''} value="${escapeHTML(s.name)}">${escapeHTML(s.name)} (${s.qty} ${escapeHTML(s.unit||'')})</option>`).join('') }</select></td><td style="text-align:center"><input type="number" min="1" value="${line.qty||1}" onchange="updatePOLine(${i}, 'qty', this.value)"></td><td style="text-align:center"><input value="${escapeHTML(line.unit||'')}" onchange="updatePOLine(${i}, 'unit', this.value)"></td><td style="text-align:center"><input type="number" step="0.01" min="0" value="${line.price||0}" onchange="updatePOLine(${i}, 'price', this.value)"></td><td class="subtotal">₱${subtotal.toFixed(2)}</td><td style="text-align:center"><button class="btn btn-ghost" onclick="removePOLine(${i})">Remove</button></td>`;
         tbody.appendChild(tr);
       });
-
       document.getElementById('poTotal').textContent = `₱${calcPOTotal().toFixed(2)}`;
     }
 
+    /* ---------- Save PO (shows details) ---------- */
     function savePO(){
       const cust = (document.getElementById('poCustomer').value || '').trim();
       const date = (document.getElementById('poDate').value || '').trim();
       const poNum = document.getElementById('poNumber').value;
-
       if(!cust){ showToast('Enter customer/school name'); return; }
       if(!date){ showToast('Choose a date'); return; }
       if(!window.poLines.length){ showToast('Add at least one line'); return; }
@@ -553,7 +434,7 @@
       for(const l of window.poLines){
         if(!l.itemName){ showToast('Select product on all lines'); return; }
         if(!(parseFloat(l.qty) > 0)){ showToast(`Invalid qty for ${l.itemName}`); return; }
-        const st = (window.stockData || []).find(s => s.name === l.itemName);
+        const st = (window.stockData||[]).find(s => s.name === l.itemName);
         if(!st){ showToast(`Item not in stock: ${l.itemName}`); return; }
         if(l.qty > st.qty){ showToast(`Not enough stock for ${l.itemName} (available ${st.qty})`); return; }
       }
@@ -570,60 +451,105 @@
         createdAt: Date.now()
       };
 
-      posRef.push().set(poObj).then(() => {
-        // deduct stock locally and save
+      // push to Firebase, capture key
+      const pushRef = posRef.push();
+      pushRef.set(poObj).then(()=>{
+        // add id locally (for immediate viewing)
+        poObj.id = pushRef.key;
+
+        // deduct local stock and persist
         window.poLines.forEach(l=>{
-          const st = (window.stockData || []).find(s => s.name === l.itemName);
+          const st = (window.stockData||[]).find(s => s.name === l.itemName);
           if(st) st.qty = Math.max(0, (st.qty||0) - (l.qty||0));
         });
         saveStocksToFirebase();
+
         showToast('PO saved ✔');
-        openPrintableInvoice(poObj);
+
+        // show saved PO details in modal (immediate feedback)
+        viewPODetail(poObj);
+
+        // reset form + refresh lists
         initPOForm();
         renderPOList();
-      }).catch(err => {
+        renderPOHistory();
+      }).catch(err=>{
         console.error(err);
         showToast('Error saving PO');
       });
     }
 
-    /* ---------- Render PO list (dashboard) ---------- */
+    /* ---------- Dashboard PO summary ---------- */
     function renderPOList(){
       const containerId = 'poListContainer';
       let container = document.getElementById(containerId);
       if(!container){
         const holder = document.getElementById('dashboard-summary-tables');
-        container = document.createElement('div');
-        container.id = containerId;
-        holder.appendChild(container);
+        container = document.createElement('div'); container.id = containerId; holder.appendChild(container);
       }
       container.innerHTML = 'Loading...';
 
       posRef.orderByChild('createdAt').limitToLast(150).once('value').then(snap=>{
         const data = snap.val();
         if(!data){ container.innerHTML = '<div class="muted">No purchase orders yet.</div>'; refreshSummary(); return; }
-
-        const arr = Object.keys(data).map(k => ({ id:k, ...data[k] })).sort((a,b) => b.createdAt - a.createdAt);
+        const arr = Object.keys(data).map(k => ({ id:k, ...data[k] })).sort((a,b)=> b.createdAt - a.createdAt);
         let html = `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6fbff;color:var(--accent-2)"><th style="padding:10px">PO#</th><th>Customer</th><th>Date</th><th>Total</th><th>Action</th></tr></thead><tbody>`;
         html += arr.map(p => `<tr><td style="padding:10px">${p.poNumber}</td><td>${escapeHTML(p.customer)}</td><td>${escapeHTML(p.date)}</td><td>₱${(p.total||0).toFixed(2)}</td><td><button class="btn btn-ghost" onclick='viewPODetail(${JSON.stringify(p).replace(/'/g,"\\'")})'>View</button></td></tr>`).join('');
         html += '</tbody></table>';
         container.innerHTML = html;
 
-        // update recent on dashboard
         const recent = arr.slice(0,6);
         document.getElementById('recentPOsContainer').innerHTML = recent.length ? `<ul style="margin:6px 0">${recent.map(r=>`<li style="margin:6px 0"><strong>${r.poNumber}</strong> — ${escapeHTML(r.customer)} (${r.date}) ₱${(r.total||0).toFixed(2)}</li>`).join('')}</ul>` : '<div class="muted">No recent POs</div>';
-
         refreshSummary();
       }).catch(err => { console.error(err); container.innerHTML = '<div class="muted">Error loading POs</div>'; });
+    }
+
+    /* ---------- PO HISTORY (view + delete) ---------- */
+    function renderPOHistory(){
+      const container = document.getElementById('poHistoryContainer');
+      const q = (document.getElementById('historySearch')?.value || '').toLowerCase().trim();
+      container.innerHTML = 'Loading PO history...';
+
+      posRef.orderByChild('createdAt').limitToLast(1000).once('value').then(snap=>{
+        const data = snap.val();
+        if(!data){ container.innerHTML = '<div class="muted">No purchase orders yet.</div>'; return; }
+        const arr = Object.keys(data).map(k => ({ id:k, ...data[k] })).sort((a,b)=> b.createdAt - a.createdAt);
+        let filtered = arr;
+        if(q) filtered = arr.filter(p => (p.poNumber||'').toLowerCase().includes(q) || (p.customer||'').toLowerCase().includes(q));
+        let html = `<div style="overflow:auto"><table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6fbff;color:var(--accent-2)"><th style="padding:10px">PO#</th><th>Customer</th><th>Date</th><th>Total</th><th style="width:220px">Actions</th></tr></thead><tbody>`;
+        html += filtered.map(p => `<tr><td style="padding:10px">${p.poNumber}</td><td>${escapeHTML(p.customer)}</td><td>${escapeHTML(p.date)}</td><td>₱${(p.total||0).toFixed(2)}</td><td><button class="btn btn-ghost" onclick='viewPODetail(${JSON.stringify(p).replace(/'/g,"\\'")})'>View</button> <button class="btn btn-ghost" onclick="confirmDeletePO('${p.id}','${escapeHTML(p.poNumber)}')">Delete</button></td></tr>`).join('');
+        html += `</tbody></table></div>`;
+        container.innerHTML = html;
+      }).catch(err => { console.error(err); container.innerHTML = '<div class="muted">Error loading history</div>'; });
+    }
+
+    function confirmDeletePO(id, poNumber){
+      if(!confirm(`Delete ${poNumber}? This will permanently remove the record.`)) return;
+      deletePO(id);
+    }
+
+    function deletePO(id){
+      // NOTE: as requested, deleting a PO does NOT restore stock quantities
+      posRef.child(id).remove().then(()=>{
+        showToast('PO deleted');
+        renderPOHistory();
+        renderPOList();
+        refreshSummary();
+      }).catch(err=>{
+        console.error(err);
+        showToast('Error deleting PO');
+      });
     }
 
     /* ---------- PO Viewer ---------- */
     function viewPODetail(p){
       lastViewedPO = p;
-      let html = `<div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${p.poNumber}</strong> — ${escapeHTML(p.customer)}</div><div>${escapeHTML(p.date)}</div></div>`;
-      html += `<table style="width:100%;border-collapse:collapse;margin-top:10px"><thead><tr style="background:#f6f8fb"><th style="padding:8px">Item</th><th style="padding:8px;text-align:right">Qty</th><th style="padding:8px">Unit</th><th style="padding:8px;text-align:right">Price</th><th style="padding:8px;text-align:right">Subtotal</th></tr></thead><tbody>`;
-      html += (p.lines||[]).map(l => `<tr><td style="padding:6px">${escapeHTML(l.itemName)}</td><td style="padding:6px;text-align:right">${l.qty}</td><td style="padding:6px">${escapeHTML(l.unit||'')}</td><td style="padding:6px;text-align:right">₱${(l.price||0).toFixed(2)}</td><td style="padding:6px;text-align:right">₱${(l.qty*l.price).toFixed(2)}</td></tr>`).join('');
-      html += `</tbody></table><div style="text-align:right;font-weight:800;margin-top:8px">Total: ₱${(p.total||0).toFixed(2)}</div>`;
+      const totalText = `₱${((p.total||0)).toFixed(2)}`;
+      let html = `<div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${escapeHTML(p.poNumber||'')}</strong> — ${escapeHTML(p.customer||'')}</div><div>${escapeHTML(p.date||'')}</div></div>`;
+      if(p.remarks) html += `<div style="margin-top:8px;color:#566b80">${escapeHTML(p.remarks||'')}</div>`;
+      html += `<table style="width:100%;border-collapse:collapse;margin-top:12px"><thead><tr style="background:#f6f8fb"><th style="padding:8px">Item</th><th style="padding:8px;text-align:right">Qty</th><th style="padding:8px">Unit</th><th style="padding:8px;text-align:right">Price</th><th style="padding:8px;text-align:right">Subtotal</th></tr></thead><tbody>`;
+      html += (p.lines||[]).map(l=>`<tr><td style="padding:6px">${escapeHTML(l.itemName)}</td><td style="padding:6px;text-align:right">${l.qty}</td><td style="padding:6px">${escapeHTML(l.unit||'')}</td><td style="padding:6px;text-align:right">₱${(l.price||0).toFixed(2)}</td><td style="padding:6px;text-align:right">₱${((l.qty||0)*(l.price||0)).toFixed(2)}</td></tr>`).join('');
+      html += `</tbody></table><div style="text-align:right;font-weight:800;margin-top:8px">Total: ${totalText}</div>`;
       document.getElementById('poViewerContent').innerHTML = html;
       showModalById('poViewerModal');
     }
@@ -635,139 +561,51 @@
     function openPrintableInvoice(p){
       const w = window.open('', '_blank');
       const dateText = p.date || new Date(p.createdAt||Date.now()).toISOString().slice(0,10);
-      const rows = (p.lines||[]).map(l => `<tr><td style="padding:8px;border:1px solid #ddd">${escapeHTML(l.itemName)}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">${l.qty}</td><td style="padding:8px;border:1px solid #ddd">${escapeHTML(l.unit||'')}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">₱${(l.price||0).toFixed(2)}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">₱${(l.qty*l.price).toFixed(2)}</td></tr>`).join('');
-      const html = `<!doctype html><html><head><meta charset="utf-8"><title>${p.poNumber}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#222}table{width:100%;border-collapse:collapse;margin-top:14px}th{background:#f6f6f6;padding:8px;border:1px solid #ddd;text-align:left}td{padding:8px;border:1px solid #ddd} .right{text-align:right}</style></head><body>
-        <div style="display:flex;justify-content:space-between;align-items:center"><div><h2 style="margin:0">MSITE Enterprises</h2><div>Purchase Order</div></div><div style="text-align:right"><div><strong>PO#:</strong> ${p.poNumber}</div><div><strong>Date:</strong> ${dateText}</div><div><strong>Customer:</strong> ${escapeHTML(p.customer)}</div></div></div>
-        <table><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th>Unit</th><th style="text-align:right">Price</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>${rows}</tbody></table>
-        <div style="text-align:right;margin-top:12px;font-weight:800">Total: ₱${(p.total||0).toFixed(2)}</div>
-        <div style="margin-top:18px;color:#666;font-size:0.9rem">Printed: ${new Date().toLocaleString()}</div></body></html>`;
-      w.document.write(html); w.document.close(); w.focus();
-      setTimeout(()=> w.print(),300);
+      const rows = (p.lines||[]).map(l=>`<tr><td style="padding:8px;border:1px solid #ddd">${escapeHTML(l.itemName)}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">${l.qty}</td><td style="padding:8px;border:1px solid #ddd">${escapeHTML(l.unit||'')}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">₱${(l.price||0).toFixed(2)}</td><td style="padding:8px;border:1px solid #ddd;text-align:right">₱${((l.qty||0)*(l.price||0)).toFixed(2)}</td></tr>`).join('');
+      const html = `<!doctype html><html><head><meta charset="utf-8"><title>${p.poNumber}</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#222}table{width:100%;border-collapse:collapse;margin-top:14px}th{background:#f6f6f6;padding:8px;border:1px solid #ddd;text-align:left}td{padding:8px;border:1px solid #ddd}</style></head><body><div style="display:flex;justify-content:space-between;align-items:center"><div><h2 style="margin:0">MSITE Enterprises</h2><div>Purchase Order</div></div><div style="text-align:right"><div><strong>PO#:</strong> ${p.poNumber}</div><div><strong>Date:</strong> ${dateText}</div><div><strong>Customer:</strong> ${escapeHTML(p.customer)}</div></div></div><table><thead><tr><th>Item</th><th style="text-align:right">Qty</th><th>Unit</th><th style="text-align:right">Price</th><th style="text-align:right">Subtotal</th></tr></thead><tbody>${rows}</tbody></table><div style="text-align:right;margin-top:12px;font-weight:800">Total: ₱${(p.total||0).toFixed(2)}</div><div style="margin-top:18px;color:#666;font-size:0.9rem">Printed: ${new Date().toLocaleString()}</div></body></html>`;
+      w.document.write(html); w.document.close(); w.focus(); setTimeout(()=> w.print(),300);
     }
 
     function openPrintableInvoiceFromForm(){
-      // build a PO-like object from current form (not saved to Firebase)
-      const p = {
-        poNumber: document.getElementById('poNumber').value,
-        customer: document.getElementById('poCustomer').value,
-        date: document.getElementById('poDate').value,
-        lines: JSON.parse(JSON.stringify(window.poLines || [])),
-        total: calcPOTotal(),
-        createdAt: Date.now()
-      };
+      const p = { poNumber: document.getElementById('poNumber').value, customer: document.getElementById('poCustomer').value, date: document.getElementById('poDate').value, lines: JSON.parse(JSON.stringify(window.poLines || [])), total: calcPOTotal(), createdAt: Date.now() };
       openPrintableInvoice(p);
     }
 
-    /* ---------- Print stock list ---------- */
-    function printStockList(){
-      const printWindow = window.open('', '_blank');
-      const tableHTML = `<table style="width:100%;border-collapse:collapse;margin-top:14px"><thead><tr style="background:#0b6ff2;color:white"><th style="padding:8px;border:1px solid #ccc;text-align:left">Item</th><th style="padding:8px;border:1px solid #ccc;text-align:right">Quantity</th><th style="padding:8px;border:1px solid #ccc;text-align:left">Unit</th><th style="padding:8px;border:1px solid #ccc;text-align:right">Price</th></tr></thead><tbody>${(window.stockData||[]).map(s=>`<tr><td style="padding:8px;border:1px solid #ccc">${escapeHTML(s.name)}</td><td style="padding:8px;border:1px solid #ccc;text-align:right">${s.qty}</td><td style="padding:8px;border:1px solid #ccc">${escapeHTML(s.unit||'')}</td><td style="padding:8px;border:1px solid #ccc;text-align:right">₱${(parseFloat(s.price)||0).toFixed(2)}</td></tr>`).join('')}</tbody></table>`;
-      printWindow.document.write(`<html><head><title>Stock List</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#222;}h2{margin:0;text-align:center;color:#0b6ff2;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#0b6ff2;color:#fff;}tr:nth-child(even){background:#f8faff;}</style></head><body><h2>MSITE Stock List</h2><div style="text-align:center;font-size:0.9rem;color:#555;">Printed: ${new Date().toLocaleString()}</div>${tableHTML}</body></html>`);
-      printWindow.document.close();
-      setTimeout(()=> printWindow.print(),300);
-    }
+    /* ---------- Print stock ---------- */
+    function printStockList(){ const printWindow = window.open('', '_blank'); const tableHTML = `<table style="width:100%;border-collapse:collapse;margin-top:14px"><thead><tr style="background:#0b6ff2;color:white"><th style="padding:8px;border:1px solid #ccc;text-align:left">Item</th><th style="padding:8px;border:1px solid #ccc;text-align:right">Quantity</th><th style="padding:8px;border:1px solid #ccc;text-align:left">Unit</th><th style="padding:8px;border:1px solid #ccc;text-align:right">Price</th></tr></thead><tbody>${(window.stockData||[]).map(s=>`<tr><td style="padding:8px;border:1px solid #ccc">${escapeHTML(s.name)}</td><td style="padding:8px;border:1px solid #ccc;text-align:right">${s.qty}</td><td style="padding:8px;border:1px solid #ccc">${escapeHTML(s.unit||'')}</td><td style="padding:8px;border:1px solid #ccc;text-align:right">₱${(parseFloat(s.price)||0).toFixed(2)}</td></tr>`).join('')}</tbody></table>`; printWindow.document.write(`<html><head><title>Stock List</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#222;}h2{margin:0;text-align:center;color:#0b6ff2;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#0b6ff2;color:#fff;}tr:nth-child(even){background:#f8faff;}</style></head><body><h2>MSITE Stock List</h2><div style="text-align:center;font-size:0.9rem;color:#555;">Printed: ${new Date().toLocaleString()}</div>${tableHTML}</body></html>`); printWindow.document.close(); setTimeout(()=> printWindow.print(),300); }
 
     /* ---------- Summary ---------- */
-    function refreshSummary(){
-      document.getElementById('summary-count').textContent = (window.stockData||[]).filter(Boolean).length;
-      document.getElementById('summary-total').textContent = (window.stockData||[]).reduce((s,i)=> s + (parseFloat(i.qty)||0), 0);
-      posRef.once('value').then(snap => {
-        const val = snap.val(); document.getElementById('summary-pos').textContent = val ? Object.keys(val).length : 0;
-      }).catch(()=>{});
-    }
+    function refreshSummary(){ document.getElementById('summary-count').textContent = (window.stockData||[]).filter(Boolean).length; document.getElementById('summary-total').textContent = (window.stockData||[]).reduce((s,i)=> s + (parseFloat(i.qty)||0), 0); posRef.once('value').then(snap=>{ const val = snap.val(); document.getElementById('summary-pos').textContent = val ? Object.keys(val).length : 0; }).catch(()=>{}); }
 
-    /* ---------- Utilities ---------- */
-    function escapeHTML(s){ if(s === undefined || s === null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    /* ---------- Charts (safe) ---------- */
+    function renderDashboardCharts(){ posRef.once('value').then(snap=>{ const data = snap.val(); if(!data){ if(schoolChart){ try{schoolChart.destroy()}catch(e){}; schoolChart=null;} if(itemChart){ try{itemChart.destroy()}catch(e){}; itemChart=null;} return; } const poArr = Object.values(data||{}); const schoolTotals={}; poArr.forEach(po=>{ if(!po.customer) return; schoolTotals[po.customer] = (schoolTotals[po.customer] || 0) + (po.total || 0); }); const top5Schools = Object.entries(schoolTotals).sort((a,b)=>b[1]-a[1]).slice(0,5); const itemTotals={}; poArr.forEach(po=>{ (po.lines||[]).forEach(line=>{ if(!line.itemName) return; itemTotals[line.itemName] = (itemTotals[line.itemName] || 0) + (parseFloat(line.qty) || 0); }); }); const top5Items = Object.entries(itemTotals).sort((a,b)=>b[1]-a[1]).slice(0,5); const schoolsLabels = top5Schools.map(x=>x[0]); const schoolsData = top5Schools.map(x=>x[1]); const ctxS = document.getElementById('topSchoolsChart').getContext('2d'); if(schoolChart){ try{ schoolChart.destroy(); }catch(e){} } schoolChart = new Chart(ctxS,{ type:'bar', data:{ labels: schoolsLabels, datasets:[{ label:'Total (₱)', data: schoolsData }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } }); const itemsLabels = top5Items.map(x=>x[0]); const itemsData = top5Items.map(x=>x[1]); const ctxI = document.getElementById('bestItemsChart').getContext('2d'); if(itemChart){ try{ itemChart.destroy(); }catch(e){} } itemChart = new Chart(ctxI,{ type:'bar', data:{ labels: itemsLabels, datasets:[{ label:'Qty Sold', data: itemsData }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } }); }).catch(err=>console.error('Chart update error',err)); }
+    function scheduleChartUpdate(){ if(chartUpdateTimer) clearTimeout(chartUpdateTimer); chartUpdateTimer = setTimeout(()=>{ renderDashboardCharts(); chartUpdateTimer = null; }, 500); }
 
-    /* ---------- Charts: Debounced update + safe destroy ---------- */
-    function renderDashboardCharts(){
-      posRef.once('value').then(snap => {
-        const data = snap.val();
-        if(!data){
-          // clear charts if no data
-          if(schoolChart){ schoolChart.destroy(); schoolChart = null; }
-          if(itemChart){ itemChart.destroy(); itemChart = null; }
-          return;
-        }
-
-        const poArr = Object.values(data || {});
-        // aggregate school totals
-        const schoolTotals = {};
-        poArr.forEach(po => { if(!po.customer) return; schoolTotals[po.customer] = (schoolTotals[po.customer] || 0) + (po.total || 0); });
-        const top5Schools = Object.entries(schoolTotals).sort((a,b)=>b[1]-a[1]).slice(0,5);
-
-        // aggregate item totals
-        const itemTotals = {};
-        poArr.forEach(po => { (po.lines||[]).forEach(line => { if(!line.itemName) return; itemTotals[line.itemName] = (itemTotals[line.itemName] || 0) + (parseFloat(line.qty) || 0); }); });
-        const top5Items = Object.entries(itemTotals).sort((a,b)=>b[1]-a[1]).slice(0,5);
-
-        // schools chart
-        const schoolsLabels = top5Schools.map(x=>x[0]);
-        const schoolsData = top5Schools.map(x=>x[1]);
-        const ctxS = document.getElementById('topSchoolsChart').getContext('2d');
-        if(schoolChart) { try { schoolChart.destroy(); } catch(e){} }
-        schoolChart = new Chart(ctxS, {
-          type:'bar',
-          data:{ labels: schoolsLabels, datasets:[{ label:'Total (₱)', data: schoolsData }] },
-          options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
-        });
-
-        // items chart
-        const itemsLabels = top5Items.map(x=>x[0]);
-        const itemsData = top5Items.map(x=>x[1]);
-        const ctxI = document.getElementById('bestItemsChart').getContext('2d');
-        if(itemChart) { try { itemChart.destroy(); } catch(e){} }
-        itemChart = new Chart(ctxI, {
-          type:'bar',
-          data:{ labels: itemsLabels, datasets:[{ label:'Qty Sold', data: itemsData }] },
-          options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} }
-        });
-
-      }).catch(err => console.error('Chart update error', err));
-    }
-
-    // Debounced listener: only rerender charts at most once per 500ms of inactivity
-    function scheduleChartUpdate(){
-      if(chartUpdateTimer) clearTimeout(chartUpdateTimer);
-      chartUpdateTimer = setTimeout(() => { renderDashboardCharts(); chartUpdateTimer = null; }, 500);
-    }
-
-    /* ---------- Init: only register the listener once ---------- */
-    document.addEventListener('DOMContentLoaded', () => {
-      // initial UI
+    /* ---------- Init ---------- */
+    document.addEventListener('DOMContentLoaded', ()=>{
       openMenu('dashboard');
       renderStock();
       initPOForm();
       renderPOList();
+      renderPOHistory();
       refreshSummary();
 
-      // register single debounced listener for posRef
-      posRef.on('value', () => {
-        // update PO list & dashboard summary immediately, and schedule charts
+      // register one posRef listener to update lists & schedule charts
+      posRef.on('value', ()=>{
         renderPOList();
+        renderPOHistory();
         refreshSummary();
         scheduleChartUpdate();
       });
 
-      // initial chart render
       renderDashboardCharts();
 
-      // mobile toggle
-      document.getElementById('hamburger').addEventListener('click', () => document.getElementById('sidebar').classList.toggle('show'));
+      document.getElementById('hamburger').addEventListener('click', ()=> document.getElementById('sidebar').classList.toggle('show'));
     });
 
-    /* ---------- keep service worker registration if present ---------- */
-    if('serviceWorker' in navigator){
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js').then(reg => console.log('SW registered', reg)).catch(e => console.warn('SW failed', e));
-      });
-    }
+    if('serviceWorker' in navigator){ window.addEventListener('load', ()=> { navigator.serviceWorker.register('sw.js').then(reg=>console.log('SW registered',reg)).catch(e=>console.warn('SW failed', e)); }); }
 
-    /* ---------- small helpers: reset PO form ---------- */
-    function resetPOForm(){
-      if(!confirm('Reset PO form?')) return;
-      initPOForm();
-    }
+    function resetPOForm(){ if(!confirm('Reset PO form?')) return; initPOForm(); }
   </script>
 </body>
 </html>
