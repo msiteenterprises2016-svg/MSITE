@@ -437,22 +437,45 @@ option {
 
   <!-- MODALS -->
   <div id="modalAddStock" class="modal" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(8,12,20,0.45);z-index:999">
-    <div style="background:white;border-radius:12px;padding:16px;min-width:360px;border:1px solid var(--border);box-shadow:var(--shadow-1)">
-      <h3 style="margin:0 0 8px 0;color:var(--accent)">Add / Edit Stock</h3>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-        <div style="flex:1;min-width:160px">
-          <label class="small muted">Item name</label>
-          <input id="modal-stock-name" placeholder="Item name" />
-        </div>
-        <div style="width:120px">
-          <label class="small muted">Quantity</label>
-          <input id="modal-stock-qty" type="number" min="0" />
-        </div>
-        <div style="width:120px">
-          <label class="small muted">Unit</label>
-          <input id="modal-stock-unit" />
-        </div>
+       <div style="
+    background: rgba(30,41,59,0.92);
+    color: var(--text-main);
+    border-radius: 14px;
+    padding: 20px;
+    min-width: 380px;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: var(--shadow-1);
+    backdrop-filter: blur(18px);
+  ">
+    <h3 style="margin:0 0 8px 0;color:var(--accent-2)">Add / Edit Stock</h3>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px">
+      <div style="flex:1;min-width:160px">
+        <label class="small muted">Item name</label>
+        <input id="modal-stock-name" placeholder="Item name" />
       </div>
+      <div style="width:120px">
+        <label class="small muted">Quantity</label>
+        <input id="modal-stock-qty" type="number" min="0" />
+      </div>
+      <div style="width:120px">
+        <label class="small muted">Unit</label>
+        <input id="modal-stock-unit" />
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px">
+      <div style="width:150px">
+        <label class="small muted">Price</label>
+        <input id="modal-stock-price" type="number" step="0.01" />
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button class="btn btn-primary" onclick="saveStockFromModal()">Save</button>
+        <button class="btn btn-ghost" onclick="closeAddStockModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
 
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
         <div style="width:150px">
