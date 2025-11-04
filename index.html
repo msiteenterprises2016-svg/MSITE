@@ -278,6 +278,66 @@ option {
   color: #E2E8F0;
 }
 
+    /* ---------- THEME FIXES (Dark Mode Consistency) ---------- */
+
+/* 🔹 Fix: Purchase Order Modal */
+.modal, .modal-content, #poViewModal {
+  background: var(--dark-2) !important;
+  color: #f5f6fa !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  border-radius: 16px;
+  border: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Table inside PO modal */
+#poViewModal table {
+  background: rgba(255,255,255,0.03);
+  color: #f5f6fa;
+}
+
+#poViewModal th {
+  background: rgba(255,255,255,0.06);
+  color: var(--accent-2);
+}
+
+/* 🔹 Fix: Purchase Order History table */
+#poHistoryContainer table {
+  background: rgba(255,255,255,0.02);
+  color: #eaeaea;
+}
+
+#poHistoryContainer thead tr {
+  background: rgba(255,255,255,0.06);
+  color: var(--accent-2);
+}
+
+#poHistoryContainer td, 
+#poHistoryContainer th {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+/* 🔹 Fix: Stock History Table */
+#stockHistoryContainer table {
+  background: rgba(255,255,255,0.03);
+  color: #eaeaea;
+}
+
+#stockHistoryContainer thead tr {
+  background: rgba(255,255,255,0.06);
+  color: var(--accent-2);
+}
+
+#stockHistoryContainer th, 
+#stockHistoryContainer td {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 10px;
+}
+
+/* Optional: Button theme consistency */
+button, .btn, .btn-ghost {
+  color: #fff;
+}
+
 
 
 
