@@ -266,6 +266,7 @@ option {
             <li><button id="nav-stock" onclick="openMenu('stock')">📦 Stock</button></li>
             <li><button id="nav-po" onclick="openMenu('po')">🧾 Purchase Orders</button></li>
             <li><button id="nav-pohistory" onclick="openMenu('pohistory')">📜 PO History</button></li>
+          <li><button id="nav-stockhistory" onclick="openMenu('stockhistory')">📊 Stock History</button></li>
           </ul>
         </nav>
         <hr style="border:none;border-top:1px solid var(--border);margin:12px 0" />
@@ -275,7 +276,7 @@ option {
       <!-- MAIN -->
       <main class="main">
         <div class="topbar">
-<div id="hamburger" class="hamburger" onclick="toggleSidebar()">☰</div>
+        <div class="hamburger" onclick="toggleSidebar()">☰</div>
           <div class="page-title" id="pageTitle">Dashboard</div>
           <div class="row">
             <button class="btn btn-ghost" onclick="renderStock()">⟳ Refresh</button>
@@ -428,6 +429,25 @@ option {
             <div id="poHistoryContainer">Loading PO history...</div>
           </div>
         </section>
+      
+        <!-- STOCK HISTORY -->
+        <section id="stockhistory" class="card page" style="display:none">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+            <div>
+              <h2 style="margin:0;color:var(--accent-2)">📦 Stock Movement History</h2>
+              <div class="small muted">Track all stock in/out/update/delete activities.</div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center">
+              <input id="stockHistorySearch" placeholder="Search item or PO#" oninput="renderStockHistory()" style="min-width:220px" />
+              <button class="btn btn-ghost" onclick="renderStockHistory()">Refresh</button>
+            </div>
+          </div>
+
+          <div style="margin-top:12px;overflow:auto">
+            <div id="stockHistoryContainer">Loading stock history...</div>
+          </div>
+        </section>
+
       </main>
     </div>
   </div>
@@ -526,6 +546,7 @@ option {
     const db = firebase.database();
     const stocksRef = db.ref("stocks");
     const posRef = db.ref("purchaseOrders");
+    const historyRef = db.ref("stockHistory"); // New Stock History ref
 
     /* ---------- state ---------- */
     window.stockData = JSON.parse(localStorage.getItem("stockData") || "[]");
@@ -801,7 +822,8 @@ stocksRef.on('value', snap => {
         container.innerHTML = html;
 
         const recent = arr.slice(0,6);
-        document.getElementById('recentPOsContainer').innerHTML = recent.length ? `<ul style="margin:6px 0">${recent.map(r=>`<li style="margin:6px 0"><strong>${r.poNumber}</strong> — ${escapeHTML(r.customer)} (${r.date}) ₱${(r.total||0).toFixed(2)}</li>`).join('')}</ul>` : '<div class="muted">No recent POs</div>';
+        document.getElementById('recentPOsContainer').innerHTML = recent.length ? `<ul style="margin:6px 0">${recent.map(r=>`<li style="margin:6px 0"><strong>${r.poNumber}</strong> — ${escapeHTML(r.customer)} (${r.date}) ₱${(r.total||0).toFixed(2)}</li>`).join('')}<li><button id="nav-stockhistory" onclick="openMenu('stockhistory')">📊 Stock History</button></li>
+          </ul>` : '<div class="muted">No recent POs</div>';
         refreshSummary();
       }).catch(err => { console.error(err); container.innerHTML = '<div class="muted">Error loading POs</div>'; });
     }
