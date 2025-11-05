@@ -397,6 +397,64 @@ option {
   background: rgba(255,255,255,0.08);
 }
 
+    /* ---------- FIX: Preserve Dark Background ---------- */
+
+/* Make sure the body always uses your dark variable theme */
+body {
+  background: var(--dark-1, #0f172a) !important;  /* fallback dark navy */
+  color: var(--text-main, #f1f5f9) !important;
+}
+
+/* Sidebar and header stay dark glass */
+.sidebar, .topbar {
+  background: var(--glass, rgba(15, 23, 42, 0.8)) !important;
+  color: var(--text-main, #f8fafc) !important;
+}
+
+/* Prevent any white overrides from styles or inline backgrounds */
+div[style*="background:#fff"],
+div[style*="background: #fff"],
+div[style*="background-color:#fff"],
+div[style*="background-color: #fff"],
+div[style*="background:#FFF"],
+div[style*="background-color:#FFF"] {
+  background: rgba(15, 23, 42, 0.85) !important;
+  color: var(--text-main, #f8fafc) !important;
+}
+
+/* Keep all cards dark glass */
+.card, .chart-card, .sales-card, .insight-card {
+  background: rgba(15, 23, 42, 0.85) !important;
+  color: var(--text-main, #f8fafc) !important;
+  border: 1px solid rgba(255,255,255,0.06);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  border-radius: 12px;
+}
+
+/* Tables stay visible */
+#poHistoryContainer thead tr,
+#stockHistoryContainer thead tr {
+  background: rgba(15, 23, 42, 0.9) !important;
+  color: var(--accent-2, #8b5cf6) !important;
+}
+
+#poHistoryContainer tbody tr,
+#stockHistoryContainer tbody tr {
+  background: rgba(255,255,255,0.03) !important;
+  color: var(--text-main, #f8fafc) !important;
+}
+
+table tr:hover {
+  background: rgba(255,255,255,0.08) !important;
+}
+
+/* Keep modals readable */
+.modal, .modal-content {
+  background: rgba(15, 23, 42, 0.9) !important;
+  color: var(--text-main, #f8fafc) !important;
+}
+
+
 
     
 
