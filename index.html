@@ -7,8 +7,10 @@
   <meta name="theme-color" content="#0b6ff2" />
   <link rel="icon" href="msite.png?v=2.0.0" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js">
-    function renderStockHistory() {
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+/* ---------- Fixed Stock History Renderer ---------- */
+function renderStockHistory() {
   const container = document.getElementById('stockHistoryContainer');
   if (!container) return;
   const q = (document.getElementById('stockHistorySearch')?.value || '').toLowerCase().trim();
@@ -83,7 +85,7 @@
   });
 }
 
-// New function for deleting stock history entries
+/* ---------- New Delete Function ---------- */
 function deleteHistoryEntry(id) {
   if (!confirm('Delete this history entry?')) return;
   historyRef.child(id).remove()
@@ -96,9 +98,8 @@ function deleteHistoryEntry(id) {
       showToast('Error deleting entry');
     });
 }
+</script>
 
-    
-  </script>
 
   <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap');
