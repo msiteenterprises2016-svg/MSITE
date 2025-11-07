@@ -855,71 +855,7 @@ table tr:hover {
     </div>
   </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js">
-    /* ---------- Stock History Renderer (injected) ---------- */
-    function renderStockHistory() {
-      const container = document.getElementById('stockHistoryContainer');
-      if(!container) return;
-      const q = (document.getElementById('stockHistorySearch')?.value || '').toLowerCase().trim();
-      container.innerHTML = 'Loading stock history...';
-
-      historyRef.limitToLast(2000).once('value').then(snap=>{
-        const val = snap.val();
-        if(!val){ container.innerHTML = '<div class="muted">No history yet.</div>'; return; }
-        const arr = Object.keys(val).map(k=>({id:k, ...val[k]})).sort((a,b)=> new Date(b.date) - new Date(a.date));
-        const filtered = q ? arr.filter(h => (h.item||'').toLowerCase().includes(q) || (h.poNumber||'').toLowerCase().includes(q) || (h.note||'').toLowerCase().includes(q)) : arr;
-
-        let html = `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6fbff;color:var(--accent-2)"><th style="padding:10px">Date</th><th>Type</th><th>Item</th><th>Qty</th><th>PO# / Note</th><th>Customer</th></tr></thead><tbody>`;
-        html += filtered.map(h => {
-          const color = h.type === 'IN' ? '#22c55e' : (h.type === 'OUT' ? '#ef4444' : '#94a3b8');
-          return `<tr>
-            <td style="padding:10px">${h.date ? new Date(h.date).toLocaleString() : ''}</td>
-            <td style="padding:10px;color:${color};font-weight:700">${escapeHTML(h.type || '')}</td>
-            <td style="padding:10px">${escapeHTML(h.item || '')}</td>
-            <td style="padding:10px">${escapeHTML(String(h.qty || ''))}</td>
-            <td style="padding:10px">${escapeHTML(h.poNumber || h.note || '')}</td>
-            <td style="padding:10px">${escapeHTML(h.customer || '')}</td>
-          </tr>`;
-        }).join('');
-        html += '</tbody></table>';
-        container.innerHTML = html;
-      }).catch(err => { console.error(err); container.innerHTML = '<div class="muted">Error loading history</div>'; });
-    }
-    
-  </script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js">
-    /* ---------- Stock History Renderer (injected) ---------- */
-    function renderStockHistory() {
-      const container = document.getElementById('stockHistoryContainer');
-      if(!container) return;
-      const q = (document.getElementById('stockHistorySearch')?.value || '').toLowerCase().trim();
-      container.innerHTML = 'Loading stock history...';
-
-      historyRef.limitToLast(2000).once('value').then(snap=>{
-        const val = snap.val();
-        if(!val){ container.innerHTML = '<div class="muted">No history yet.</div>'; return; }
-        const arr = Object.keys(val).map(k=>({id:k, ...val[k]})).sort((a,b)=> new Date(b.date) - new Date(a.date));
-        const filtered = q ? arr.filter(h => (h.item||'').toLowerCase().includes(q) || (h.poNumber||'').toLowerCase().includes(q) || (h.note||'').toLowerCase().includes(q)) : arr;
-
-        let html = `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6fbff;color:var(--accent-2)"><th style="padding:10px">Date</th><th>Type</th><th>Item</th><th>Qty</th><th>PO# / Note</th><th>Customer</th></tr></thead><tbody>`;
-        html += filtered.map(h => {
-          const color = h.type === 'IN' ? '#22c55e' : (h.type === 'OUT' ? '#ef4444' : '#94a3b8');
-          return `<tr>
-            <td style="padding:10px">${h.date ? new Date(h.date).toLocaleString() : ''}</td>
-            <td style="padding:10px;color:${color};font-weight:700">${escapeHTML(h.type || '')}</td>
-            <td style="padding:10px">${escapeHTML(h.item || '')}</td>
-            <td style="padding:10px">${escapeHTML(String(h.qty || ''))}</td>
-            <td style="padding:10px">${escapeHTML(h.poNumber || h.note || '')}</td>
-            <td style="padding:10px">${escapeHTML(h.customer || '')}</td>
-          </tr>`;
-        }).join('');
-        html += '</tbody></table>';
-        container.innerHTML = html;
-      }).catch(err => { console.error(err); container.innerHTML = '<div class="muted">Error loading history</div>'; });
-    }
-    
-  </script>
+ 
 
   <script>
     /* ---------- Firebase config ---------- */
