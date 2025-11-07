@@ -7,38 +7,101 @@
   <meta name="theme-color" content="#0b6ff2" />
   <link rel="icon" href="msite.png?v=2.0.0" type="image/png" />
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js">
-    /* ---------- Stock History Renderer (injected) ---------- */
-    function renderStockHistory() {
-      const container = document.getElementById('stockHistoryContainer');
-      if(!container) return;
-      const q = (document.getElementById('stockHistorySearch')?.value || '').toLowerCase().trim();
-      container.innerHTML = 'Loading stock history...';
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<script>
+/* ---------- Fixed Stock History Renderer ---------- */
+function renderStockHistory() {
+  const container = document.getElementById('stockHistoryContainer');
+  if (!container) return;
+  const q = (document.getElementById('stockHistorySearch')?.value || '').toLowerCase().trim();
+  container.innerHTML = 'Loading stock history...';
 
-      historyRef.limitToLast(2000).once('value').then(snap=>{
-        const val = snap.val();
-        if(!val){ container.innerHTML = '<div class="muted">No history yet.</div>'; return; }
-        const arr = Object.keys(val).map(k=>({id:k, ...val[k]})).sort((a,b)=> new Date(b.date) - new Date(a.date));
-        const filtered = q ? arr.filter(h => (h.item||'').toLowerCase().includes(q) || (h.poNumber||'').toLowerCase().includes(q) || (h.note||'').toLowerCase().includes(q)) : arr;
-
-        let html = `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6fbff;color:var(--accent-2)"><th style="padding:10px">Date</th><th>Type</th><th>Item</th><th>Qty</th><th>PO# / Note</th><th>Customer</th></tr></thead><tbody>`;
-        html += filtered.map(h => {
-          const color = h.type === 'IN' ? '#22c55e' : (h.type === 'OUT' ? '#ef4444' : '#94a3b8');
-          return `<tr>
-            <td style="padding:10px">${h.date ? new Date(h.date).toLocaleString() : ''}</td>
-            <td style="padding:10px;color:${color};font-weight:700">${escapeHTML(h.type || '')}</td>
-            <td style="padding:10px">${escapeHTML(h.item || '')}</td>
-            <td style="padding:10px">${escapeHTML(String(h.qty || ''))}</td>
-            <td style="padding:10px">${escapeHTML(h.poNumber || h.note || '')}</td>
-            <td style="padding:10px">${escapeHTML(h.customer || '')}</td>
-          </tr>`;
-        }).join('');
-        html += '</tbody></table>';
-        container.innerHTML = html;
-      }).catch(err => { console.error(err); container.innerHTML = '<div class="muted">Error loading history</div>'; });
+  historyRef.limitToLast(2000).once('value').then(snap => {
+    const val = snap.val();
+    if (!val) {
+      container.innerHTML = '<div class="muted">No history yet.</div>';
+      return;
     }
-    
-  </script>
+
+    const arr = Object.keys(val)
+      .map(k => ({ id: k, ...val[k] }))
+      .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    const filtered = q
+      ? arr.filter(h =>
+          (h.item || '').toLowerCase().includes(q) ||
+          (h.poNumber || '').toLowerCase().includes(q) ||
+          (h.note || '').toLowerCase().includes(q)
+        )
+      : arr;
+
+    let html = `
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr style="background:#0f172a;color:var(--accent-2)">
+            <th style="padding:10px">Date</th>
+            <th>Type</th>
+            <th>Item</th>
+            <th>Qty</th>
+            <th>PO# / Note</th>
+            <th>Customer</th>
+            <th style="width:100px;text-align:center">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+    `;
+
+    html += filtered.map(h => {
+      const color =
+        h.type === 'IN'
+          ? '#22c55e'
+          : h.type === 'OUT'
+          ? '#ef4444'
+          : h.type === 'DELETE'
+          ? '#facc15'
+          : '#94a3b8';
+
+      return `
+        <tr>
+          <td style="padding:10px">${h.date ? new Date(h.date).toLocaleString() : ''}</td>
+          <td style="padding:10px;color:${color};font-weight:700">${escapeHTML(h.type || '')}</td>
+          <td style="padding:10px">${escapeHTML(h.item || '')}</td>
+          <td style="padding:10px">${escapeHTML(String(h.qty || ''))}</td>
+          <td style="padding:10px">${escapeHTML(h.poNumber || h.note || '')}</td>
+          <td style="padding:10px">${escapeHTML(h.customer || '')}</td>
+          <td style="text-align:center">
+            <button class="btn btn-ghost" onclick="deleteHistoryEntry('${h.id}')">🗑 Delete</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  })
+  .catch(err => {
+    console.error(err);
+    container.innerHTML = '<div class="muted">Error loading history</div>';
+  });
+}
+
+/* ---------- New Delete Function ---------- */
+function deleteHistoryEntry(id) {
+  if (!confirm('Delete this history entry?')) return;
+  historyRef.child(id).remove()
+    .then(() => {
+      showToast('History entry deleted');
+      renderStockHistory();
+    })
+    .catch(err => {
+      console.error(err);
+      showToast('Error deleting entry');
+    });
+}
+</script>
+
 
   <style>
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=DM+Sans:wght@400;500;700&display=swap');
@@ -454,7 +517,7 @@ table tr:hover {
   color: var(--text-main, #f8fafc) !important;
 }
 
-    /* ---------- FIX: Preserve Dark Background ---------- */
+    
 
 /* Make sure the body always uses your dark variable theme */
 body {
@@ -517,6 +580,13 @@ table tr:hover {
 
     
 
+
+/* ---------- PRINT DARK MODE CONSISTENCY ---------- */
+@media print {
+  body { background: #0f172a !important; color: #f8fafc !important; }
+  table, th, td { background: #1e293b !important; color: #f8fafc !important; border-color: #334155 !important; }
+  .card, .modal { background: #1e293b !important; color: #f8fafc !important; }
+}
 </style>
 </head>
 
@@ -543,7 +613,7 @@ table tr:hover {
       <!-- MAIN -->
       <main class="main">
         <div class="topbar">
-        <div class="hamburger" onclick="toggleSidebar()">☰</div>
+        <div id="hamburger" class="hamburger" onclick="toggleSidebar()">☰</div>
           <div class="page-title" id="pageTitle">Dashboard</div>
           <div class="row">
             <button class="btn btn-ghost" onclick="renderStock()">⟳ Refresh</button>
@@ -780,7 +850,7 @@ table tr:hover {
       
   <!-- PO Viewer modal -->
   <div id="poViewerModal" class="modal" style="display:none;position:fixed;inset:0;align-items:center;justify-content:center;background:rgba(8,12,20,0.45);z-index:999">
-    <div style="background:white;border-radius:12px;padding:16px;min-width:520px;border:1px solid var(--border);box-shadow:var(--shadow-1)">
+    <div style="background:rgba(30,41,59,0.92);border-radius:12px;padding:16px;min-width:520px;border:1px solid var(--border);box-shadow:var(--shadow-1)">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <h3 style="margin:0;color:var(--accent)">Purchase Order</h3>
         <div><button class="btn btn-ghost" onclick="closePOViewer()">Close</button></div>
@@ -794,71 +864,7 @@ table tr:hover {
     </div>
   </div>
 
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js">
-    /* ---------- Stock History Renderer (injected) ---------- */
-    function renderStockHistory() {
-      const container = document.getElementById('stockHistoryContainer');
-      if(!container) return;
-      const q = (document.getElementById('stockHistorySearch')?.value || '').toLowerCase().trim();
-      container.innerHTML = 'Loading stock history...';
-
-      historyRef.limitToLast(2000).once('value').then(snap=>{
-        const val = snap.val();
-        if(!val){ container.innerHTML = '<div class="muted">No history yet.</div>'; return; }
-        const arr = Object.keys(val).map(k=>({id:k, ...val[k]})).sort((a,b)=> new Date(b.date) - new Date(a.date));
-        const filtered = q ? arr.filter(h => (h.item||'').toLowerCase().includes(q) || (h.poNumber||'').toLowerCase().includes(q) || (h.note||'').toLowerCase().includes(q)) : arr;
-
-        let html = `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6fbff;color:var(--accent-2)"><th style="padding:10px">Date</th><th>Type</th><th>Item</th><th>Qty</th><th>PO# / Note</th><th>Customer</th></tr></thead><tbody>`;
-        html += filtered.map(h => {
-          const color = h.type === 'IN' ? '#22c55e' : (h.type === 'OUT' ? '#ef4444' : '#94a3b8');
-          return `<tr>
-            <td style="padding:10px">${h.date ? new Date(h.date).toLocaleString() : ''}</td>
-            <td style="padding:10px;color:${color};font-weight:700">${escapeHTML(h.type || '')}</td>
-            <td style="padding:10px">${escapeHTML(h.item || '')}</td>
-            <td style="padding:10px">${escapeHTML(String(h.qty || ''))}</td>
-            <td style="padding:10px">${escapeHTML(h.poNumber || h.note || '')}</td>
-            <td style="padding:10px">${escapeHTML(h.customer || '')}</td>
-          </tr>`;
-        }).join('');
-        html += '</tbody></table>';
-        container.innerHTML = html;
-      }).catch(err => { console.error(err); container.innerHTML = '<div class="muted">Error loading history</div>'; });
-    }
-    
-  </script>
-  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js">
-    /* ---------- Stock History Renderer (injected) ---------- */
-    function renderStockHistory() {
-      const container = document.getElementById('stockHistoryContainer');
-      if(!container) return;
-      const q = (document.getElementById('stockHistorySearch')?.value || '').toLowerCase().trim();
-      container.innerHTML = 'Loading stock history...';
-
-      historyRef.limitToLast(2000).once('value').then(snap=>{
-        const val = snap.val();
-        if(!val){ container.innerHTML = '<div class="muted">No history yet.</div>'; return; }
-        const arr = Object.keys(val).map(k=>({id:k, ...val[k]})).sort((a,b)=> new Date(b.date) - new Date(a.date));
-        const filtered = q ? arr.filter(h => (h.item||'').toLowerCase().includes(q) || (h.poNumber||'').toLowerCase().includes(q) || (h.note||'').toLowerCase().includes(q)) : arr;
-
-        let html = `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6fbff;color:var(--accent-2)"><th style="padding:10px">Date</th><th>Type</th><th>Item</th><th>Qty</th><th>PO# / Note</th><th>Customer</th></tr></thead><tbody>`;
-        html += filtered.map(h => {
-          const color = h.type === 'IN' ? '#22c55e' : (h.type === 'OUT' ? '#ef4444' : '#94a3b8');
-          return `<tr>
-            <td style="padding:10px">${h.date ? new Date(h.date).toLocaleString() : ''}</td>
-            <td style="padding:10px;color:${color};font-weight:700">${escapeHTML(h.type || '')}</td>
-            <td style="padding:10px">${escapeHTML(h.item || '')}</td>
-            <td style="padding:10px">${escapeHTML(String(h.qty || ''))}</td>
-            <td style="padding:10px">${escapeHTML(h.poNumber || h.note || '')}</td>
-            <td style="padding:10px">${escapeHTML(h.customer || '')}</td>
-          </tr>`;
-        }).join('');
-        html += '</tbody></table>';
-        container.innerHTML = html;
-      }).catch(err => { console.error(err); container.innerHTML = '<div class="muted">Error loading history</div>'; });
-    }
-    
-  </script>
+ 
 
   <script>
     /* ---------- Firebase config ---------- */
@@ -1363,34 +1369,7 @@ document.querySelectorAll('.nav button').forEach(btn => {
 
   
     /* ---------- Stock History Renderer (injected) ---------- */
-    function renderStockHistory() {
-      const container = document.getElementById('stockHistoryContainer');
-      if(!container) return;
-      const q = (document.getElementById('stockHistorySearch')?.value || '').toLowerCase().trim();
-      container.innerHTML = 'Loading stock history...';
-
-      historyRef.limitToLast(2000).once('value').then(snap=>{
-        const val = snap.val();
-        if(!val){ container.innerHTML = '<div class="muted">No history yet.</div>'; return; }
-        const arr = Object.keys(val).map(k=>({id:k, ...val[k]})).sort((a,b)=> new Date(b.date) - new Date(a.date));
-        const filtered = q ? arr.filter(h => (h.item||'').toLowerCase().includes(q) || (h.poNumber||'').toLowerCase().includes(q) || (h.note||'').toLowerCase().includes(q)) : arr;
-
-        let html = `<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f6fbff;color:var(--accent-2)"><th style="padding:10px">Date</th><th>Type</th><th>Item</th><th>Qty</th><th>PO# / Note</th><th>Customer</th></tr></thead><tbody>`;
-        html += filtered.map(h => {
-          const color = h.type === 'IN' ? '#22c55e' : (h.type === 'OUT' ? '#ef4444' : '#94a3b8');
-          return `<tr>
-            <td style="padding:10px">${h.date ? new Date(h.date).toLocaleString() : ''}</td>
-            <td style="padding:10px;color:${color};font-weight:700">${escapeHTML(h.type || '')}</td>
-            <td style="padding:10px">${escapeHTML(h.item || '')}</td>
-            <td style="padding:10px">${escapeHTML(String(h.qty || ''))}</td>
-            <td style="padding:10px">${escapeHTML(h.poNumber || h.note || '')}</td>
-            <td style="padding:10px">${escapeHTML(h.customer || '')}</td>
-          </tr>`;
-        }).join('');
-        html += '</tbody></table>';
-        container.innerHTML = html;
-      }).catch(err => { console.error(err); container.innerHTML = '<div class="muted">Error loading history</div>'; });
-    }
+    
     
   </script>
 </body>
