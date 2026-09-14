@@ -686,6 +686,7 @@ table tr:hover {
     </div>
 
   </div>
+  <div id="dashboard-summary-tables"></div>
 
 
   <!-- SALES SUMMARY -->
@@ -1065,32 +1066,8 @@ table tr:hover {
     window.poLines = [];
     let editingStockIndex = null;
     let lastViewedPO = null;
-    let schoolChart = null, itemChart = null, chartUpdateTimer = null;
+let schoolChart = null, itemChart = null;
 
- // ---------- CHART DARK MODE SYNC ----------
-if (window.schoolChart) {
-  const ctx = schoolChart.ctx;
-  const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-  gradient.addColorStop(0, 'rgba(59,130,246,0.9)');   // Sapphire blue
-  gradient.addColorStop(1, 'rgba(139,92,246,0.25)');  // Violet fade
-
-  schoolChart.data.datasets.forEach(ds => {
-    ds.borderColor = 'rgba(59,130,246,1)';
-    ds.backgroundColor = gradient;
-    ds.pointBackgroundColor = '#06B6D4';   // Cyan points
-    ds.pointBorderColor = '#fff';
-  });
-
-  schoolChart.options.plugins = schoolChart.options.plugins || {};
-  schoolChart.options.plugins.legend = {
-    labels: { color: '#E2E8F0', font: { family: 'DM Sans', weight: '500' } }
-  };
-  schoolChart.options.scales = {
-    x: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-    y: { ticks: { color: '#94A3B8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
-  };
-  schoolChart.update();
-}
 
 
 
@@ -1112,7 +1089,13 @@ if (window.schoolChart) {
     function openMenu(menuId){
       document.querySelectorAll('.page').forEach(el=>el.style.display='none');
       document.getElementById(menuId).style.display='block';
-      document.getElementById('pageTitle').textContent = { dashboard:'Dashboard', stock:'Stock Management', po:'Purchase Orders', pohistory:'PO History' }[menuId] || 'MSITE';
+document.getElementById('pageTitle').textContent = {
+  dashboard:'Dashboard',
+  stock:'Stock Management',
+  po:'Purchase Orders',
+  pohistory:'PO History',
+  stockhistory:'Stock History'
+}[menuId] || 'MSITE';
       document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
       const btn = document.getElementById('nav-' + menuId); if(btn) btn.classList.add('active');
     }
@@ -1420,8 +1403,18 @@ renderAllItemsSold();
         container.innerHTML = html;
 
         const recent = arr.slice(0,6);
-        document.getElementById('recentPOsContainer').innerHTML = recent.length ? `<ul style="margin:6px 0">${recent.map(r=>`<li style="margin:6px 0"><strong>${r.poNumber}</strong> — ${escapeHTML(r.customer)} (${r.date}) ₱${(r.total||0).toFixed(2)}</li>`).join('')}<li><button id="nav-stockhistory" onclick="openMenu('stockhistory')">📊 Stock History</button></li>
-          </ul>` : '<div class="muted">No recent POs</div>';
+        document.getElementById('recentPOsContainer').innerHTML = recent.length ? `
+  <ul style="margin:6px 0">
+    ${recent.map(r=>`
+      <li style="margin:6px 0">
+        <strong>${escapeHTML(r.poNumber || '')}</strong>
+        — ${escapeHTML(r.customer || '')}
+        (${escapeHTML(r.date || '')})
+        ₱${(parseFloat(r.total) || 0).toFixed(2)}
+      </li>
+    `).join('')}
+  </ul>
+` : '<div class="muted">No recent POs</div>';
         refreshSummary();
       }).catch(err => { console.error(err); container.innerHTML = '<div class="muted">Error loading POs</div>'; });
     }
@@ -2272,27 +2265,7 @@ document.addEventListener('DOMContentLoaded',function(){
   initDashboardSearch();
 
 
-  const hamburger =
-    document.getElementById('hamburger');
-
-
-  if(hamburger){
-
-    hamburger.addEventListener(
-      'click',
-      function(){
-
-        document
-          .getElementById('sidebar')
-          .classList.toggle('show');
-
-      }
-    );
-
-  }
-
-});
-
+  
 
 /* ---------- Firebase PO Listener ----------
    Keeps Dashboard updated whenever PO data changes.
@@ -2309,8 +2282,7 @@ posRef.on('value',function(){
 
 });
 
-      document.getElementById('hamburger').addEventListener('click', ()=> document.getElementById('sidebar').classList.toggle('show'));
-    });
+      
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
