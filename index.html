@@ -621,42 +621,219 @@ table tr:hover {
           </div>
         </div>
 
-        <!-- DASHBOARD -->
-        <section id="dashboard" class="card card-lg page">
-          <div style="display:flex;gap:16px;flex-wrap:wrap;">
-            <div style="flex:1;min-width:200px;background:var(--card);padding:14px;border-radius:12px;border:1px solid var(--border)">
-              <div class="small muted">Total unique items</div>
-              <div id="summary-count" style="font-size:1.2rem;font-weight:800;color:var(--accent-2)">0</div>
-            </div>
-            <div style="flex:1;min-width:200px;background:var(--card);padding:14px;border-radius:12px;border:1px solid var(--border)">
-              <div class="small muted">Total stock (sum qty)</div>
-              <div id="summary-total" style="font-size:1.2rem;font-weight:800;color:var(--accent-2)">0</div>
-            </div>
-            <div style="flex:1;min-width:200px;background:var(--card);padding:14px;border-radius:12px;border:1px solid var(--border)">
-              <div class="small muted">Purchase orders filed</div>
-              <div id="summary-pos" style="font-size:1.2rem;font-weight:800;color:var(--accent-2)">0</div>
-            </div>
-          </div>
+       <!-- DASHBOARD -->
+<section id="dashboard" class="card card-lg page">
 
-          <hr style="margin:14px 0;border:none;border-top:1px solid var(--border)" />
-          <h3 style="margin:6px 0;color:var(--accent-2)">Recent Purchase Orders</h3>
-          <div id="recentPOsContainer" class="muted-2">Loading...</div>
+  <!-- DASHBOARD SUMMARY -->
+  <div style="
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(190px,1fr));
+    gap:14px;
+  ">
 
-          <hr style="margin:18px 0;border:none;border-top:1px solid var(--border)" />
-          <h3 style="color:var(--accent-2)">📊 Sales Insights</h3>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:18px;margin-top:12px">
-            <div class="card" style="padding:14px;">
-              <h4 style="margin:0 0 8px 0;color:var(--accent-2)">Top Schools (by total)</h4>
-              <div style="height:220px"><canvas id="topSchoolsChart"></canvas></div>
-            </div>
-            <div class="card" style="padding:14px;">
-              <h4 style="margin:0 0 8px 0;color:var(--accent-2)">Best-Selling Items</h4>
-              <div style="height:220px"><canvas id="bestItemsChart"></canvas></div>
-            </div>
-          </div>
+    <div class="card" style="padding:16px;">
+      <div class="small muted">Total Unique Items</div>
+      <div id="summary-count"
+           style="font-size:1.6rem;font-weight:800;color:var(--accent-2)">
+        0
+      </div>
+    </div>
 
-          <div id="dashboard-summary-tables" style="margin-top:16px"></div>
-        </section>
+    <div class="card" style="padding:16px;">
+      <div class="small muted">Total Stock</div>
+      <div id="summary-total"
+           style="font-size:1.6rem;font-weight:800;color:var(--accent-2)">
+        0
+      </div>
+    </div>
+
+    <div class="card" style="padding:16px;">
+      <div class="small muted">Purchase Orders</div>
+      <div id="summary-pos"
+           style="font-size:1.6rem;font-weight:800;color:var(--accent-2)">
+        0
+      </div>
+    </div>
+
+    <div class="card" style="padding:16px;">
+      <div class="small muted">Total Quantity Sold</div>
+      <div id="summary-sold"
+           style="font-size:1.6rem;font-weight:800;color:var(--accent-2)">
+        0
+      </div>
+    </div>
+
+    <div class="card" style="padding:16px;">
+      <div class="small muted">Total Sales</div>
+      <div id="summary-sales"
+           style="font-size:1.6rem;font-weight:800;color:var(--accent-2)">
+        ₱0.00
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- RECENT PURCHASE ORDERS -->
+  <div class="card" style="margin-top:18px;padding:16px;">
+
+    <h3 style="margin:0 0 10px;color:var(--accent-2)">
+      Recent Purchase Orders
+    </h3>
+
+    <div id="recentPOsContainer" class="muted">
+      Loading...
+    </div>
+
+  </div>
+
+
+  <!-- SALES SUMMARY -->
+  <div class="card" style="margin-top:18px;padding:16px;">
+
+    <h3 style="margin:0 0 14px;color:var(--accent-2)">
+      📊 Sales Summary
+    </h3>
+
+
+    <div style="
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+      gap:18px;
+    ">
+
+      <!-- TOP SCHOOLS -->
+      <div class="card" style="padding:14px;">
+
+        <h4 style="margin:0 0 10px;color:var(--accent-2)">
+          Top Schools / Customers
+        </h4>
+
+        <div id="topSchoolsSummary">
+          <div class="muted">Loading...</div>
+        </div>
+
+      </div>
+
+
+      <!-- BEST SELLING ITEMS -->
+      <div class="card" style="padding:14px;">
+
+        <h4 style="margin:0 0 10px;color:var(--accent-2)">
+          Best-Selling Items
+        </h4>
+
+        <div id="bestItemsSummary">
+          <div class="muted">Loading...</div>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <!-- ALL ITEMS SOLD -->
+  <div class="card" style="margin-top:18px;padding:16px;">
+
+    <div style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      flex-wrap:wrap;
+    ">
+
+      <div>
+
+        <h3 style="margin:0;color:var(--accent-2)">
+          📦 All Items Sold
+        </h3>
+
+        <div class="small muted">
+          Complete summary of all items sold through Purchase Orders
+        </div>
+
+      </div>
+
+
+      <input
+        id="soldItemsSearch"
+        type="text"
+        placeholder="Search sold items..."
+        style="min-width:220px;"
+      />
+
+    </div>
+
+
+    <div style="overflow:auto;margin-top:14px;">
+
+      <table style="
+        width:100%;
+        border-collapse:collapse;
+      ">
+
+        <thead>
+
+          <tr style="
+            background:rgba(59,130,246,.12);
+            color:var(--accent-2);
+          ">
+
+            <th style="padding:10px;text-align:left;">
+              #
+            </th>
+
+            <th style="padding:10px;text-align:left;">
+              Item
+            </th>
+
+            <th style="padding:10px;text-align:right;">
+              Qty Sold
+            </th>
+
+            <th style="padding:10px;text-align:right;">
+              Sales
+            </th>
+
+            <th style="padding:10px;text-align:right;">
+              Current Stock
+            </th>
+
+            <th style="padding:10px;text-align:left;">
+              Last Sold
+            </th>
+
+          </tr>
+
+        </thead>
+
+
+        <tbody id="allItemsSoldBody">
+
+          <tr>
+
+            <td
+              colspan="6"
+              class="muted"
+              style="padding:16px;text-align:center;"
+            >
+              Loading...
+            </td>
+
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+  </div>
+
+</section>
 
         <!-- STOCK -->
         <section id="stock" class="card page" style="display:none">
@@ -1319,26 +1496,42 @@ renderAllItemsSold();
     /* ---------- Print stock ---------- */
     function printStockList(){ const printWindow = window.open('', '_blank'); const tableHTML = `<table style="width:100%;border-collapse:collapse;margin-top:14px"><thead><tr style="background:#0b6ff2;color:white"><th style="padding:8px;border:1px solid #ccc;text-align:left">Item</th><th style="padding:8px;border:1px solid #ccc;text-align:right">Quantity</th><th style="padding:8px;border:1px solid #ccc;text-align:left">Unit</th><th style="padding:8px;border:1px solid #ccc;text-align:right">Price</th></tr></thead><tbody>${(window.stockData||[]).map(s=>`<tr><td style="padding:8px;border:1px solid #ccc">${escapeHTML(s.name)}</td><td style="padding:8px;border:1px solid #ccc;text-align:right">${s.qty}</td><td style="padding:8px;border:1px solid #ccc">${escapeHTML(s.unit||'')}</td><td style="padding:8px;border:1px solid #ccc;text-align:right">₱${(parseFloat(s.price)||0).toFixed(2)}</td></tr>`).join('')}</tbody></table>`; printWindow.document.write(`<html><head><title>Stock List</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#222;}h2{margin:0;text-align:center;color:#0b6ff2;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#0b6ff2;color:#fff;}tr:nth-child(even){background:#f8faff;}</style></head><body><h2>MSITE Stock List</h2><div style="text-align:center;font-size:0.9rem;color:#555;">Printed: ${new Date().toLocaleString()}</div>${tableHTML}</body></html>`); printWindow.document.close(); setTimeout(()=> printWindow.print(),300); }
 
-   /* ---------- Dashboard Summary ---------- */
+   /* =========================================================
+   DASHBOARD
+   ========================================================= */
+
+
+/* ---------- Get Purchase Orders ---------- */
 
 function getDashboardPOs(callback){
 
   posRef.once('value')
-    .then(snap => {
+    .then(function(snap){
 
       const data = snap.val() || {};
 
-      const orders = Object.keys(data).map(key => ({
-        id: key,
-        ...data[key]
-      }));
+      const orders = Object.keys(data)
+        .map(function(key){
+
+          return {
+            id: key,
+            ...(data[key] || {})
+          };
+
+        })
+        .sort(function(a,b){
+
+          return (b.createdAt || 0) - (a.createdAt || 0);
+
+        });
+
 
       callback(orders);
 
     })
-    .catch(err => {
+    .catch(function(error){
 
-      console.error('Dashboard PO error:', err);
+      console.error('Dashboard PO error:', error);
 
       callback([]);
 
@@ -1347,111 +1540,78 @@ function getDashboardPOs(callback){
 }
 
 
-/* ---------- Dashboard Summary Cards ---------- */
-
-function refreshSummary(){
-
-  const stock = window.stockData || [];
-
-  // Total unique products
-  document.getElementById('summary-count').textContent =
-    stock.filter(Boolean).length;
-
-
-  // Total current stock
-  const totalStock = stock.reduce((sum, item) => {
-
-    return sum + (parseFloat(item.qty) || 0);
-
-  }, 0);
-
-  document.getElementById('summary-total').textContent =
-    totalStock;
-
-
-  // Purchase orders + sales
-  getDashboardPOs(function(orders){
-
-    document.getElementById('summary-pos').textContent =
-      orders.length;
-
-
-    let totalQtySold = 0;
-    let totalSales = 0;
-
-
-    orders.forEach(po => {
-
-      totalSales += parseFloat(po.total) || 0;
-
-
-      (po.lines || []).forEach(line => {
-
-        totalQtySold += parseFloat(line.qty) || 0;
-
-      });
-
-    });
-
-
-    document.getElementById('summary-sold').textContent =
-      totalQtySold;
-
-
-    document.getElementById('summary-sales').textContent =
-      '₱' + totalSales.toFixed(2);
-
-  });
-
-}
-    /* ---------- Complete Sales Summary ---------- */
+/* ---------- Build Complete Sales Summary ---------- */
 
 function buildSalesSummary(){
 
-  return new Promise((resolve) => {
+  return new Promise(function(resolve){
 
     getDashboardPOs(function(orders){
 
       const items = {};
-      const schools = {};
+      const customers = {};
 
-      orders.forEach(po => {
+      let totalQuantitySold = 0;
+      let totalSales = 0;
+
+
+      orders.forEach(function(po){
 
         const customer =
-          (po.customer || 'Unknown Customer').trim();
+          String(po.customer || 'Unknown Customer').trim();
+
 
         const poTotal =
           parseFloat(po.total) || 0;
 
 
-        // SCHOOL / CUSTOMER TOTAL
-        schools[customer] =
-          (schools[customer] || 0) + poTotal;
+        totalSales += poTotal;
 
 
-        // ITEMS SOLD
-        (po.lines || []).forEach(line => {
+        /* Customer / School */
+
+        if(!customers[customer]){
+          customers[customer] = 0;
+        }
+
+        customers[customer] += poTotal;
+
+
+        /* Items */
+
+        (po.lines || []).forEach(function(line){
 
           const itemName =
-            (line.itemName || 'Unknown Item').trim();
+            String(line.itemName || 'Unknown Item').trim();
+
 
           const qty =
             parseFloat(line.qty) || 0;
 
+
           const price =
             parseFloat(line.price) || 0;
+
 
           const sales =
             qty * price;
 
 
+          totalQuantitySold += qty;
+
+
           if(!items[itemName]){
 
             items[itemName] = {
+
               name: itemName,
+
               qty: 0,
+
               sales: 0,
+
               lastSold: ''
+
             };
 
           }
@@ -1462,16 +1622,22 @@ function buildSalesSummary(){
           items[itemName].sales += sales;
 
 
-          // Save latest sold date
-          const soldDate =
-            po.date ||
-            (
-              po.createdAt
-                ? new Date(po.createdAt)
-                    .toISOString()
-                    .slice(0,10)
-                : ''
-            );
+          /* Determine last sold date */
+
+          let soldDate = '';
+
+          if(po.date){
+
+            soldDate = po.date;
+
+          }else if(po.createdAt){
+
+            soldDate =
+              new Date(po.createdAt)
+                .toISOString()
+                .slice(0,10);
+
+          }
 
 
           if(
@@ -1493,9 +1659,17 @@ function buildSalesSummary(){
 
 
       resolve({
+
         orders: orders,
+
         items: items,
-        schools: schools
+
+        customers: customers,
+
+        totalQuantitySold: totalQuantitySold,
+
+        totalSales: totalSales
+
       });
 
     });
@@ -1503,274 +1677,583 @@ function buildSalesSummary(){
   });
 
 }
-    /* ---------- All Items Sold ---------- */
-
-function renderAllItemsSold(){
-
-  buildSalesSummary().then(summary => {
-
-    const tbody =
-      document.getElementById('allItemsSoldBody');
-
-    if(!tbody) return;
 
 
-    const search =
-      (
-        document.getElementById('soldItemsSearch')?.value ||
-        ''
-      )
-      .toLowerCase()
-      .trim();
+/* ---------- Dashboard Summary Cards ---------- */
+
+function refreshSummary(){
+
+  const stock =
+    Array.isArray(window.stockData)
+      ? window.stockData
+      : [];
 
 
-    let items =
-      Object.values(summary.items);
+  /* Unique item names */
 
+  const uniqueNames =
+    new Set();
 
-    // Search
-    if(search){
+  stock.forEach(function(item){
 
-      items = items.filter(item =>
-        item.name.toLowerCase().includes(search)
+    if(
+      item &&
+      item.name &&
+      String(item.name).trim()
+    ){
+
+      uniqueNames.add(
+        String(item.name).trim().toLowerCase()
       );
 
     }
 
+  });
 
-    // Highest quantity sold first
-    items.sort((a,b) => {
 
-      return b.qty - a.qty;
+  const countElement =
+    document.getElementById('summary-count');
+
+
+  if(countElement){
+
+    countElement.textContent =
+      uniqueNames.size;
+
+  }
+
+
+  /* Total current stock */
+
+  const totalStock =
+    stock.reduce(function(sum,item){
+
+      return sum +
+        (parseFloat(item.qty) || 0);
+
+    },0);
+
+
+  const totalElement =
+    document.getElementById('summary-total');
+
+
+  if(totalElement){
+
+    totalElement.textContent =
+      totalStock;
+
+  }
+
+
+  /* Purchase orders + sales */
+
+  buildSalesSummary()
+    .then(function(summary){
+
+      const poElement =
+        document.getElementById('summary-pos');
+
+
+      const soldElement =
+        document.getElementById('summary-sold');
+
+
+      const salesElement =
+        document.getElementById('summary-sales');
+
+
+      if(poElement){
+
+        poElement.textContent =
+          summary.orders.length;
+
+      }
+
+
+      if(soldElement){
+
+        soldElement.textContent =
+          summary.totalQuantitySold;
+
+      }
+
+
+      if(salesElement){
+
+        salesElement.textContent =
+          '₱' +
+          summary.totalSales.toFixed(2);
+
+      }
 
     });
 
+}
 
-    if(!items.length){
 
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="6"
+/* ---------- All Items Sold ---------- */
+
+function renderAllItemsSold(){
+
+  const tbody =
+    document.getElementById('allItemsSoldBody');
+
+
+  if(!tbody){
+
+    return;
+
+  }
+
+
+  buildSalesSummary()
+    .then(function(summary){
+
+      const searchInput =
+        document.getElementById('soldItemsSearch');
+
+
+      const search =
+        searchInput
+          ? String(searchInput.value || '')
+              .toLowerCase()
+              .trim()
+          : '';
+
+
+      let items =
+        Object.values(summary.items);
+
+
+      /* Search */
+
+      if(search){
+
+        items =
+          items.filter(function(item){
+
+            return item.name
+              .toLowerCase()
+              .includes(search);
+
+          });
+
+      }
+
+
+      /* Highest quantity sold first */
+
+      items.sort(function(a,b){
+
+        if(b.qty !== a.qty){
+
+          return b.qty - a.qty;
+
+        }
+
+        return a.name.localeCompare(b.name);
+
+      });
+
+
+      if(!items.length){
+
+        tbody.innerHTML = `
+
+          <tr>
+
+            <td
+              colspan="6"
               class="muted"
-              style="padding:15px;text-align:center">
-            No sold items found.
-          </td>
-        </tr>
-      `;
+              style="padding:16px;text-align:center;"
+            >
+              No sold items found.
+            </td>
 
-      return;
+          </tr>
 
-    }
+        `;
 
+        return;
 
-    tbody.innerHTML = items.map((item,index) => {
-
-      const stockItem =
-        (window.stockData || []).find(
-          s => s.name === item.name
-        );
+      }
 
 
-      const currentStock =
-        stockItem
-          ? parseFloat(stockItem.qty) || 0
-          : 0;
+      tbody.innerHTML =
+        items.map(function(item,index){
+
+          /* Find current stock */
+
+          const stockItem =
+            stockData.find(function(stock){
+
+              return String(stock.name || '')
+                .trim()
+                .toLowerCase() ===
+                item.name
+                  .trim()
+                  .toLowerCase();
+
+            });
 
 
-      return `
-        <tr>
+          const currentStock =
+            stockItem
+              ? parseFloat(stockItem.qty) || 0
+              : 0;
 
-          <td style="padding:10px">
-            ${index + 1}
-          </td>
 
-          <td style="padding:10px;font-weight:700">
-            ${escapeHTML(item.name)}
-          </td>
+          return `
 
-          <td style="padding:10px;text-align:right">
-            ${item.qty}
-          </td>
+            <tr>
 
-          <td style="padding:10px;text-align:right">
-            ₱${item.sales.toFixed(2)}
-          </td>
+              <td style="padding:10px;">
+                ${index + 1}
+              </td>
 
-          <td style="padding:10px;text-align:right">
-            ${currentStock}
-          </td>
 
-          <td style="padding:10px">
-            ${item.lastSold || '-'}
-          </td>
+              <td style="
+                padding:10px;
+                font-weight:700;
+              ">
+                ${escapeHTML(item.name)}
+              </td>
 
-        </tr>
-      `;
 
-    }).join('');
+              <td style="
+                padding:10px;
+                text-align:right;
+              ">
+                ${item.qty}
+              </td>
 
-  });
+
+              <td style="
+                padding:10px;
+                text-align:right;
+              ">
+                ₱${item.sales.toFixed(2)}
+              </td>
+
+
+              <td style="
+                padding:10px;
+                text-align:right;
+              ">
+                ${currentStock}
+              </td>
+
+
+              <td style="padding:10px;">
+                ${item.lastSold || '-'}
+              </td>
+
+            </tr>
+
+          `;
+
+        }).join('');
+
+    });
 
 }
-    /* ---------- Dashboard Sales Insights ---------- */
+
+
+/* ---------- Top Schools + Best Sellers ---------- */
 
 function renderDashboardSales(){
 
-  buildSalesSummary().then(summary => {
+  buildSalesSummary()
+    .then(function(summary){
 
-    /* =========================
-       TOP SCHOOLS
-       ========================= */
+      /* =====================================================
+         TOP SCHOOLS / CUSTOMERS
+         ===================================================== */
 
-    const schoolsContainer =
-      document.getElementById('topSchoolsSummary');
-
-
-    const topSchools =
-      Object.entries(summary.schools)
-        .sort((a,b) => b[1] - a[1])
-        .slice(0,10);
+      const schoolsContainer =
+        document.getElementById('topSchoolsSummary');
 
 
-    if(!topSchools.length){
+      if(schoolsContainer){
 
-      schoolsContainer.innerHTML =
-        '<div class="muted">No sales yet.</div>';
+        const topSchools =
+          Object.entries(summary.customers)
+            .sort(function(a,b){
 
-    }else{
+              return b[1] - a[1];
 
-      schoolsContainer.innerHTML = `
-
-        <table style="width:100%;border-collapse:collapse">
-
-          <thead>
-            <tr>
-              <th style="padding:8px;text-align:left">#</th>
-              <th style="padding:8px;text-align:left">School / Customer</th>
-              <th style="padding:8px;text-align:right">Total Sales</th>
-            </tr>
-          </thead>
-
-          <tbody>
-
-            ${topSchools.map((school,index) => `
-
-              <tr>
-
-                <td style="padding:8px">
-                  ${index + 1}
-                </td>
-
-                <td style="padding:8px">
-                  ${escapeHTML(school[0])}
-                </td>
-
-                <td style="padding:8px;text-align:right;font-weight:700">
-                  ₱${school[1].toFixed(2)}
-                </td>
-
-              </tr>
-
-            `).join('')}
-
-          </tbody>
-
-        </table>
-
-      `;
-
-    }
+            })
+            .slice(0,10);
 
 
-    /* =========================
-       BEST SELLING ITEMS
-       ========================= */
+        if(!topSchools.length){
 
-    const itemsContainer =
-      document.getElementById('bestItemsSummary');
+          schoolsContainer.innerHTML =
+            '<div class="muted">No sales yet.</div>';
+
+        }else{
+
+          schoolsContainer.innerHTML = `
+
+            <div style="overflow:auto;">
+
+              <table style="
+                width:100%;
+                border-collapse:collapse;
+              ">
+
+                <thead>
+
+                  <tr>
+
+                    <th style="
+                      padding:8px;
+                      text-align:left;
+                    ">
+                      #
+                    </th>
+
+                    <th style="
+                      padding:8px;
+                      text-align:left;
+                    ">
+                      School / Customer
+                    </th>
+
+                    <th style="
+                      padding:8px;
+                      text-align:right;
+                    ">
+                      Sales
+                    </th>
+
+                  </tr>
+
+                </thead>
 
 
-    const bestItems =
-      Object.values(summary.items)
-        .sort((a,b) => b.qty - a.qty)
-        .slice(0,10);
+                <tbody>
+
+                  ${
+                    topSchools.map(function(row,index){
+
+                      return `
+
+                        <tr>
+
+                          <td style="padding:8px;">
+                            ${index + 1}
+                          </td>
+
+                          <td style="padding:8px;">
+                            ${escapeHTML(row[0])}
+                          </td>
+
+                          <td style="
+                            padding:8px;
+                            text-align:right;
+                            font-weight:700;
+                          ">
+                            ₱${row[1].toFixed(2)}
+                          </td>
+
+                        </tr>
+
+                      `;
+
+                    }).join('')
+                  }
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          `;
+
+        }
+
+      }
 
 
-    if(!bestItems.length){
+      /* =====================================================
+         BEST SELLING ITEMS
+         ===================================================== */
 
-      itemsContainer.innerHTML =
-        '<div class="muted">No items sold yet.</div>';
+      const itemsContainer =
+        document.getElementById('bestItemsSummary');
 
-    }else{
 
-      itemsContainer.innerHTML = `
+      if(itemsContainer){
 
-        <table style="width:100%;border-collapse:collapse">
+        const bestItems =
+          Object.values(summary.items)
+            .sort(function(a,b){
 
-          <thead>
+              if(b.qty !== a.qty){
 
-            <tr>
+                return b.qty - a.qty;
 
-              <th style="padding:8px;text-align:left">
-                #
-              </th>
+              }
 
-              <th style="padding:8px;text-align:left">
-                Item
-              </th>
+              return a.name.localeCompare(b.name);
 
-              <th style="padding:8px;text-align:right">
-                Qty Sold
-              </th>
+            })
+            .slice(0,10);
 
-              <th style="padding:8px;text-align:right">
-                Sales
-              </th>
 
-            </tr>
+        if(!bestItems.length){
 
-          </thead>
+          itemsContainer.innerHTML =
+            '<div class="muted">No items sold yet.</div>';
 
-          <tbody>
+        }else{
 
-            ${bestItems.map((item,index) => `
+          itemsContainer.innerHTML = `
 
-              <tr>
+            <div style="overflow:auto;">
 
-                <td style="padding:8px">
-                  ${index + 1}
-                </td>
+              <table style="
+                width:100%;
+                border-collapse:collapse;
+              ">
 
-                <td style="padding:8px;font-weight:700">
-                  ${escapeHTML(item.name)}
-                </td>
+                <thead>
 
-                <td style="padding:8px;text-align:right">
-                  ${item.qty}
-                </td>
+                  <tr>
 
-                <td style="padding:8px;text-align:right">
-                  ₱${item.sales.toFixed(2)}
-                </td>
+                    <th style="
+                      padding:8px;
+                      text-align:left;
+                    ">
+                      #
+                    </th>
 
-              </tr>
+                    <th style="
+                      padding:8px;
+                      text-align:left;
+                    ">
+                      Item
+                    </th>
 
-            `).join('')}
+                    <th style="
+                      padding:8px;
+                      text-align:right;
+                    ">
+                      Qty Sold
+                    </th>
 
-          </tbody>
+                    <th style="
+                      padding:8px;
+                      text-align:right;
+                    ">
+                      Sales
+                    </th>
 
-        </table>
+                  </tr>
 
-      `;
+                </thead>
 
-    }
 
-  });
+                <tbody>
+
+                  ${
+                    bestItems.map(function(item,index){
+
+                      return `
+
+                        <tr>
+
+                          <td style="padding:8px;">
+                            ${index + 1}
+                          </td>
+
+                          <td style="
+                            padding:8px;
+                            font-weight:700;
+                          ">
+                            ${escapeHTML(item.name)}
+                          </td>
+
+                          <td style="
+                            padding:8px;
+                            text-align:right;
+                          ">
+                            ${item.qty}
+                          </td>
+
+                          <td style="
+                            padding:8px;
+                            text-align:right;
+                          ">
+                            ₱${item.sales.toFixed(2)}
+                          </td>
+
+                        </tr>
+
+                      `;
+
+                    }).join('')
+                  }
+
+                </tbody>
+
+              </table>
+
+            </div>
+
+          `;
+
+        }
+
+      }
+
+    });
 
 }
-    function scheduleChartUpdate(){ if(chartUpdateTimer) clearTimeout(chartUpdateTimer); chartUpdateTimer = setTimeout(()=>{ renderDashboardCharts(); chartUpdateTimer = null; }, 500); }
 
-   document.addEventListener('DOMContentLoaded', ()=>{
+
+/* ---------- Refresh Everything on Dashboard ---------- */
+
+function refreshDashboard(){
+
+  refreshSummary();
+
+  renderDashboardSales();
+
+  renderAllItemsSold();
+
+}
+
+
+/* ---------- Dashboard Search ---------- */
+
+function initDashboardSearch(){
+
+  const search =
+    document.getElementById('soldItemsSearch');
+
+
+  if(!search){
+
+    return;
+
+  }
+
+
+  search.addEventListener(
+    'input',
+    renderAllItemsSold
+  );
+
+}
+
+
+/* ---------- Dashboard Initialization ---------- */
+
+document.addEventListener('DOMContentLoaded',function(){
 
   openMenu('dashboard');
 
@@ -1782,34 +2265,49 @@ function renderDashboardSales(){
 
   renderPOHistory();
 
-  refreshSummary();
+  refreshDashboard();
 
   renderStockHistory();
 
-  renderDashboardSales();
+  initDashboardSearch();
 
-  renderAllItemsSold();
 
-  document
-    .getElementById('hamburger')
-    .addEventListener('click', () =>
-      document
-        .getElementById('sidebar')
-        .classList.toggle('show')
+  const hamburger =
+    document.getElementById('hamburger');
+
+
+  if(hamburger){
+
+    hamburger.addEventListener(
+      'click',
+      function(){
+
+        document
+          .getElementById('sidebar')
+          .classList.toggle('show');
+
+      }
     );
+
+  }
 
 });
 
-      // register one posRef listener to update lists & schedule charts
-      posRef.on('value', ()=>{
-        renderPOList();
-        renderPOHistory();
-        refreshSummary();
-        scheduleChartUpdate();
-        renderStockHistory();
-      });
 
-      renderDashboardCharts();
+/* ---------- Firebase PO Listener ----------
+   Keeps Dashboard updated whenever PO data changes.
+   Do NOT call renderDashboardCharts() here.
+------------------------------------------------------- */
+
+posRef.on('value',function(){
+
+  renderPOList();
+
+  renderPOHistory();
+
+  refreshDashboard();
+
+});
 
       document.getElementById('hamburger').addEventListener('click', ()=> document.getElementById('sidebar').classList.toggle('show'));
     });
