@@ -1206,6 +1206,10 @@ stocksRef.on('value', snap => {
 
         showToast('PO saved ✔');
 
+refreshSummary();
+renderDashboardSales();
+renderAllItemsSold();
+
         // show saved PO details in modal (immediate feedback)
         viewPODetail(poObj);
 
@@ -1315,22 +1319,486 @@ stocksRef.on('value', snap => {
     /* ---------- Print stock ---------- */
     function printStockList(){ const printWindow = window.open('', '_blank'); const tableHTML = `<table style="width:100%;border-collapse:collapse;margin-top:14px"><thead><tr style="background:#0b6ff2;color:white"><th style="padding:8px;border:1px solid #ccc;text-align:left">Item</th><th style="padding:8px;border:1px solid #ccc;text-align:right">Quantity</th><th style="padding:8px;border:1px solid #ccc;text-align:left">Unit</th><th style="padding:8px;border:1px solid #ccc;text-align:right">Price</th></tr></thead><tbody>${(window.stockData||[]).map(s=>`<tr><td style="padding:8px;border:1px solid #ccc">${escapeHTML(s.name)}</td><td style="padding:8px;border:1px solid #ccc;text-align:right">${s.qty}</td><td style="padding:8px;border:1px solid #ccc">${escapeHTML(s.unit||'')}</td><td style="padding:8px;border:1px solid #ccc;text-align:right">₱${(parseFloat(s.price)||0).toFixed(2)}</td></tr>`).join('')}</tbody></table>`; printWindow.document.write(`<html><head><title>Stock List</title><style>body{font-family:Arial,Helvetica,sans-serif;padding:24px;color:#222;}h2{margin:0;text-align:center;color:#0b6ff2;}table{width:100%;border-collapse:collapse;}th,td{border:1px solid #ccc;padding:8px;text-align:left;}th{background:#0b6ff2;color:#fff;}tr:nth-child(even){background:#f8faff;}</style></head><body><h2>MSITE Stock List</h2><div style="text-align:center;font-size:0.9rem;color:#555;">Printed: ${new Date().toLocaleString()}</div>${tableHTML}</body></html>`); printWindow.document.close(); setTimeout(()=> printWindow.print(),300); }
 
-    /* ---------- Summary ---------- */
-    function refreshSummary(){ document.getElementById('summary-count').textContent = (window.stockData||[]).filter(Boolean).length; document.getElementById('summary-total').textContent = (window.stockData||[]).reduce((s,i)=> s + (parseFloat(i.qty)||0), 0); posRef.once('value').then(snap=>{ const val = snap.val(); document.getElementById('summary-pos').textContent = val ? Object.keys(val).length : 0; }).catch(()=>{}); }
+   /* ---------- Dashboard Summary ---------- */
 
-    /* ---------- Charts (safe) ---------- */
-    function renderDashboardCharts(){ posRef.once('value').then(snap=>{ const data = snap.val(); if(!data){ if(schoolChart){ try{schoolChart.destroy()}catch(e){}; schoolChart=null;} if(itemChart){ try{itemChart.destroy()}catch(e){}; itemChart=null;} return; } const poArr = Object.values(data||{}); const schoolTotals={}; poArr.forEach(po=>{ if(!po.customer) return; schoolTotals[po.customer] = (schoolTotals[po.customer] || 0) + (po.total || 0); }); const top5Schools = Object.entries(schoolTotals).sort((a,b)=>b[1]-a[1]).slice(0,5); const itemTotals={}; poArr.forEach(po=>{ (po.lines||[]).forEach(line=>{ if(!line.itemName) return; itemTotals[line.itemName] = (itemTotals[line.itemName] || 0) + (parseFloat(line.qty) || 0); }); }); const top5Items = Object.entries(itemTotals).sort((a,b)=>b[1]-a[1]).slice(0,5); const schoolsLabels = top5Schools.map(x=>x[0]); const schoolsData = top5Schools.map(x=>x[1]); const ctxS = document.getElementById('topSchoolsChart').getContext('2d'); if(schoolChart){ try{ schoolChart.destroy(); }catch(e){} } schoolChart = new Chart(ctxS,{ type:'bar', data:{ labels: schoolsLabels, datasets:[{ label:'Total (₱)', data: schoolsData }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } }); const itemsLabels = top5Items.map(x=>x[0]); const itemsData = top5Items.map(x=>x[1]); const ctxI = document.getElementById('bestItemsChart').getContext('2d'); if(itemChart){ try{ itemChart.destroy(); }catch(e){} } itemChart = new Chart(ctxI,{ type:'bar', data:{ labels: itemsLabels, datasets:[{ label:'Qty Sold', data: itemsData }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}} } }); }).catch(err=>console.error('Chart update error',err)); }
+function getDashboardPOs(callback){
+
+  posRef.once('value')
+    .then(snap => {
+
+      const data = snap.val() || {};
+
+      const orders = Object.keys(data).map(key => ({
+        id: key,
+        ...data[key]
+      }));
+
+      callback(orders);
+
+    })
+    .catch(err => {
+
+      console.error('Dashboard PO error:', err);
+
+      callback([]);
+
+    });
+
+}
+
+
+/* ---------- Dashboard Summary Cards ---------- */
+
+function refreshSummary(){
+
+  const stock = window.stockData || [];
+
+  // Total unique products
+  document.getElementById('summary-count').textContent =
+    stock.filter(Boolean).length;
+
+
+  // Total current stock
+  const totalStock = stock.reduce((sum, item) => {
+
+    return sum + (parseFloat(item.qty) || 0);
+
+  }, 0);
+
+  document.getElementById('summary-total').textContent =
+    totalStock;
+
+
+  // Purchase orders + sales
+  getDashboardPOs(function(orders){
+
+    document.getElementById('summary-pos').textContent =
+      orders.length;
+
+
+    let totalQtySold = 0;
+    let totalSales = 0;
+
+
+    orders.forEach(po => {
+
+      totalSales += parseFloat(po.total) || 0;
+
+
+      (po.lines || []).forEach(line => {
+
+        totalQtySold += parseFloat(line.qty) || 0;
+
+      });
+
+    });
+
+
+    document.getElementById('summary-sold').textContent =
+      totalQtySold;
+
+
+    document.getElementById('summary-sales').textContent =
+      '₱' + totalSales.toFixed(2);
+
+  });
+
+}
+    /* ---------- Complete Sales Summary ---------- */
+
+function buildSalesSummary(){
+
+  return new Promise((resolve) => {
+
+    getDashboardPOs(function(orders){
+
+      const items = {};
+      const schools = {};
+
+      orders.forEach(po => {
+
+        const customer =
+          (po.customer || 'Unknown Customer').trim();
+
+        const poTotal =
+          parseFloat(po.total) || 0;
+
+
+        // SCHOOL / CUSTOMER TOTAL
+        schools[customer] =
+          (schools[customer] || 0) + poTotal;
+
+
+        // ITEMS SOLD
+        (po.lines || []).forEach(line => {
+
+          const itemName =
+            (line.itemName || 'Unknown Item').trim();
+
+          const qty =
+            parseFloat(line.qty) || 0;
+
+          const price =
+            parseFloat(line.price) || 0;
+
+          const sales =
+            qty * price;
+
+
+          if(!items[itemName]){
+
+            items[itemName] = {
+              name: itemName,
+              qty: 0,
+              sales: 0,
+              lastSold: ''
+            };
+
+          }
+
+
+          items[itemName].qty += qty;
+
+          items[itemName].sales += sales;
+
+
+          // Save latest sold date
+          const soldDate =
+            po.date ||
+            (
+              po.createdAt
+                ? new Date(po.createdAt)
+                    .toISOString()
+                    .slice(0,10)
+                : ''
+            );
+
+
+          if(
+            soldDate &&
+            (
+              !items[itemName].lastSold ||
+              soldDate > items[itemName].lastSold
+            )
+          ){
+
+            items[itemName].lastSold =
+              soldDate;
+
+          }
+
+        });
+
+      });
+
+
+      resolve({
+        orders: orders,
+        items: items,
+        schools: schools
+      });
+
+    });
+
+  });
+
+}
+    /* ---------- All Items Sold ---------- */
+
+function renderAllItemsSold(){
+
+  buildSalesSummary().then(summary => {
+
+    const tbody =
+      document.getElementById('allItemsSoldBody');
+
+    if(!tbody) return;
+
+
+    const search =
+      (
+        document.getElementById('soldItemsSearch')?.value ||
+        ''
+      )
+      .toLowerCase()
+      .trim();
+
+
+    let items =
+      Object.values(summary.items);
+
+
+    // Search
+    if(search){
+
+      items = items.filter(item =>
+        item.name.toLowerCase().includes(search)
+      );
+
+    }
+
+
+    // Highest quantity sold first
+    items.sort((a,b) => {
+
+      return b.qty - a.qty;
+
+    });
+
+
+    if(!items.length){
+
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="6"
+              class="muted"
+              style="padding:15px;text-align:center">
+            No sold items found.
+          </td>
+        </tr>
+      `;
+
+      return;
+
+    }
+
+
+    tbody.innerHTML = items.map((item,index) => {
+
+      const stockItem =
+        (window.stockData || []).find(
+          s => s.name === item.name
+        );
+
+
+      const currentStock =
+        stockItem
+          ? parseFloat(stockItem.qty) || 0
+          : 0;
+
+
+      return `
+        <tr>
+
+          <td style="padding:10px">
+            ${index + 1}
+          </td>
+
+          <td style="padding:10px;font-weight:700">
+            ${escapeHTML(item.name)}
+          </td>
+
+          <td style="padding:10px;text-align:right">
+            ${item.qty}
+          </td>
+
+          <td style="padding:10px;text-align:right">
+            ₱${item.sales.toFixed(2)}
+          </td>
+
+          <td style="padding:10px;text-align:right">
+            ${currentStock}
+          </td>
+
+          <td style="padding:10px">
+            ${item.lastSold || '-'}
+          </td>
+
+        </tr>
+      `;
+
+    }).join('');
+
+  });
+
+}
+    /* ---------- Dashboard Sales Insights ---------- */
+
+function renderDashboardSales(){
+
+  buildSalesSummary().then(summary => {
+
+    /* =========================
+       TOP SCHOOLS
+       ========================= */
+
+    const schoolsContainer =
+      document.getElementById('topSchoolsSummary');
+
+
+    const topSchools =
+      Object.entries(summary.schools)
+        .sort((a,b) => b[1] - a[1])
+        .slice(0,10);
+
+
+    if(!topSchools.length){
+
+      schoolsContainer.innerHTML =
+        '<div class="muted">No sales yet.</div>';
+
+    }else{
+
+      schoolsContainer.innerHTML = `
+
+        <table style="width:100%;border-collapse:collapse">
+
+          <thead>
+            <tr>
+              <th style="padding:8px;text-align:left">#</th>
+              <th style="padding:8px;text-align:left">School / Customer</th>
+              <th style="padding:8px;text-align:right">Total Sales</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            ${topSchools.map((school,index) => `
+
+              <tr>
+
+                <td style="padding:8px">
+                  ${index + 1}
+                </td>
+
+                <td style="padding:8px">
+                  ${escapeHTML(school[0])}
+                </td>
+
+                <td style="padding:8px;text-align:right;font-weight:700">
+                  ₱${school[1].toFixed(2)}
+                </td>
+
+              </tr>
+
+            `).join('')}
+
+          </tbody>
+
+        </table>
+
+      `;
+
+    }
+
+
+    /* =========================
+       BEST SELLING ITEMS
+       ========================= */
+
+    const itemsContainer =
+      document.getElementById('bestItemsSummary');
+
+
+    const bestItems =
+      Object.values(summary.items)
+        .sort((a,b) => b.qty - a.qty)
+        .slice(0,10);
+
+
+    if(!bestItems.length){
+
+      itemsContainer.innerHTML =
+        '<div class="muted">No items sold yet.</div>';
+
+    }else{
+
+      itemsContainer.innerHTML = `
+
+        <table style="width:100%;border-collapse:collapse">
+
+          <thead>
+
+            <tr>
+
+              <th style="padding:8px;text-align:left">
+                #
+              </th>
+
+              <th style="padding:8px;text-align:left">
+                Item
+              </th>
+
+              <th style="padding:8px;text-align:right">
+                Qty Sold
+              </th>
+
+              <th style="padding:8px;text-align:right">
+                Sales
+              </th>
+
+            </tr>
+
+          </thead>
+
+          <tbody>
+
+            ${bestItems.map((item,index) => `
+
+              <tr>
+
+                <td style="padding:8px">
+                  ${index + 1}
+                </td>
+
+                <td style="padding:8px;font-weight:700">
+                  ${escapeHTML(item.name)}
+                </td>
+
+                <td style="padding:8px;text-align:right">
+                  ${item.qty}
+                </td>
+
+                <td style="padding:8px;text-align:right">
+                  ₱${item.sales.toFixed(2)}
+                </td>
+
+              </tr>
+
+            `).join('')}
+
+          </tbody>
+
+        </table>
+
+      `;
+
+    }
+
+  });
+
+}
     function scheduleChartUpdate(){ if(chartUpdateTimer) clearTimeout(chartUpdateTimer); chartUpdateTimer = setTimeout(()=>{ renderDashboardCharts(); chartUpdateTimer = null; }, 500); }
 
-    /* ---------- Init ---------- */
-    document.addEventListener('DOMContentLoaded', ()=>{
-      openMenu('dashboard');
-      renderStock();
-      initPOForm();
-      renderPOList();
-      renderPOHistory();
-      refreshSummary();
-      renderStockHistory();
+   document.addEventListener('DOMContentLoaded', ()=>{
+
+  openMenu('dashboard');
+
+  renderStock();
+
+  initPOForm();
+
+  renderPOList();
+
+  renderPOHistory();
+
+  refreshSummary();
+
+  renderStockHistory();
+
+  renderDashboardSales();
+
+  renderAllItemsSold();
+
+  document
+    .getElementById('hamburger')
+    .addEventListener('click', () =>
+      document
+        .getElementById('sidebar')
+        .classList.toggle('show')
+    );
+
+});
 
       // register one posRef listener to update lists & schedule charts
       posRef.on('value', ()=>{
